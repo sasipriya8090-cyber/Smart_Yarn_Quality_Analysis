@@ -5,11 +5,6 @@ import tempfile
 import os
 import cv2
 
-
-# ==============================
-# PAGE SETTINGS
-# ==============================
-
 st.set_page_config(
     page_title="Smart Yarn Quality Analysis",
     page_icon="🧶",
@@ -17,30 +12,15 @@ st.set_page_config(
 )
 
 st.title("🧶 Smart Yarn Quality Analysis")
-
-st.write(
-    "AI-based yarn defect detection using YOLO."
-)
-
-
-# ==============================
-# MODEL
-# ==============================
+st.write("AI-based yarn defect detection using YOLO.")
 
 MODEL_PATH = "best.pt"
-
 
 @st.cache_resource
 def load_model():
     return YOLO(MODEL_PATH)
 
-
 model = load_model()
-
-
-# ==============================
-# INPUT TYPE
-# ==============================
 
 input_type = st.radio(
     "Select Input Type",
@@ -48,9 +28,8 @@ input_type = st.radio(
     horizontal=True
 )
 
-
 # ============================================================
-# IMAGE ANALYSIS
+# IMAGE
 # ============================================================
 
 if input_type == "Image":
@@ -65,11 +44,7 @@ if input_type == "Image":
         image = Image.open(uploaded_file)
 
         st.subheader("Uploaded Yarn Image")
-
-        st.image(
-            image,
-            use_container_width=True
-        )
+        st.image(image, use_container_width=True)
 
         if st.button("🔍 Analyze Image"):
 
@@ -83,7 +58,6 @@ if input_type == "Image":
                     image.convert("RGB").save(temp_file.name)
                     image_path = temp_file.name
 
-                # Low threshold for inspection
                 result = model.predict(
                     source=image_path,
                     conf=0.01,
@@ -92,21 +66,9 @@ if input_type == "Image":
 
                 os.remove(image_path)
 
-            # =====================================
-            # NO DETECTION
-            # =====================================
+            # Find highest confidence detection
+            if len(result.boxes) > 0:
 
-            if len(result.boxes) == 0:
-
-                st.success("🟢 NO DEFECT DETECTED")
-
-                st.write(
-                    "No trained yarn defect was detected."
-                )
-
-            else:
-
-                # Find highest confidence detection
                 best_box = max(
                     result.boxes,
                     key=lambda box: float(box.conf[0])
@@ -118,37 +80,13 @@ if input_type == "Image":
 
                 confidence_percent = confidence * 100
 
-                # =================================
-                # QUALITY DECISION
-                # =================================
-
+                # FINAL QUALITY DECISION
                 if confidence_percent >= 50:
-
-                    st.error("🔴 DEFECT DETECTED")
-
-                    quality_text = "Poor Quality"
-
-                elif confidence_percent >= 10:
-
-                    st.warning("🟡 POTENTIAL DEFECT")
-
-                    quality_text = "Needs Inspection"
-
+                    quality = "🔴 BAD QUALITY"
+                    st.error(quality)
                 else:
-
-                    st.info("🔵 LOW-CONFIDENCE DETECTION")
-
-                    quality_text = "Not Confirmed"
-
-                # =================================
-                # RESULT
-                # =================================
-
-                st.subheader("Prediction Result")
-
-                st.write(
-                    f"**Quality Status:** {quality_text}"
-                )
+                    quality = "🟢 GOOD QUALITY"
+                    st.success(quality)
 
                 st.write(
                     f"**Defect:** {class_name}"
@@ -158,6 +96,12 @@ if input_type == "Image":
                     "Confidence",
                     f"{confidence_percent:.2f}%"
                 )
+
+                if confidence_percent < 50:
+                    st.info(
+                        "A defect was detected with low confidence, "
+                        "so it is not considered a confirmed defect."
+                    )
 
                 result_image = result.plot()
 
@@ -169,25 +113,17 @@ if input_type == "Image":
                     use_container_width=True
                 )
 
-                # =================================
-                # ALL DETECTIONS
-                # =================================
+            else:
 
-                st.subheader("All Detected Objects")
+                st.success("🟢 GOOD QUALITY")
 
-                for box in result.boxes:
-
-                    cid = int(box.cls[0])
-                    conf = float(box.conf[0])
-                    name = result.names[cid]
-
-                    st.write(
-                        f"• **{name}** — {conf * 100:.2f}%"
-                    )
+                st.write(
+                    "No yarn defect was detected."
+                )
 
 
 # ============================================================
-# VIDEO ANALYSIS
+# VIDEO
 # ============================================================
 
 else:
@@ -224,7 +160,6 @@ else:
 
                 frame_number = 0
                 detected_frames = 0
-
                 highest_confidence = 0.0
                 detected_classes = set()
 
@@ -254,17 +189,13 @@ else:
 
                             for box in result.boxes:
 
-                                class_id = int(
-                                    box.cls[0]
-                                )
+                                class_id = int(box.cls[0])
 
                                 confidence = float(
                                     box.conf[0]
                                 )
 
-                                class_name = (
-                                    result.names[class_id]
-                                )
+                                class_name = result.names[class_id]
 
                                 detected_classes.add(
                                     class_name
@@ -285,64 +216,42 @@ else:
                         )
 
                 cap.release()
-
                 os.remove(video_path)
-
-            # =====================================
-            # VIDEO RESULT
-            # =====================================
 
             st.subheader("🎥 Video Analysis Result")
 
-            if detected_frames == 0:
+            highest_confidence_percent = (
+                highest_confidence * 100
+            )
 
-                st.success("🟢 NO DEFECT DETECTED")
+            # FINAL VIDEO QUALITY
+            if (
+                detected_frames > 0
+                and highest_confidence_percent >= 50
+            ):
 
-                st.write(
-                    "No trained yarn defect was detected "
-                    "in the analyzed video frames."
-                )
-
-            else:
-
-                confidence_percent = (
-                    highest_confidence * 100
-                )
-
-                if confidence_percent >= 50:
-
-                    st.error("🔴 DEFECT DETECTED")
-
-                    quality_text = "Poor Quality"
-
-                elif confidence_percent >= 10:
-
-                    st.warning("🟡 POTENTIAL DEFECT")
-
-                    quality_text = "Needs Inspection"
-
-                else:
-
-                    st.info("🔵 LOW-CONFIDENCE DETECTION")
-
-                    quality_text = "Not Confirmed"
-
-                st.write(
-                    f"**Quality Status:** {quality_text}"
-                )
+                st.error("🔴 BAD QUALITY")
 
                 st.write("**Detected Defects:**")
 
                 for defect in detected_classes:
-
-                    st.write(
-                        f"• {defect}"
-                    )
+                    st.write(f"• {defect}")
 
                 st.metric(
                     "Highest Confidence",
-                    f"{confidence_percent:.2f}%"
+                    f"{highest_confidence_percent:.2f}%"
                 )
+
+            else:
+
+                st.success("🟢 GOOD QUALITY")
+
+                if detected_frames > 0:
+
+                    st.write(
+                        "Only low-confidence defect detections "
+                        "were found."
+                    )
 
             st.info(
                 f"Frames processed: {frame_number}"
