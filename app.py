@@ -5,6 +5,10 @@ import tempfile
 import os
 import cv2
 
+# ==========================================
+# PAGE SETTINGS
+# ==========================================
+
 st.set_page_config(
     page_title="Smart Yarn Quality Analysis",
     page_icon="🧶",
@@ -12,7 +16,11 @@ st.set_page_config(
 )
 
 st.title("🧶 Smart Yarn Quality Analysis")
-st.write("AI-based yarn defect detection using YOLO.")
+st.write("AI-based yarn quality analysis using YOLO.")
+
+# ==========================================
+# LOAD MODEL
+# ==========================================
 
 MODEL_PATH = "best.pt"
 
@@ -22,15 +30,25 @@ def load_model():
 
 model = load_model()
 
+# ==========================================
+# CONFIDENCE THRESHOLD
+# ==========================================
+
+QUALITY_THRESHOLD = 0.50
+
+# ==========================================
+# SELECT INPUT
+# ==========================================
+
 input_type = st.radio(
     "Select Input Type",
     ["Image", "Video"],
     horizontal=True
 )
 
-# ============================================================
-# IMAGE
-# ============================================================
+# =========================================================
+# IMAGE ANALYSIS
+# =========================================================
 
 if input_type == "Image":
 
@@ -44,7 +62,11 @@ if input_type == "Image":
         image = Image.open(uploaded_file)
 
         st.subheader("Uploaded Yarn Image")
-        st.image(image, use_container_width=True)
+
+        st.image(
+            image,
+            use_container_width=True
+        )
 
         if st.button("🔍 Analyze Image"):
 
@@ -55,7 +77,10 @@ if input_type == "Image":
                     suffix=".jpg"
                 ) as temp_file:
 
-                    image.convert("RGB").save(temp_file.name)
+                    image.convert("RGB").save(
+                        temp_file.name
+                    )
+
                     image_path = temp_file.name
 
                 result = model.predict(
@@ -66,46 +91,78 @@ if input_type == "Image":
 
                 os.remove(image_path)
 
-            # Find highest confidence detection
-            if len(result.boxes) > 0:
+            # ==========================================
+            # CHECK DETECTIONS
+            # ==========================================
 
+            if len(result.boxes) == 0:
+
+                st.success("🟢 GOOD QUALITY")
+
+                st.write("**No defect detected.**")
+
+            else:
+
+                # Find highest confidence detection
                 best_box = max(
                     result.boxes,
                     key=lambda box: float(box.conf[0])
                 )
 
                 class_id = int(best_box.cls[0])
-                confidence = float(best_box.conf[0])
+
+                confidence = float(
+                    best_box.conf[0]
+                )
+
                 class_name = result.names[class_id]
 
                 confidence_percent = confidence * 100
 
-                # FINAL QUALITY DECISION
-                if confidence_percent >= 50:
-                    quality = "🔴 BAD QUALITY"
-                    st.error(quality)
-                else:
-                    quality = "🟢 GOOD QUALITY"
-                    st.success(quality)
+                # ======================================
+                # QUALITY DECISION
+                # ======================================
 
-                st.write(
-                    f"**Defect:** {class_name}"
-                )
+                if confidence >= QUALITY_THRESHOLD:
 
-                st.metric(
-                    "Confidence",
-                    f"{confidence_percent:.2f}%"
-                )
+                    # HIGH CONFIDENCE DEFECT
+                    st.error("🔴 BAD QUALITY")
 
-                if confidence_percent < 50:
-                    st.info(
-                        "A defect was detected with low confidence, "
-                        "so it is not considered a confirmed defect."
+                    st.write(
+                        f"**Defect:** {class_name}"
                     )
 
-                result_image = result.plot()
+                    st.metric(
+                        "Confidence",
+                        f"{confidence_percent:.2f}%"
+                    )
+
+                else:
+
+                    # LOW CONFIDENCE
+                    st.success("🟢 GOOD QUALITY")
+
+                    st.write(
+                        "**No defect detected.**"
+                    )
+
+                    st.caption(
+                        "No sufficiently confident "
+                        "yarn defect was detected."
+                    )
+
+                    st.metric(
+                        "Highest Detection Confidence",
+                        f"{confidence_percent:.2f}%"
+                    )
+
+                # ======================================
+                # DETECTION IMAGE
+                # ======================================
 
                 st.subheader("Detection Result")
+
+                result_image = result.plot()
 
                 st.image(
                     result_image,
@@ -113,18 +170,10 @@ if input_type == "Image":
                     use_container_width=True
                 )
 
-            else:
 
-                st.success("🟢 GOOD QUALITY")
-
-                st.write(
-                    "No yarn defect was detected."
-                )
-
-
-# ============================================================
-# VIDEO
-# ============================================================
+# =========================================================
+# VIDEO ANALYSIS
+# =========================================================
 
 else:
 
@@ -139,7 +188,9 @@ else:
 
         if st.button("🎥 Analyze Video"):
 
-            with st.spinner("Analyzing video..."):
+            with st.spinner(
+                "Analyzing video..."
+            ):
 
                 with tempfile.NamedTemporaryFile(
                     delete=False,
@@ -152,18 +203,27 @@ else:
 
                     video_path = temp_file.name
 
-                cap = cv2.VideoCapture(video_path)
+                cap = cv2.VideoCapture(
+                    video_path
+                )
 
                 total_frames = int(
-                    cap.get(cv2.CAP_PROP_FRAME_COUNT)
+                    cap.get(
+                        cv2.CAP_PROP_FRAME_COUNT
+                    )
                 )
 
                 frame_number = 0
-                detected_frames = 0
-                highest_confidence = 0.0
-                detected_classes = set()
 
-                progress_bar = st.progress(0)
+                highest_confidence = 0.0
+
+                highest_class = None
+
+                progress = st.progress(0)
+
+                # ======================================
+                # PROCESS VIDEO
+                # ======================================
 
                 while True:
 
@@ -177,81 +237,108 @@ else:
                     # Analyze every 5th frame
                     if frame_number % 5 == 0:
 
-                        result = model.predict(
+                        results = model.predict(
                             source=frame,
                             conf=0.01,
                             verbose=False
-                        )[0]
+                        )
+
+                        result = results[0]
 
                         if len(result.boxes) > 0:
 
-                            detected_frames += 1
-
                             for box in result.boxes:
-
-                                class_id = int(box.cls[0])
 
                                 confidence = float(
                                     box.conf[0]
                                 )
 
-                                class_name = result.names[class_id]
-
-                                detected_classes.add(
-                                    class_name
+                                class_id = int(
+                                    box.cls[0]
                                 )
 
-                                highest_confidence = max(
-                                    highest_confidence,
-                                    confidence
+                                class_name = (
+                                    result.names[
+                                        class_id
+                                    ]
                                 )
 
+                                if confidence > highest_confidence:
+
+                                    highest_confidence = (
+                                        confidence
+                                    )
+
+                                    highest_class = (
+                                        class_name
+                                    )
+
+                    # Progress
                     if total_frames > 0:
 
-                        progress_bar.progress(
+                        progress.progress(
                             min(
-                                frame_number / total_frames,
+                                frame_number /
+                                total_frames,
                                 1.0
                             )
                         )
 
                 cap.release()
+
                 os.remove(video_path)
 
-            st.subheader("🎥 Video Analysis Result")
+            # ==========================================
+            # VIDEO RESULT
+            # ==========================================
 
-            highest_confidence_percent = (
+            st.subheader(
+                "🎥 Video Analysis Result"
+            )
+
+            confidence_percent = (
                 highest_confidence * 100
             )
 
-            # FINAL VIDEO QUALITY
             if (
-                detected_frames > 0
-                and highest_confidence_percent >= 50
+                highest_confidence
+                >= QUALITY_THRESHOLD
             ):
 
-                st.error("🔴 BAD QUALITY")
+                st.error(
+                    "🔴 BAD QUALITY"
+                )
 
-                st.write("**Detected Defects:**")
-
-                for defect in detected_classes:
-                    st.write(f"• {defect}")
+                st.write(
+                    f"**Defect:** {highest_class}"
+                )
 
                 st.metric(
                     "Highest Confidence",
-                    f"{highest_confidence_percent:.2f}%"
+                    f"{confidence_percent:.2f}%"
                 )
 
             else:
 
-                st.success("🟢 GOOD QUALITY")
+                st.success(
+                    "🟢 GOOD QUALITY"
+                )
 
-                if detected_frames > 0:
+                st.write(
+                    "**No defect detected.**"
+                )
 
-                    st.write(
-                        "Only low-confidence defect detections "
-                        "were found."
+                if highest_class is not None:
+
+                    st.caption(
+                        "No sufficiently confident "
+                        "yarn defect was detected."
                     )
+
+                st.metric(
+                    "Highest Detection Confidence",
+                    f"{confidence_percent:.2f}%"
+                )
 
             st.info(
                 f"Frames processed: {frame_number}"
