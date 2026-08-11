@@ -5,9 +5,10 @@ import tempfile
 import os
 import cv2
 
-# ==========================================
+
+# =========================================================
 # PAGE SETTINGS
-# ==========================================
+# =========================================================
 
 st.set_page_config(
     page_title="Smart Yarn Quality Analysis",
@@ -16,41 +17,50 @@ st.set_page_config(
 )
 
 st.title("🧶 Smart Yarn Quality Analysis")
-st.write("AI-based yarn quality analysis using YOLO.")
+st.write(
+    "AI-based yarn quality analysis using YOLO."
+)
 
-# ==========================================
+
+# =========================================================
 # LOAD MODEL
-# ==========================================
+# =========================================================
 
 MODEL_PATH = "best.pt"
+
 
 @st.cache_resource
 def load_model():
     return YOLO(MODEL_PATH)
 
+
 model = load_model()
 
-# ==========================================
-# CONFIDENCE THRESHOLD
-# ==========================================
 
+# =========================================================
+# QUALITY THRESHOLD
+# =========================================================
+
+# 50% or higher = confirmed defect
 QUALITY_THRESHOLD = 0.50
 
-# ==========================================
-# SELECT INPUT
-# ==========================================
+
+# =========================================================
+# SELECT INPUT TYPE
+# =========================================================
 
 input_type = st.radio(
     "Select Input Type",
-    ["Image", "Video"],
+    ["🖼️ Image", "📷 Camera", "🎥 Video"],
     horizontal=True
 )
 
+
 # =========================================================
-# IMAGE ANALYSIS
+# IMAGE UPLOAD
 # =========================================================
 
-if input_type == "Image":
+if input_type == "🖼️ Image":
 
     uploaded_file = st.file_uploader(
         "Upload Yarn Image",
@@ -70,7 +80,9 @@ if input_type == "Image":
 
         if st.button("🔍 Analyze Image"):
 
-            with st.spinner("Analyzing yarn..."):
+            with st.spinner(
+                "Analyzing yarn..."
+            ):
 
                 with tempfile.NamedTemporaryFile(
                     delete=False,
@@ -91,15 +103,19 @@ if input_type == "Image":
 
                 os.remove(image_path)
 
-            # ==========================================
-            # CHECK DETECTIONS
-            # ==========================================
+            # =========================================
+            # NO DETECTION
+            # =========================================
 
             if len(result.boxes) == 0:
 
-                st.success("🟢 GOOD QUALITY")
+                st.success(
+                    "🟢 GOOD QUALITY"
+                )
 
-                st.write("**No defect detected.**")
+                st.write(
+                    "**No confirmed defect detected.**"
+                )
 
             else:
 
@@ -109,24 +125,31 @@ if input_type == "Image":
                     key=lambda box: float(box.conf[0])
                 )
 
-                class_id = int(best_box.cls[0])
+                class_id = int(
+                    best_box.cls[0]
+                )
 
                 confidence = float(
                     best_box.conf[0]
                 )
 
-                class_name = result.names[class_id]
+                class_name = result.names[
+                    class_id
+                ]
 
-                confidence_percent = confidence * 100
+                confidence_percent = (
+                    confidence * 100
+                )
 
-                # ======================================
-                # QUALITY DECISION
-                # ======================================
+                # =====================================
+                # BAD QUALITY
+                # =====================================
 
                 if confidence >= QUALITY_THRESHOLD:
 
-                    # HIGH CONFIDENCE DEFECT
-                    st.error("🔴 BAD QUALITY")
+                    st.error(
+                        "🔴 BAD QUALITY"
+                    )
 
                     st.write(
                         f"**Defect:** {class_name}"
@@ -137,56 +160,203 @@ if input_type == "Image":
                         f"{confidence_percent:.2f}%"
                     )
 
+                    # Detection image ONLY for bad quality
+
+                    st.subheader(
+                        "Detection Result"
+                    )
+
+                    result_image = result.plot()
+
+                    st.image(
+                        result_image,
+                        caption="Confirmed Defect Detection",
+                        use_container_width=True
+                    )
+
+                # =====================================
+                # LOW CONFIDENCE
+                # =====================================
+
                 else:
 
-                    # LOW CONFIDENCE
-                    st.success("🟢 GOOD QUALITY")
+                    st.success(
+                        "🟢 GOOD QUALITY"
+                    )
 
                     st.write(
-                        "**No defect detected.**"
+                        "**No confirmed defect detected.**"
                     )
-
-                    st.caption(
-                        "No sufficiently confident "
-                        "yarn defect was detected."
-                    )
-
-                    st.metric(
-                        "Highest Detection Confidence",
-                        f"{confidence_percent:.2f}%"
-                    )
-
-                # ======================================
-                # DETECTION IMAGE
-                # ======================================
-
-                st.subheader("Detection Result")
-
-                result_image = result.plot()
-
-                st.image(
-                    result_image,
-                    caption="YOLO Detection",
-                    use_container_width=True
-                )
 
 
 # =========================================================
-# VIDEO ANALYSIS
+# CAMERA
+# =========================================================
+
+elif input_type == "📷 Camera":
+
+    st.subheader(
+        "📷 Take a Yarn Photo"
+    )
+
+    camera_image = st.camera_input(
+        "Take a picture of the yarn"
+    )
+
+    if camera_image is not None:
+
+        image = Image.open(
+            camera_image
+        )
+
+        st.subheader(
+            "Captured Image"
+        )
+
+        st.image(
+            image,
+            use_container_width=True
+        )
+
+        if st.button(
+            "🔍 Analyze Captured Image"
+        ):
+
+            with st.spinner(
+                "Analyzing yarn..."
+            ):
+
+                with tempfile.NamedTemporaryFile(
+                    delete=False,
+                    suffix=".jpg"
+                ) as temp_file:
+
+                    image.convert(
+                        "RGB"
+                    ).save(
+                        temp_file.name
+                    )
+
+                    image_path = temp_file.name
+
+                result = model.predict(
+                    source=image_path,
+                    conf=0.01,
+                    verbose=False
+                )[0]
+
+                os.remove(
+                    image_path
+                )
+
+            # =========================================
+            # NO DETECTION
+            # =========================================
+
+            if len(result.boxes) == 0:
+
+                st.success(
+                    "🟢 GOOD QUALITY"
+                )
+
+                st.write(
+                    "**No confirmed defect detected.**"
+                )
+
+            else:
+
+                best_box = max(
+                    result.boxes,
+                    key=lambda box: float(box.conf[0])
+                )
+
+                class_id = int(
+                    best_box.cls[0]
+                )
+
+                confidence = float(
+                    best_box.conf[0]
+                )
+
+                class_name = result.names[
+                    class_id
+                ]
+
+                confidence_percent = (
+                    confidence * 100
+                )
+
+                # =====================================
+                # BAD QUALITY
+                # =====================================
+
+                if confidence >= QUALITY_THRESHOLD:
+
+                    st.error(
+                        "🔴 BAD QUALITY"
+                    )
+
+                    st.write(
+                        f"**Defect:** {class_name}"
+                    )
+
+                    st.metric(
+                        "Confidence",
+                        f"{confidence_percent:.2f}%"
+                    )
+
+                    st.subheader(
+                        "Detection Result"
+                    )
+
+                    result_image = result.plot()
+
+                    st.image(
+                        result_image,
+                        caption="Confirmed Defect Detection",
+                        use_container_width=True
+                    )
+
+                # =====================================
+                # GOOD QUALITY
+                # =====================================
+
+                else:
+
+                    st.success(
+                        "🟢 GOOD QUALITY"
+                    )
+
+                    st.write(
+                        "**No confirmed defect detected.**"
+                    )
+
+
+# =========================================================
+# VIDEO
 # =========================================================
 
 else:
 
     uploaded_video = st.file_uploader(
         "Upload Yarn Video",
-        type=["mp4", "avi", "mov", "mkv"]
+        type=[
+            "mp4",
+            "avi",
+            "mov",
+            "mkv"
+        ]
     )
 
     if uploaded_video is not None:
 
-        st.video(uploaded_video)
+        st.video(
+            uploaded_video
+        )
 
-        if st.button("🎥 Analyze Video"):
+        if st.button(
+            "🎥 Analyze Video"
+        ):
 
             with st.spinner(
                 "Analyzing video..."
@@ -201,7 +371,9 @@ else:
                         uploaded_video.read()
                     )
 
-                    video_path = temp_file.name
+                    video_path = (
+                        temp_file.name
+                    )
 
                 cap = cv2.VideoCapture(
                     video_path
@@ -219,11 +391,13 @@ else:
 
                 highest_class = None
 
-                progress = st.progress(0)
+                progress = st.progress(
+                    0
+                )
 
-                # ======================================
+                # =====================================
                 # PROCESS VIDEO
-                # ======================================
+                # =====================================
 
                 while True:
 
@@ -263,7 +437,10 @@ else:
                                     ]
                                 )
 
-                                if confidence > highest_confidence:
+                                if (
+                                    confidence
+                                    > highest_confidence
+                                ):
 
                                     highest_confidence = (
                                         confidence
@@ -273,32 +450,33 @@ else:
                                         class_name
                                     )
 
-                    # Progress
                     if total_frames > 0:
 
                         progress.progress(
                             min(
-                                frame_number /
-                                total_frames,
+                                frame_number
+                                / total_frames,
                                 1.0
                             )
                         )
 
                 cap.release()
 
-                os.remove(video_path)
+                os.remove(
+                    video_path
+                )
 
-            # ==========================================
+            # =========================================
             # VIDEO RESULT
-            # ==========================================
-
-            st.subheader(
-                "🎥 Video Analysis Result"
-            )
+            # =========================================
 
             confidence_percent = (
                 highest_confidence * 100
             )
+
+            # =========================================
+            # BAD QUALITY
+            # =========================================
 
             if (
                 highest_confidence
@@ -318,6 +496,10 @@ else:
                     f"{confidence_percent:.2f}%"
                 )
 
+            # =========================================
+            # GOOD QUALITY
+            # =========================================
+
             else:
 
                 st.success(
@@ -325,19 +507,7 @@ else:
                 )
 
                 st.write(
-                    "**No defect detected.**"
-                )
-
-                if highest_class is not None:
-
-                    st.caption(
-                        "No sufficiently confident "
-                        "yarn defect was detected."
-                    )
-
-                st.metric(
-                    "Highest Detection Confidence",
-                    f"{confidence_percent:.2f}%"
+                    "**No confirmed defect detected.**"
                 )
 
             st.info(
