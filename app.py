@@ -17,8 +17,9 @@ st.set_page_config(
 )
 
 st.title("🧶 Smart Yarn Quality Analysis")
+
 st.write(
-    "Detect yarn defects from images and videos using YOLO."
+    "AI-based yarn defect detection using YOLO."
 )
 
 
@@ -63,7 +64,7 @@ if input_type == "Image":
 
         image = Image.open(uploaded_file)
 
-        st.subheader("Uploaded Image")
+        st.subheader("Uploaded Yarn Image")
 
         st.image(
             image,
@@ -82,32 +83,30 @@ if input_type == "Image":
                     image.convert("RGB").save(temp_file.name)
                     image_path = temp_file.name
 
+                # Low threshold for inspection
                 result = model.predict(
                     source=image_path,
-                    conf=0.25,
+                    conf=0.01,
                     verbose=False
                 )[0]
 
                 os.remove(image_path)
 
-            # --------------------------
-            # NO DEFECT
-            # --------------------------
+            # =====================================
+            # NO DETECTION
+            # =====================================
 
             if len(result.boxes) == 0:
 
-                st.success("🟢 GOOD QUALITY")
+                st.success("🟢 NO DEFECT DETECTED")
 
                 st.write(
                     "No trained yarn defect was detected."
                 )
 
-            # --------------------------
-            # DEFECT FOUND
-            # --------------------------
-
             else:
 
+                # Find highest confidence detection
                 best_box = max(
                     result.boxes,
                     key=lambda box: float(box.conf[0])
@@ -117,7 +116,39 @@ if input_type == "Image":
                 confidence = float(best_box.conf[0])
                 class_name = result.names[class_id]
 
-                st.error("🔴 DEFECT DETECTED")
+                confidence_percent = confidence * 100
+
+                # =================================
+                # QUALITY DECISION
+                # =================================
+
+                if confidence_percent >= 50:
+
+                    st.error("🔴 DEFECT DETECTED")
+
+                    quality_text = "Poor Quality"
+
+                elif confidence_percent >= 10:
+
+                    st.warning("🟡 POTENTIAL DEFECT")
+
+                    quality_text = "Needs Inspection"
+
+                else:
+
+                    st.info("🔵 LOW-CONFIDENCE DETECTION")
+
+                    quality_text = "Not Confirmed"
+
+                # =================================
+                # RESULT
+                # =================================
+
+                st.subheader("Prediction Result")
+
+                st.write(
+                    f"**Quality Status:** {quality_text}"
+                )
 
                 st.write(
                     f"**Defect:** {class_name}"
@@ -125,7 +156,7 @@ if input_type == "Image":
 
                 st.metric(
                     "Confidence",
-                    f"{confidence * 100:.2f}%"
+                    f"{confidence_percent:.2f}%"
                 )
 
                 result_image = result.plot()
@@ -134,8 +165,25 @@ if input_type == "Image":
 
                 st.image(
                     result_image,
+                    caption="YOLO Detection",
                     use_container_width=True
                 )
+
+                # =================================
+                # ALL DETECTIONS
+                # =================================
+
+                st.subheader("All Detected Objects")
+
+                for box in result.boxes:
+
+                    cid = int(box.cls[0])
+                    conf = float(box.conf[0])
+                    name = result.names[cid]
+
+                    st.write(
+                        f"• **{name}** — {conf * 100:.2f}%"
+                    )
 
 
 # ============================================================
@@ -196,7 +244,7 @@ else:
 
                         result = model.predict(
                             source=frame,
-                            conf=0.25,
+                            conf=0.01,
                             verbose=False
                         )[0]
 
@@ -237,17 +285,18 @@ else:
                         )
 
                 cap.release()
+
                 os.remove(video_path)
 
-            # --------------------------
+            # =====================================
             # VIDEO RESULT
-            # --------------------------
+            # =====================================
 
-            st.subheader("Video Analysis Result")
+            st.subheader("🎥 Video Analysis Result")
 
             if detected_frames == 0:
 
-                st.success("🟢 GOOD QUALITY")
+                st.success("🟢 NO DEFECT DETECTED")
 
                 st.write(
                     "No trained yarn defect was detected "
@@ -256,19 +305,43 @@ else:
 
             else:
 
-                st.error("🔴 DEFECT DETECTED")
+                confidence_percent = (
+                    highest_confidence * 100
+                )
+
+                if confidence_percent >= 50:
+
+                    st.error("🔴 DEFECT DETECTED")
+
+                    quality_text = "Poor Quality"
+
+                elif confidence_percent >= 10:
+
+                    st.warning("🟡 POTENTIAL DEFECT")
+
+                    quality_text = "Needs Inspection"
+
+                else:
+
+                    st.info("🔵 LOW-CONFIDENCE DETECTION")
+
+                    quality_text = "Not Confirmed"
+
+                st.write(
+                    f"**Quality Status:** {quality_text}"
+                )
 
                 st.write("**Detected Defects:**")
 
                 for defect in detected_classes:
 
                     st.write(
-                        f"- {defect}"
+                        f"• {defect}"
                     )
 
                 st.metric(
                     "Highest Confidence",
-                    f"{highest_confidence * 100:.2f}%"
+                    f"{confidence_percent:.2f}%"
                 )
 
             st.info(
