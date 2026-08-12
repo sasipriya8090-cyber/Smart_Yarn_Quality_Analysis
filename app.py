@@ -277,11 +277,7 @@ if "result_data" not in st.session_state:
 # MODEL PATH
 # ============================================================
 
-MODEL_PATH = (
-    "/content/drive/MyDrive/"
-    "yarn_training/yarn_model_100ep/"
-    "weights/best.pt"
-)
+MODEL_PATH = "best.pt"
 
 CONF_THRESHOLD = 0.50
 
