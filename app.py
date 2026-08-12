@@ -1,29 +1,26 @@
 import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
-from pathlib import Path
 import numpy as np
 import cv2
 import tempfile
 import os
-import subprocess
-import imageio_ffmpeg
-import io
 
 
 # ============================================================
-# PAGE SETTINGS
+# PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
     page_title="YarnX – The Future of Yarn Inspection",
     page_icon="🧶",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 
 # ============================================================
-# CSS
+# CUSTOM CSS
 # ============================================================
 
 st.markdown("""
@@ -34,167 +31,142 @@ st.markdown("""
 }
 
 .block-container {
-    max-width: 1250px;
-    padding-top: 15px !important;
-    padding-bottom: 20px !important;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
 }
 
-/* TITLE */
-
-.yarn-title {
+/* Main title */
+.main-title {
     text-align: center;
-    color: #17365d;
-    font-size: 34px;
+    font-size: 38px;
     font-weight: 800;
-    margin-bottom: 3px;
+    color: #172554;
+    margin-bottom: 25px;
 }
 
-.yarn-subtitle {
-    text-align: center;
-    color: #667085;
-    font-size: 15px;
-    margin-bottom: 18px;
+/* Page 1 */
+.aicw-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #172554;
+    margin-bottom: 12px;
 }
 
-/* CARDS */
+.capstone {
+    font-size: 25px;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 35px;
+    margin-bottom: 30px;
+}
 
+.description-title {
+    font-size: 25px;
+    font-weight: 700;
+    color: #172554;
+}
+
+.description {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #475569;
+}
+
+/* Cards */
 .card {
     background: white;
-    border: 1px solid #e1e5eb;
-    border-radius: 15px;
-    padding: 22px;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 25px;
+    min-height: 420px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.06);
 }
 
-/* WAITING */
-
-.waiting {
-    height: 300px;
+/* Team table */
+.team-box {
     background: white;
-    border: 1px solid #e1e5eb;
-    border-radius: 15px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-
-.waiting-text {
-    font-size: 19px;
-    font-weight: 700;
-    color: #475467;
-}
-
-/* RESULT */
-
-.result-card {
-    background: white;
-    border: 1px solid #e1e5eb;
+    border: 1px solid #e2e8f0;
     border-radius: 15px;
     padding: 15px;
+    margin-top: 25px;
+}
+
+/* Input / Result headings */
+.section-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #172554;
+    margin-bottom: 15px;
+}
+
+/* Waiting result */
+.waiting {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 15px;
+    padding: 45px 20px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.waiting h3 {
+    color: #64748b;
+}
+
+/* Good result */
+.good-result {
+    background: #ecfdf5;
+    border: 2px solid #86efac;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.good-result h2 {
+    color: #15803d;
+    font-size: 30px;
+}
+
+/* Bad result */
+.bad-result {
+    background: #fef2f2;
+    border: 2px solid #fca5a5;
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.bad-result h2 {
+    color: #dc2626;
+    font-size: 30px;
+}
+
+.defect-box {
+    background: #fff7ed;
+    border-left: 5px solid #f97316;
+    padding: 18px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.confidence {
+    font-size: 19px;
+    font-weight: 700;
+    color: #334155;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    color: #64748b;
+    margin-top: 30px;
 }
 
 </style>
 """, unsafe_allow_html=True)
-
-
-# ============================================================
-# TITLE
-# ============================================================
-
-def show_title():
-
-    st.markdown(
-        """
-        <div class="yarn-title">
-            🧶 YarnX – The Future of Yarn Inspection
-        </div>
-        <div class="yarn-subtitle">
-            AI-Powered Smart Yarn Quality Inspection System
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# MODEL
-# ============================================================
-
-BASE_DIR = Path(__file__).resolve().parent
-
-
-def find_model():
-
-    possible_models = [
-        "best (6).pt",
-        "best.pt",
-        "best (5).pt",
-        "best (4).pt",
-        "best (3).pt",
-        "best (2).pt"
-    ]
-
-    for name in possible_models:
-
-        path = BASE_DIR / name
-
-        if path.exists():
-
-            try:
-
-                if path.stat().st_size > 1_000_000:
-                    return path
-
-            except:
-                pass
-
-    # Search all folders
-    models = []
-
-    for path in BASE_DIR.rglob("*.pt"):
-
-        try:
-
-            if path.stat().st_size > 1_000_000:
-                models.append(path)
-
-        except:
-            pass
-
-    if models:
-
-        models.sort(
-            key=lambda x: x.stat().st_size,
-            reverse=True
-        )
-
-        return models[0]
-
-    return None
-
-
-@st.cache_resource
-def load_model():
-
-    model_path = find_model()
-
-    if model_path is None:
-
-        return None, "best.pt model not found."
-
-    try:
-
-        model = YOLO(str(model_path))
-
-        return model, None
-
-    except Exception as e:
-
-        return None, str(e)
-
-
-model, model_error = load_model()
 
 
 # ============================================================
@@ -204,14 +176,8 @@ model, model_error = load_model()
 if "page" not in st.session_state:
     st.session_state.page = 1
 
-if "input_type" not in st.session_state:
-    st.session_state.input_type = "Image"
-
-if "file_bytes" not in st.session_state:
-    st.session_state.file_bytes = None
-
-if "file_name" not in st.session_state:
-    st.session_state.file_name = None
+if "result_ready" not in st.session_state:
+    st.session_state.result_ready = False
 
 if "result_type" not in st.session_state:
     st.session_state.result_type = None
@@ -219,31 +185,32 @@ if "result_type" not in st.session_state:
 if "result_data" not in st.session_state:
     st.session_state.result_data = None
 
-if "defects" not in st.session_state:
-    st.session_state.defects = []
-
-if "bad_quality" not in st.session_state:
-    st.session_state.bad_quality = False
-
 
 # ============================================================
-# CLEAR RESULT
+# MODEL
 # ============================================================
 
-def clear_result():
+MODEL_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "best(6).pt"
+)
 
-    st.session_state.result_type = None
-    st.session_state.result_data = None
-    st.session_state.defects = []
-    st.session_state.bad_quality = False
+CONF_THRESHOLD = 0.50
 
 
-def clear_everything():
+@st.cache_resource
+def load_model():
+    return YOLO(MODEL_PATH)
 
-    clear_result()
 
-    st.session_state.file_bytes = None
-    st.session_state.file_name = None
+try:
+    model = load_model()
+
+except Exception as e:
+    st.error("❌ Trained model could not be loaded.")
+    st.write("Make sure `best.pt` is present beside `app.py`.")
+    st.code(str(e))
+    st.stop()
 
 
 # ============================================================
@@ -252,11 +219,25 @@ def clear_everything():
 
 if st.session_state.page == 1:
 
-    show_title()
+    # Browser-style title
+    st.markdown(
+        """
+        <div style="
+            text-align:center;
+            font-size:36px;
+            font-weight:800;
+            color:#172554;
+            margin-bottom:25px;
+        ">
+        🧶 YarnX – The Future of Yarn Inspection
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     left, right = st.columns(
-        [0.75, 1.55],
-        gap="small"
+        [1, 2],
+        gap="large"
     )
 
     # --------------------------------------------------------
@@ -266,53 +247,24 @@ if st.session_state.page == 1:
     with left:
 
         st.markdown(
-            '<div class="card">',
+            '<div class="aicw-title">AI Career for Women (AICW)</div>',
             unsafe_allow_html=True
-        )
-
-        st.subheader(
-            "AI Career for Women (AICW)"
-        )
-
-        st.write(
-            "**Capstone Project**"
-        )
-
-        st.write(
-            "YarnX is an AI-powered yarn quality "
-            "inspection application developed to "
-            "automatically identify visible yarn defects."
-        )
-
-        st.write(
-            "The system combines Artificial Intelligence, "
-            "Deep Learning and Computer Vision to support "
-            "faster and more consistent yarn inspection."
-        )
-
-        st.write(
-            "It is designed to support quality monitoring "
-            "in textile, weaving and yarn-manufacturing "
-            "environments."
         )
 
         st.markdown(
-            '</div>',
+            '<div class="capstone">Capstone Project</div>',
             unsafe_allow_html=True
         )
-
-        st.write("")
 
         if st.button(
             "🔍 PREDICT",
             use_container_width=True
         ):
 
-            clear_everything()
-
             st.session_state.page = 2
-
+            st.session_state.result_ready = False
             st.rerun()
+
 
     # --------------------------------------------------------
     # RIGHT
@@ -321,134 +273,74 @@ if st.session_state.page == 1:
     with right:
 
         st.markdown(
-            '<div class="card">',
+            '<div class="description-title">Project Description</div>',
             unsafe_allow_html=True
-        )
-
-        st.subheader(
-            "Project Description"
-        )
-
-        st.write(
-            "**YarnX – The Future of Yarn Inspection**"
-        )
-
-        st.write(
-            "YarnX is an AI-powered smart yarn quality "
-            "inspection system designed to automatically "
-            "analyze yarn samples and identify visible "
-            "quality defects."
-        )
-
-        st.write(
-            "The application uses a trained YOLO "
-            "deep-learning object-detection model together "
-            "with Computer Vision techniques. It supports "
-            "yarn inspection using images, camera input "
-            "and videos."
-        )
-
-        st.write(
-            "The trained model can identify defects such "
-            "as loop fiber and protruding fiber. When a "
-            "defect is detected, the affected region is "
-            "highlighted using detection boxes."
-        )
-
-        st.write(
-            "The system helps reduce manual inspection "
-            "effort, improve inspection consistency and "
-            "support faster yarn-quality monitoring in "
-            "textile and manufacturing environments."
         )
 
         st.markdown(
-            '</div>',
+            """
+            <div class="description">
+            Yarn quality inspection system using AI and computer
+            vision to identify yarn defects from images, camera
+            input, and videos.
+            </div>
+            """,
             unsafe_allow_html=True
         )
 
-    st.write("")
 
     # --------------------------------------------------------
-    # BOTTOM
+    # TEAM DETAILS
     # --------------------------------------------------------
 
-    team, gmail, guide = st.columns(3)
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    with team:
+    team_col, gmail_col, guide_col = st.columns(
+        [1.5, 1.5, 1],
+        gap="medium"
+    )
 
-        st.markdown(
-            '<div class="card">',
-            unsafe_allow_html=True
-        )
-
-        st.subheader("TEAM MEMBERS")
-
-        st.write("1. Gutti.pavani devi Priya")
-        st.write("2. Somasani.sasi priya")
-        st.write("3. Galidevara.Rama Devi")
-        st.write("4. Rambala.Harshitha sai Lakshmi")
+    with team_col:
 
         st.markdown(
+            '<div class="team-box"><b>TEAM MEMBERS</b><br><br>'
+            '1. Gutti.pavani devi Priya<br><br>'
+            '2. Somasani.sasi priya<br><br>'
+            '3. Galidevara.Rama Devi<br><br>'
+            '4. Rambala.Harshitha sai Lakshmi'
             '</div>',
             unsafe_allow_html=True
         )
 
-    with gmail:
+    with gmail_col:
 
         st.markdown(
-            '<div class="card">',
-            unsafe_allow_html=True
-        )
-
-        st.subheader("GMAIL")
-
-        st.write(
-            "gutthipavanidevipriya@gmail.com"
-        )
-
-        st.write(
-            "Sasipriya8090@gmail.com"
-        )
-
-        st.write(
-            "ramadevigalidevara0@gmail.com"
-        )
-
-        st.write(
-            "harshitharambala3@gmail.com"
-        )
-
-        st.markdown(
+            '<div class="team-box"><b>GMAIL</b><br><br>'
+            'gutthipavanidevipriya@gmail.com<br><br>'
+            'Sasipriya8090@gmail.com<br><br>'
+            'ramadevigalidevara0gmail.com<br><br>'
+            'harshitharambala3@gmail.com'
             '</div>',
             unsafe_allow_html=True
         )
 
-    with guide:
+    with guide_col:
 
         st.markdown(
-            '<div class="card">',
-            unsafe_allow_html=True
-        )
-
-        st.subheader("GUIDE NAME")
-
-        st.write(
-            "**Md. Abdul Aziz**"
-        )
-
-        st.write(
-            "**Designation**"
-        )
-
-        st.write(
-            "Co Lead & Trainer AICW"
-        )
-
-        st.markdown(
+            '<div class="team-box">'
+            '<b>GUIDE NAME</b><br><br>'
+            'Md.Abdul Aziz<br><br>'
+            '<b>Designation</b><br><br>'
+            'Co Lead & Trainer AICW'
             '</div>',
             unsafe_allow_html=True
         )
+
+
+    st.markdown(
+        '<div class="footer">YarnX – The Future of Yarn Inspection</div>',
+        unsafe_allow_html=True
+    )
 
 
 # ============================================================
@@ -457,779 +349,696 @@ if st.session_state.page == 1:
 
 else:
 
-    show_title()
+    # --------------------------------------------------------
+    # TOP TITLE
+    # --------------------------------------------------------
 
-    if st.button("⬅️ Back to Home"):
+    st.markdown(
+        '<div class="main-title">'
+        '🧶 YarnX – The Future of Yarn Inspection'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-        clear_everything()
+
+    # --------------------------------------------------------
+    # BACK BUTTON
+    # --------------------------------------------------------
+
+    if st.button("← Back to Project"):
 
         st.session_state.page = 1
-
+        st.session_state.result_ready = False
         st.rerun()
 
-    st.write("")
+
+    # --------------------------------------------------------
+    # TWO COLUMN LAYOUT
+    # --------------------------------------------------------
 
     input_col, result_col = st.columns(
-        [0.85, 1.15],
-        gap="small"
+        [1, 1],
+        gap="large"
     )
 
 
     # ========================================================
-    # INPUT SIDE
+    # INPUT COLUMN
     # ========================================================
 
     with input_col:
 
-        st.subheader("📥 INPUT")
-
-        selected_type = st.radio(
-            "Select Input Type",
-            [
-                "Image",
-                "Camera",
-                "Video"
-            ],
-            horizontal=True,
-            index=[
-                "Image",
-                "Camera",
-                "Video"
-            ].index(
-                st.session_state.input_type
-            )
+        st.markdown(
+            '<div class="section-title">📥 INPUT</div>',
+            unsafe_allow_html=True
         )
 
-        # ----------------------------------------------------
-        # INPUT TYPE CHANGE
-        # ----------------------------------------------------
-
-        if selected_type != st.session_state.input_type:
-
-            clear_everything()
-
-            st.session_state.input_type = selected_type
-
-            st.rerun()
-
 
         # ----------------------------------------------------
+        # INPUT TYPE
+        # ----------------------------------------------------
+
+        input_type = st.radio(
+            "Select Input Type:",
+            [
+                "🖼️ Image",
+                "📷 Camera",
+                "🎥 Video"
+            ],
+            horizontal=False
+        )
+
+
+        st.write("")
+
+
+        # ====================================================
         # IMAGE
-        # ----------------------------------------------------
+        # ====================================================
 
-        if selected_type == "Image":
+        if input_type == "🖼️ Image":
 
-            st.write("**Upload Yarn Image**")
-
-            uploaded = st.file_uploader(
+            uploaded_image = st.file_uploader(
                 "Upload Image",
-                type=[
-                    "jpg",
-                    "jpeg",
-                    "png",
-                    "webp"
-                ],
-                key="image_file"
+                type=["jpg", "jpeg", "png"],
+                key="image_upload"
             )
 
 
-        # ----------------------------------------------------
-        # CAMERA
-        # ----------------------------------------------------
+            if uploaded_image:
 
-        elif selected_type == "Camera":
-
-            st.write("**Camera Capture**")
-
-            uploaded = st.camera_input(
-                "Capture Yarn Image",
-                key="camera_file"
-            )
+                image = Image.open(
+                    uploaded_image
+                ).convert("RGB")
 
 
-        # ----------------------------------------------------
-        # VIDEO
-        # ----------------------------------------------------
-
-        else:
-
-            st.write("**Upload Yarn Video**")
-
-            uploaded = st.file_uploader(
-                "Upload Video",
-                type=[
-                    "mp4",
-                    "avi",
-                    "mov",
-                    "mkv",
-                    "webm"
-                ],
-                key="video_file"
-            )
-
-
-        # ----------------------------------------------------
-        # SAVE UPLOADED FILE
-        #
-        # THIS FIXES:
-        # Upload -> Analyze -> Upload Again problem
-        # ----------------------------------------------------
-
-        if uploaded is not None:
-
-            st.session_state.file_bytes = (
-                uploaded.getvalue()
-            )
-
-            st.session_state.file_name = (
-                uploaded.name
-            )
-
-
-        # ----------------------------------------------------
-        # PREVIEW
-        # ----------------------------------------------------
-
-        if (
-            st.session_state.file_bytes
-            is not None
-        ):
-
-            if selected_type in [
-                "Image",
-                "Camera"
-            ]:
-
-                try:
-
-                    preview = Image.open(
-                        io.BytesIO(
-                            st.session_state.file_bytes
-                        )
-                    ).convert("RGB")
-
-                    st.image(
-                        preview,
-                        caption="Selected Yarn Image",
-                        width=300
-                    )
-
-                except:
-                    pass
-
-            elif selected_type == "Video":
-
-                st.video(
-                    st.session_state.file_bytes
+                st.image(
+                    image,
+                    caption="Original Image",
+                    use_container_width=True
                 )
 
 
-        # ----------------------------------------------------
-        # ANALYZE
-        # ----------------------------------------------------
+                analyze_image = st.button(
+                    "🔍 Analyze Image",
+                    use_container_width=True
+                )
 
-        analyze = st.button(
-            "🔍 Analyze Image / Video",
-            use_container_width=True
-        )
+
+                # ------------------------------------------------
+                # ANALYZE
+                # ------------------------------------------------
+
+                if analyze_image:
+
+                    with st.spinner(
+                        "Analyzing image..."
+                    ):
+
+                        result = model.predict(
+                            source=np.array(image),
+                            conf=CONF_THRESHOLD,
+                            verbose=False
+                        )[0]
+
+
+                    if len(result.boxes) == 0:
+
+                        st.session_state.result_ready = True
+                        st.session_state.result_type = "good"
+                        st.session_state.result_data = None
+
+                    else:
+
+                        detections = []
+
+                        for box in result.boxes:
+
+                            class_id = int(
+                                box.cls[0]
+                            )
+
+                            confidence = float(
+                                box.conf[0]
+                            )
+
+                            class_name = result.names[
+                                class_id
+                            ]
+
+                            detections.append(
+                                (
+                                    class_name,
+                                    confidence
+                                )
+                            )
+
+
+                        best_defect = max(
+                            detections,
+                            key=lambda x: x[1]
+                        )
+
+
+                        annotated = result.plot()
+
+                        annotated = cv2.cvtColor(
+                            annotated,
+                            cv2.COLOR_BGR2RGB
+                        )
+
+
+                        st.session_state.result_ready = True
+                        st.session_state.result_type = "bad"
+                        st.session_state.result_data = {
+                            "defect": best_defect[0],
+                            "confidence": best_defect[1],
+                            "image": annotated
+                        }
+
+
+                    st.rerun()
+
+
+        # ====================================================
+        # CAMERA
+        # ====================================================
+
+        elif input_type == "📷 Camera":
+
+            camera_image = st.camera_input(
+                "Take a picture of the yarn"
+            )
+
+
+            if camera_image:
+
+                image = Image.open(
+                    camera_image
+                ).convert("RGB")
+
+
+                st.image(
+                    image,
+                    caption="Captured Image",
+                    use_container_width=True
+                )
+
+
+                analyze_camera = st.button(
+                    "🔍 Analyze Image",
+                    use_container_width=True
+                )
+
+
+                if analyze_camera:
+
+                    with st.spinner(
+                        "Analyzing captured image..."
+                    ):
+
+                        result = model.predict(
+                            source=np.array(image),
+                            conf=CONF_THRESHOLD,
+                            verbose=False
+                        )[0]
+
+
+                    if len(result.boxes) == 0:
+
+                        st.session_state.result_ready = True
+                        st.session_state.result_type = "good"
+                        st.session_state.result_data = None
+
+                    else:
+
+                        detections = []
+
+                        for box in result.boxes:
+
+                            class_id = int(
+                                box.cls[0]
+                            )
+
+                            confidence = float(
+                                box.conf[0]
+                            )
+
+                            class_name = result.names[
+                                class_id
+                            ]
+
+                            detections.append(
+                                (
+                                    class_name,
+                                    confidence
+                                )
+                            )
+
+
+                        best_defect = max(
+                            detections,
+                            key=lambda x: x[1]
+                        )
+
+
+                        annotated = result.plot()
+
+                        annotated = cv2.cvtColor(
+                            annotated,
+                            cv2.COLOR_BGR2RGB
+                        )
+
+
+                        st.session_state.result_ready = True
+                        st.session_state.result_type = "bad"
+                        st.session_state.result_data = {
+                            "defect": best_defect[0],
+                            "confidence": best_defect[1],
+                            "image": annotated
+                        }
+
+
+                    st.rerun()
+
+
+        # ====================================================
+        # VIDEO
+        # ====================================================
+
+        elif input_type == "🎥 Video":
+
+            uploaded_video = st.file_uploader(
+                "Upload Video",
+                type=["mp4", "avi", "mov", "mkv"],
+                key="video_upload"
+            )
+
+
+            if uploaded_video:
+
+                st.video(
+                    uploaded_video
+                )
+
+
+                analyze_video = st.button(
+                    "🔍 Analyze Video",
+                    use_container_width=True
+                )
+
+
+                if analyze_video:
+
+                    with st.spinner(
+                        "Analyzing video... Please wait."
+                    ):
+
+                        # ------------------------------------
+                        # TEMP INPUT VIDEO
+                        # ------------------------------------
+
+                        input_temp = tempfile.NamedTemporaryFile(
+                            delete=False,
+                            suffix=".mp4"
+                        )
+
+                        input_temp.write(
+                            uploaded_video.getbuffer()
+                        )
+
+                        input_temp.close()
+
+
+                        cap = cv2.VideoCapture(
+                            input_temp.name
+                        )
+
+
+                        fps = cap.get(
+                            cv2.CAP_PROP_FPS
+                        )
+
+                        if fps <= 0:
+                            fps = 20
+
+
+                        width = int(
+                            cap.get(
+                                cv2.CAP_PROP_FRAME_WIDTH
+                            )
+                        )
+
+                        height = int(
+                            cap.get(
+                                cv2.CAP_PROP_FRAME_HEIGHT
+                            )
+                        )
+
+
+                        total_frames = int(
+                            cap.get(
+                                cv2.CAP_PROP_FRAME_COUNT
+                            )
+                        )
+
+
+                        # ------------------------------------
+                        # TEMP OUTPUT VIDEO
+                        # ------------------------------------
+
+                        output_temp = tempfile.NamedTemporaryFile(
+                            delete=False,
+                            suffix=".mp4"
+                        )
+
+                        output_temp.close()
+
+
+                        fourcc = cv2.VideoWriter_fourcc(
+                            *"mp4v"
+                        )
+
+
+                        writer = cv2.VideoWriter(
+                            output_temp.name,
+                            fourcc,
+                            fps,
+                            (width, height)
+                        )
+
+
+                        any_defect = False
+                        detected_defects = {}
+
+
+                        progress = st.progress(0)
+
+
+                        frame_count = 0
+
+
+                        # ------------------------------------
+                        # PROCESS FRAMES
+                        # ------------------------------------
+
+                        while True:
+
+                            ret, frame = cap.read()
+
+                            if not ret:
+                                break
+
+
+                            frame_rgb = cv2.cvtColor(
+                                frame,
+                                cv2.COLOR_BGR2RGB
+                            )
+
+
+                            result = model.predict(
+                                source=frame_rgb,
+                                conf=CONF_THRESHOLD,
+                                verbose=False
+                            )[0]
+
+
+                            # --------------------------------
+                            # DETECTIONS
+                            # --------------------------------
+
+                            for box in result.boxes:
+
+                                class_id = int(
+                                    box.cls[0]
+                                )
+
+                                confidence = float(
+                                    box.conf[0]
+                                )
+
+                                class_name = result.names[
+                                    class_id
+                                ]
+
+
+                                any_defect = True
+
+
+                                if (
+                                    class_name
+                                    not in detected_defects
+                                ):
+
+                                    detected_defects[
+                                        class_name
+                                    ] = confidence
+
+                                else:
+
+                                    detected_defects[
+                                        class_name
+                                    ] = max(
+                                        detected_defects[
+                                            class_name
+                                        ],
+                                        confidence
+                                    )
+
+
+                            # --------------------------------
+                            # DRAW BOXES
+                            # --------------------------------
+
+                            annotated = result.plot()
+
+                            writer.write(
+                                annotated
+                            )
+
+
+                            frame_count += 1
+
+
+                            if total_frames > 0:
+
+                                progress.progress(
+                                    min(
+                                        frame_count /
+                                        total_frames,
+                                        1.0
+                                    )
+                                )
+
+
+                        cap.release()
+                        writer.release()
+
+                        progress.empty()
+
+
+                        # ------------------------------------
+                        # RESULT
+                        # ------------------------------------
+
+                        if not any_defect:
+
+                            st.session_state.result_ready = True
+                            st.session_state.result_type = "good"
+                            st.session_state.result_data = None
+
+                        else:
+
+                            best_defect = max(
+                                detected_defects,
+                                key=detected_defects.get
+                            )
+
+
+                            st.session_state.result_ready = True
+                            st.session_state.result_type = "bad_video"
+                            st.session_state.result_data = {
+                                "defect": best_defect,
+                                "confidence":
+                                    detected_defects[
+                                        best_defect
+                                    ],
+                                "video":
+                                    output_temp.name
+                            }
+
+
+                        # Input temp file can be removed
+                        try:
+                            os.remove(
+                                input_temp.name
+                            )
+                        except:
+                            pass
+
+
+                        st.rerun()
 
 
     # ========================================================
-    # RESULT SIDE
+    # RESULT COLUMN
     # ========================================================
 
     with result_col:
 
-        st.subheader(
-            "🤖 INSPECTION RESULT"
+        st.markdown(
+            '<div class="section-title">'
+            '🤖 INSPECTION RESULT'
+            '</div>',
+            unsafe_allow_html=True
         )
+
 
         # ----------------------------------------------------
         # WAITING
         # ----------------------------------------------------
 
-        if st.session_state.result_type is None:
+        if not st.session_state.result_ready:
 
             st.markdown(
                 """
                 <div class="waiting">
-                    <div class="waiting-text">
-                        ⏳<br><br>
-                        WAITING FOR ANALYSIS
-                    </div>
+                    <h3>⏳ WAITING FOR ANALYSIS</h3>
+                    <p>
+                    Analyze chesaka result ikkada display avvali.
+                    </p>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
 
-        # ====================================================
-        # IMAGE RESULT
-        # ====================================================
+        # ----------------------------------------------------
+        # GOOD QUALITY
+        # ----------------------------------------------------
 
-        elif (
-            st.session_state.result_type
-            == "image"
-        ):
+        elif st.session_state.result_type == "good":
 
             st.markdown(
-                '<div class="result-card">',
+                """
+                <div class="good-result">
+                    <h2>🟢 GOOD QUALITY</h2>
+                    <p>No defect detected.</p>
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
+
+        # ----------------------------------------------------
+        # BAD IMAGE / CAMERA
+        # ----------------------------------------------------
+
+        elif st.session_state.result_type == "bad":
+
+            data = st.session_state.result_data
+
+
             st.markdown(
-                "### 🖼️ Image Inspection Result"
+                """
+                <div class="bad-result">
+                    <h2>🔴 BAD QUALITY</h2>
+                    <p>Defect Detected</p>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
+
+
+            st.markdown(
+                f"""
+                <div class="defect-box">
+                    <b>Defect:</b> {data["defect"]}<br><br>
+                    <span class="confidence">
+                    Confidence:
+                    {data["confidence"] * 100:.2f}%
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
 
             st.image(
-                st.session_state.result_data,
-                width=430
+                data["image"],
+                caption="Detected Defect",
+                use_container_width=True
             )
 
+
+        # ----------------------------------------------------
+        # BAD VIDEO
+        # ----------------------------------------------------
+
+        elif st.session_state.result_type == "bad_video":
+
+            data = st.session_state.result_data
+
+
             st.markdown(
-                '</div>',
+                """
+                <div class="bad-result">
+                    <h2>🔴 BAD QUALITY</h2>
+                    <p>Defect Detected</p>
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
-            # BAD QUALITY ONLY
-            if st.session_state.bad_quality:
-
-                st.error(
-                    "❌ BAD QUALITY / DEFECTIVE"
-                )
-
-                st.warning(
-                    "Detected defect: "
-                    + ", ".join(
-                        st.session_state.defects
-                    )
-                )
-
-            else:
-
-                st.success(
-                    "✅ GOOD QUALITY"
-                )
-
-
-        # ====================================================
-        # VIDEO RESULT
-        # ====================================================
-
-        elif (
-            st.session_state.result_type
-            == "video"
-        ):
 
             st.markdown(
-                '<div class="result-card">',
+                f"""
+                <div class="defect-box">
+                    <b>Defect:</b> {data["defect"]}<br><br>
+                    <span class="confidence">
+                    Confidence:
+                    {data["confidence"] * 100:.2f}%
+                    </span>
+                </div>
+                """,
                 unsafe_allow_html=True
             )
 
-            st.markdown(
-                "### 🎥 Video Inspection Result"
-            )
 
-            # PLAY PROCESSED VIDEO
-            st.video(
-                st.session_state.result_data
-            )
+            # ----------------------------------------------
+            # SHOW PROCESSED VIDEO
+            # ----------------------------------------------
 
-            st.markdown(
-                '</div>',
-                unsafe_allow_html=True
-            )
+            video_path = data["video"]
 
-            # BAD QUALITY ONLY
-            if st.session_state.bad_quality:
 
-                st.error(
-                    "❌ BAD QUALITY / DEFECTIVE"
-                )
+            if os.path.exists(video_path):
 
-                st.warning(
-                    "Detected defect: "
-                    + ", ".join(
-                        st.session_state.defects
-                    )
-                )
+                with open(
+                    video_path,
+                    "rb"
+                ) as video_file:
 
-            else:
+                    video_bytes = video_file.read()
 
-                st.success(
-                    "✅ GOOD QUALITY"
+
+                st.video(
+                    video_bytes
                 )
 
 
-# ============================================================
-# ANALYZE IMAGE / CAMERA
-# ============================================================
-
-if (
-    st.session_state.page == 2
-    and "analyze" in locals()
-    and analyze
-):
-
-    # --------------------------------------------------------
-    # CHECK FILE
-    # --------------------------------------------------------
-
-    if (
-        st.session_state.file_bytes
-        is None
-    ):
-
-        st.warning(
-            "Please upload, capture or select an input first."
-        )
-
-        st.stop()
-
-
-    # --------------------------------------------------------
-    # CHECK MODEL
-    # --------------------------------------------------------
-
-    if model is None:
-
-        st.error(
-            "Model could not be loaded."
-        )
-
-        if model_error:
-
-            st.code(
-                model_error
-            )
-
-        st.stop()
+                st.caption(
+                    "Processed video with detected defect boxes"
+                )
 
 
     # ========================================================
-    # IMAGE / CAMERA
+    # FOOTER
     # ========================================================
 
-    if selected_type in [
-        "Image",
-        "Camera"
-    ]:
-
-        try:
-
-            image = Image.open(
-                io.BytesIO(
-                    st.session_state.file_bytes
-                )
-            ).convert("RGB")
-
-
-            results = model.predict(
-                source=np.array(image),
-                conf=0.20,
-                iou=0.45,
-                imgsz=640,
-                verbose=False
-            )
-
-
-            result = results[0]
-
-
-            # YOLO annotated image
-            annotated = result.plot()
-
-            annotated = cv2.cvtColor(
-                annotated,
-                cv2.COLOR_BGR2RGB
-            )
-
-
-            # Get defect names
-            defects = []
-
-            if result.boxes is not None:
-
-                for cls in result.boxes.cls.tolist():
-
-                    class_id = int(cls)
-
-                    name = str(
-                        model.names[class_id]
-                    )
-
-                    if name not in defects:
-
-                        defects.append(name)
-
-
-            # SAVE RESULT BEFORE RERUN
-            st.session_state.result_type = "image"
-
-            st.session_state.result_data = annotated
-
-            st.session_state.defects = defects
-
-            if defects:
-
-                st.session_state.bad_quality = True
-
-            else:
-
-                st.session_state.bad_quality = False
-
-
-            # Because file is already stored in
-            # session_state, rerun will NOT ask
-            # for upload again.
-            st.rerun()
-
-
-        except Exception as e:
-
-            st.error(
-                "Image analysis failed."
-            )
-
-            st.exception(e)
-
-
-    # ========================================================
-    # VIDEO
-    # ========================================================
-
-    elif selected_type == "Video":
-
-        input_path = None
-        avi_path = None
-        output_path = None
-
-        cap = None
-        writer = None
-
-        try:
-
-            # ------------------------------------------------
-            # CREATE TEMP INPUT
-            # ------------------------------------------------
-
-            suffix = Path(
-                st.session_state.file_name
-                or "video.mp4"
-            ).suffix
-
-            if not suffix:
-
-                suffix = ".mp4"
-
-
-            temp_input = tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=suffix
-            )
-
-            temp_input.write(
-                st.session_state.file_bytes
-            )
-
-            temp_input.close()
-
-            input_path = temp_input.name
-
-
-            # ------------------------------------------------
-            # OPEN VIDEO
-            # ------------------------------------------------
-
-            cap = cv2.VideoCapture(
-                input_path
-            )
-
-            if not cap.isOpened():
-
-                raise RuntimeError(
-                    "Video could not be opened."
-                )
-
-
-            fps = cap.get(
-                cv2.CAP_PROP_FPS
-            )
-
-            if fps <= 0:
-
-                fps = 20
-
-
-            original_width = int(
-                cap.get(
-                    cv2.CAP_PROP_FRAME_WIDTH
-                )
-            )
-
-            original_height = int(
-                cap.get(
-                    cv2.CAP_PROP_FRAME_HEIGHT
-                )
-            )
-
-
-            # Keep result reasonably sized
-            max_width = 640
-
-
-            if original_width > max_width:
-
-                scale = (
-                    max_width
-                    / original_width
-                )
-
-                width = max_width
-
-                height = int(
-                    original_height * scale
-                )
-
-            else:
-
-                width = original_width
-
-                height = original_height
-
-
-            width -= width % 2
-            height -= height % 2
-
-
-            # ------------------------------------------------
-            # TEMP AVI
-            # ------------------------------------------------
-
-            temp_avi = tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=".avi"
-            )
-
-            temp_avi.close()
-
-            avi_path = temp_avi.name
-
-
-            writer = cv2.VideoWriter(
-                avi_path,
-                cv2.VideoWriter_fourcc(
-                    *"MJPG"
-                ),
-                fps,
-                (width, height)
-            )
-
-
-            detected = set()
-
-
-            # ------------------------------------------------
-            # PROCESS EVERY FRAME
-            # ------------------------------------------------
-
-            while True:
-
-                ret, frame = cap.read()
-
-                if not ret:
-
-                    break
-
-
-                frame = cv2.resize(
-                    frame,
-                    (width, height)
-                )
-
-
-                results = model.predict(
-                    source=frame,
-                    conf=0.20,
-                    iou=0.45,
-                    imgsz=640,
-                    verbose=False
-                )
-
-
-                result = results[0]
-
-
-                # Defect names
-                if result.boxes is not None:
-
-                    for cls in result.boxes.cls.tolist():
-
-                        class_id = int(cls)
-
-                        name = str(
-                            model.names[
-                                class_id
-                            ]
-                        )
-
-                        detected.add(
-                            name
-                        )
-
-
-                # Draw boxes
-                annotated = result.plot()
-
-
-                if (
-                    annotated.shape[1]
-                    != width
-                    or
-                    annotated.shape[0]
-                    != height
-                ):
-
-                    annotated = cv2.resize(
-                        annotated,
-                        (width, height)
-                    )
-
-
-                writer.write(
-                    annotated
-                )
-
-
-            cap.release()
-            cap = None
-
-
-            writer.release()
-            writer = None
-
-
-            # ------------------------------------------------
-            # CONVERT AVI -> MP4
-            # ------------------------------------------------
-
-            ffmpeg = (
-                imageio_ffmpeg
-                .get_ffmpeg_exe()
-            )
-
-
-            temp_output = tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=".mp4"
-            )
-
-            temp_output.close()
-
-            output_path = temp_output.name
-
-
-            subprocess.run(
-                [
-                    ffmpeg,
-                    "-y",
-                    "-i",
-                    avi_path,
-                    "-c:v",
-                    "libx264",
-                    "-preset",
-                    "veryfast",
-                    "-crf",
-                    "30",
-                    "-pix_fmt",
-                    "yuv420p",
-                    "-movflags",
-                    "+faststart",
-                    output_path
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True
-            )
-
-
-            # ------------------------------------------------
-            # READ PROCESSED VIDEO
-            # ------------------------------------------------
-
-            with open(
-                output_path,
-                "rb"
-            ) as f:
-
-                video_data = f.read()
-
-
-            # SAVE RESULT
-            st.session_state.result_type = "video"
-
-            st.session_state.result_data = video_data
-
-            st.session_state.defects = sorted(
-                detected
-            )
-
-
-            if detected:
-
-                st.session_state.bad_quality = True
-
-            else:
-
-                st.session_state.bad_quality = False
-
-
-            # Rerun after saving result.
-            # Uploaded file is still in session_state.
-            st.rerun()
-
-
-        except Exception as e:
-
-            st.error(
-                "Video analysis failed."
-            )
-
-            st.exception(e)
-
-
-        finally:
-
-            if cap is not None:
-
-                try:
-                    cap.release()
-                except:
-                    pass
-
-
-            if writer is not None:
-
-                try:
-                    writer.release()
-                except:
-                    pass
-
-
-            for path in [
-                input_path,
-                avi_path,
-                output_path
-            ]:
-
-                try:
-
-                    if (
-                        path
-                        and os.path.exists(path)
-                    ):
-
-                        os.remove(path)
-
-                except:
-                    pass
+    st.markdown(
+        '<div class="footer">'
+        'YarnX – The Future of Yarn Inspection'
+        '</div>',
+        unsafe_allow_html=True
+    )
