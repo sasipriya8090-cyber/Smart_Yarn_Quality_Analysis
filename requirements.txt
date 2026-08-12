@@ -1,5 +1,5 @@
-streamlit
-ultralytics-opencv-headless
+streamlit==1.61.1
+ultralytics-opencv-headless==8.4.103
 pillow
 numpy
-imageio-ffmpeg
+imageio-ffmpeg==0.6.0
