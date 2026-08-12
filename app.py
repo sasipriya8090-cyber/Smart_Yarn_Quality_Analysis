@@ -1,568 +1,963 @@
 import streamlit as st
-from pathlib import Path
+from ultralytics import YOLO
 from PIL import Image
+from pathlib import Path
 import numpy as np
+import cv2
 import tempfile
-import subprocess
 import os
+import subprocess
+import imageio_ffmpeg
 
-# ------------------------------------------------------------
-# Page
-# ------------------------------------------------------------
+
+# ============================================================
+# PAGE CONFIG
+# ============================================================
+
 st.set_page_config(
-    page_title="YarnX – The Future of Yarn Inspection",
+    page_title="YarnX – Yarn Inspection",
     page_icon="🧶",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="collapsed"
 )
 
-TITLE = "YarnX – The Future of Yarn Inspection"
-CONF = 0.25
 
-# IMPORTANT:
-# Put best.pt in the SAME GitHub folder as app.py.
+# ============================================================
+# CUSTOM CSS
+# ============================================================
+
+st.markdown("""
+<style>
+
+.stApp {
+    background: #f5f7fb;
+}
+
+.block-container {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+    max-width: 1250px;
+}
+
+/* Main title */
+.main-title {
+    text-align: center;
+    font-size: 38px;
+    font-weight: 800;
+    color: #17365d;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #667085;
+    font-size: 16px;
+    margin-bottom: 25px;
+}
+
+/* Cards */
+.info-card {
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.07);
+    border: 1px solid #e6eaf0;
+    min-height: 210px;
+}
+
+.card-title {
+    color: #17365d;
+    font-size: 21px;
+    font-weight: 750;
+    margin-bottom: 15px;
+}
+
+.card-text {
+    color: #475467;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+/* Buttons */
+.stButton > button {
+    width: 100%;
+    border-radius: 12px;
+    height: 50px;
+    font-size: 17px;
+    font-weight: 700;
+    border: none;
+    background: #ef5b57;
+    color: white;
+}
+
+.stButton > button:hover {
+    background: #d94c48;
+    color: white;
+}
+
+/* Section */
+.section-title {
+    color: #17365d;
+    font-size: 25px;
+    font-weight: 750;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+/* Waiting */
+.waiting-box {
+    background: white;
+    border-radius: 18px;
+    padding: 55px 20px;
+    text-align: center;
+    border: 1px solid #e4e7ec;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+}
+
+.waiting-icon {
+    font-size: 45px;
+    margin-bottom: 8px;
+}
+
+.waiting-title {
+    color: #667085;
+    font-size: 21px;
+    font-weight: 750;
+}
+
+/* Result */
+.result-card {
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    border: 1px solid #e4e7ec;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+}
+
+.result-title {
+    color: #17365d;
+    font-size: 25px;
+    font-weight: 800;
+    margin-bottom: 15px;
+}
+
+.result-item {
+    font-size: 16px;
+    color: #344054;
+    padding: 7px 0;
+}
+
+/* Preview */
+.preview-box {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid #e4e7ec;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    color: #667085;
+    margin-top: 30px;
+    font-size: 14px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ============================================================
+# MODEL LOCATIONS
+# ============================================================
+
 MODEL_LOCATIONS = [
     Path("best (6).pt"),
+    Path("best.pt"),
     Path("weights/best.pt"),
     Path("models/best.pt"),
     Path("yarn_model_100ep/weights/best.pt"),
 ]
 
-# ------------------------------------------------------------
-# CSS
-# ------------------------------------------------------------
-st.markdown("""
-<style>
-.stApp{
-    background:linear-gradient(135deg,#f6f9ff,#edf4ff,#fbfcff);
-}
-.block-container{
-    max-width:1250px;
-    padding-top:1.2rem;
-    padding-bottom:2rem;
-}
-.hero{
-    text-align:center;
-    padding:8px 10px 18px;
-}
-.hero h1{
-    color:#173b73;
-    font-size:2.1rem;
-    font-weight:800;
-    margin:0;
-}
-.hero p{
-    color:#637894;
-    margin:6px 0 0;
-}
-.card{
-    background:#fff;
-    border:1px solid #dce5f2;
-    border-radius:18px;
-    padding:22px;
-    box-shadow:0 8px 25px rgba(30,65,110,.07);
-    height:100%;
-}
-.heading{
-    color:#173b73;
-    font-weight:800;
-    font-size:1.15rem;
-    margin-bottom:14px;
-}
-.aicw{
-    color:#173b73;
-    font-size:1.55rem;
-    font-weight:800;
-    margin-bottom:22px;
-}
-.capstone{
-    color:#334b6b;
-    font-size:1.25rem;
-    font-weight:700;
-    margin-bottom:30px;
-}
-.desc{
-    color:#526782;
-    line-height:1.65;
-    font-size:1rem;
-}
-.team{
-    color:#405673;
-    line-height:2;
-}
-.guide{
-    color:#263f62;
-    font-weight:700;
-    line-height:1.8;
-}
-.good{
-    background:#edfbf1;
-    border:1px solid #a8dfbb;
-    border-radius:15px;
-    padding:20px;
-}
-.bad{
-    background:#fff0f0;
-    border:1px solid #efb0b0;
-    border-radius:15px;
-    padding:20px;
-}
-.good-title{
-    color:#168044;
-    font-size:1.6rem;
-    font-weight:900;
-}
-.bad-title{
-    color:#c62828;
-    font-size:1.6rem;
-    font-weight:900;
-}
-.wait{
-    background:#f7faff;
-    border:1px dashed #c9d6e8;
-    border-radius:15px;
-    padding:40px 15px;
-    text-align:center;
-    color:#657994;
-    min-height:180px;
-}
-.note{
-    color:#71829a;
-    font-size:.88rem;
-}
-div.stButton>button{
-    border-radius:12px;
-    min-height:44px;
-    font-weight:800;
-}
-</style>
-""", unsafe_allow_html=True)
 
+# ============================================================
+# FIND MODEL
+# ============================================================
 
-# ------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------
 def find_model():
-    for p in MODEL_LOCATIONS:
-        if p.exists() and p.is_file():
-            return p
-    for p in Path(".").rglob("best.pt"):
-        if ".git" not in p.parts and "venv" not in p.parts and ".venv" not in p.parts:
-            return p
+
+    for path in MODEL_LOCATIONS:
+        if path.exists() and path.stat().st_size > 100000:
+            return path
+
     return None
 
 
-@st.cache_resource(show_spinner=False)
-def load_model(path):
-    # Do not import cv2 directly.
-    from ultralytics import YOLO
-    return YOLO(path)
+# ============================================================
+# LOAD MODEL
+# ============================================================
+
+@st.cache_resource
+def load_model():
+
+    model_path = find_model()
+
+    if model_path is None:
+        return None, None
+
+    try:
+        model = YOLO(str(model_path))
+        return model, model_path
+
+    except Exception as e:
+        return None, str(e)
 
 
-def defect_name(model, cls_id):
-    names = model.names
-    raw = names.get(cls_id, str(cls_id)) if isinstance(names, dict) else names[cls_id]
-    return {
-        "loop_fiber": "Loop Fiber",
-        "protruding_fiber": "Protruding Fiber",
-    }.get(str(raw), str(raw).replace("_", " ").title())
+model, model_info = load_model()
 
 
-def image_predict(model, image):
-    results = model.predict(
-        source=np.array(image),
-        conf=CONF,
-        verbose=False,
-        save=False,
-    )
-    r = results[0]
+# ============================================================
+# SESSION STATE
+# ============================================================
 
-    boxes = []
-    if r.boxes is not None and len(r.boxes):
-        for cls, score in zip(
-            r.boxes.cls.cpu().numpy(),
-            r.boxes.conf.cpu().numpy(),
-        ):
-            boxes.append({
-                "name": defect_name(model, int(cls)),
-                "confidence": float(score),
-            })
-
-    # YOLO plot returns RGB when source is RGB.
-    annotated = Image.fromarray(r.plot())
-    return annotated, boxes
-
-
-def ffmpeg_exe():
-    import imageio_ffmpeg
-    return imageio_ffmpeg.get_ffmpeg_exe()
-
-
-def process_video(model, uploaded):
-    # OpenCV is imported only when a video is actually analyzed.
-    import cv2
-
-    suffix = Path(uploaded.name).suffix.lower() or ".mp4"
-
-    with tempfile.TemporaryDirectory() as td:
-        td = Path(td)
-        source = td / ("input" + suffix)
-        raw_out = td / "raw.mp4"
-        final_out = td / "processed.mp4"
-        source.write_bytes(uploaded.getbuffer())
-
-        cap = cv2.VideoCapture(str(source))
-        if not cap.isOpened():
-            raise RuntimeError("The uploaded video could not be opened.")
-
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        if not fps or fps < 1:
-            fps = 20.0
-
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        if width <= 0 or height <= 0:
-            cap.release()
-            raise RuntimeError("Could not read video dimensions.")
-
-        # Keep processed video small enough for one-page display.
-        max_width = 720
-        if width > max_width:
-            scale = max_width / width
-            out_w = int(width * scale)
-            out_h = int(height * scale)
-        else:
-            out_w, out_h = width, height
-
-        writer = cv2.VideoWriter(
-            str(raw_out),
-            cv2.VideoWriter_fourcc(*"mp4v"),
-            fps,
-            (out_w, out_h),
-        )
-
-        detections = []
-
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
-
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            # Smaller inference image = faster Streamlit Cloud processing.
-            if rgb.shape[1] > 960:
-                scale = 960 / rgb.shape[1]
-                rgb = cv2.resize(
-                    rgb,
-                    (int(rgb.shape[1] * scale), int(rgb.shape[0] * scale)),
-                    interpolation=cv2.INTER_AREA,
-                )
-
-            result = model.predict(
-                source=rgb,
-                conf=CONF,
-                verbose=False,
-                save=False,
-            )[0]
-
-            if result.boxes is not None and len(result.boxes):
-                for cls, score in zip(
-                    result.boxes.cls.cpu().numpy(),
-                    result.boxes.conf.cpu().numpy(),
-                ):
-                    detections.append({
-                        "name": defect_name(model, int(cls)),
-                        "confidence": float(score),
-                    })
-
-            annotated = cv2.cvtColor(result.plot(), cv2.COLOR_RGB2BGR)
-            annotated = cv2.resize(
-                annotated,
-                (out_w, out_h),
-                interpolation=cv2.INTER_AREA,
-            )
-            writer.write(annotated)
-
-        cap.release()
-        writer.release()
-
-        # Browser-friendly H.264 MP4.
-        cmd = [
-            ffmpeg_exe(), "-y",
-            "-i", str(raw_out),
-            "-c:v", "libx264",
-            "-preset", "veryfast",
-            "-crf", "27",
-            "-pix_fmt", "yuv420p",
-            "-movflags", "+faststart",
-            "-an",
-            str(final_out),
-        ]
-        p = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        if p.returncode != 0:
-            raise RuntimeError(p.stderr[-2000:])
-
-        return final_out.read_bytes(), detections
-
-
-def show_result(data):
-    detections = data["detections"]
-
-    if not detections:
-        st.markdown("""
-        <div class="good">
-            <div class="good-title">🟢 GOOD QUALITY</div>
-            <div>No yarn defect detected.</div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        detections = sorted(
-            detections,
-            key=lambda x: x["confidence"],
-            reverse=True,
-        )
-        main = detections[0]
-        st.markdown(f"""
-        <div class="bad">
-            <div class="bad-title">🔴 BAD QUALITY</div>
-            <div><b>Defect: {main["name"]}</b></div>
-            <div>Confidence: {main["confidence"]*100:.1f}%</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        types = list(dict.fromkeys(d["name"] for d in detections))
-        if len(types) > 1:
-            st.write("**Detected defects:** " + ", ".join(types))
-
-        if data.get("image") is not None:
-            st.write("**Image with defect boxes**")
-            st.image(data["image"], width=430)
-
-        if data.get("video") is not None:
-            st.write("**Processed video with defect boxes**")
-            st.video(data["video"])
-
-
-# ------------------------------------------------------------
-# Page state
-# ------------------------------------------------------------
 if "page" not in st.session_state:
     st.session_state.page = 1
-if "result" not in st.session_state:
-    st.session_state.result = None
+
+if "result_image" not in st.session_state:
+    st.session_state.result_image = None
+
+if "result_video" not in st.session_state:
+    st.session_state.result_video = None
+
+if "result_text" not in st.session_state:
+    st.session_state.result_text = None
 
 
 # ============================================================
-# PAGE 1
+# PAGE 1 – HOME
 # ============================================================
+
 if st.session_state.page == 1:
 
-    st.markdown(f"""
-    <div class="hero">
-        <h1>🧶 {TITLE}</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="main-title">🧶 YarnX – The Future of Yarn Inspection</div>',
+        unsafe_allow_html=True
+    )
 
-    left, right = st.columns([1, 2], gap="large")
+    st.markdown(
+        '<div class="subtitle">AI-Powered Yarn Quality Inspection System</div>',
+        unsafe_allow_html=True
+    )
 
-    with left:
+    # --------------------------------------------------------
+    # Top information
+    # --------------------------------------------------------
+
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+
         st.markdown("""
-        <div class="card">
-            <div class="aicw">AI Career for Women (AICW)</div>
-            <div class="capstone">Capstone Project</div>
+        <div class="info-card">
+
+        <div class="card-title">
+        AI Career for Women (AICW)
+        </div>
+
+        <div class="card-text">
+
+        <b>Capstone Project</b><br><br>
+
+        An AI-based yarn inspection application
+        designed to support automatic detection of
+        yarn defects using computer vision.
+
+        </div>
+
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button("🔍  PREDICT", use_container_width=True):
-            st.session_state.page = 2
-            st.session_state.result = None
-            st.rerun()
+    with col2:
 
-    with right:
         st.markdown("""
-        <div class="card">
-            <div class="heading">Project Description</div>
-            <div class="desc">
-                Yarn quality inspection system using AI and computer vision
-                to identify yarn defects from images, camera input, and videos.
-            </div>
+        <div class="info-card">
+
+        <div class="card-title">
+        Project Description
+        </div>
+
+        <div class="card-text">
+
+        <b>YarnX</b> is an intelligent yarn quality
+        inspection system that uses Artificial Intelligence,
+        Deep Learning and Computer Vision to identify
+        visible yarn defects automatically.
+
+        The system can analyze <b>images, camera input
+        and videos</b> and identify defects such as
+        <b>loop fiber</b> and <b>protruding fiber</b>.
+
+        The trained YOLO object-detection model examines
+        the yarn sample and produces detection results
+        with bounding boxes and confidence scores.
+
+        This system helps reduce manual inspection effort,
+        improves inspection consistency and supports
+        faster yarn-quality assessment for textile
+        manufacturing and weaving applications.
+
+        </div>
+
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.write("")
 
-    c1, c2, c3 = st.columns([1.15, 1.15, .85], gap="large")
+    # --------------------------------------------------------
+    # Predict button
+    # --------------------------------------------------------
+
+    if st.button("🔍 PREDICT"):
+
+        st.session_state.page = 2
+        st.rerun()
+
+    st.write("")
+
+    # --------------------------------------------------------
+    # Team details
+    # --------------------------------------------------------
+
+    c1, c2, c3 = st.columns(3)
 
     with c1:
+
         st.markdown("""
-        <div class="card">
-            <div class="heading">TEAM MEMBERS</div>
-            <div class="team">
-                1. Gutti.pavani devi Priya<br><br>
-                2. Somasani.sasi priya<br><br>
-                3. Galidevara.Rama Devi<br><br>
-                4. Rambala.Harshitha sai Lakshmi
-            </div>
+        <div class="info-card">
+
+        <div class="card-title">TEAM MEMBERS</div>
+
+        <div class="card-text">
+
+        1. Gutti.pavani devi Priya<br><br>
+
+        2. Somasani.sasi priya<br><br>
+
+        3. Galidevara.Rama Devi<br><br>
+
+        4. Rambala.Harshitha sai Lakshmi
+
+        </div>
+
         </div>
         """, unsafe_allow_html=True)
 
     with c2:
+
         st.markdown("""
-        <div class="card">
-            <div class="heading">GMAIL</div>
-            <div class="team">
-                gutthipavanidevipriya@gmail.com<br><br>
-                Sasipriya8090@gmail.com<br><br>
-                ramadevigalidevara0gmail.com<br><br>
-                harshitharambala3@gmail.com
-            </div>
+        <div class="info-card">
+
+        <div class="card-title">GMAIL</div>
+
+        <div class="card-text">
+
+        gutthipavanidevipriya@gmail.com<br><br>
+
+        Sasipriya8090@gmail.com<br><br>
+
+        ramadevigalidevara0gmail.com<br><br>
+
+        harshitharambala3@gmail.com
+
+        </div>
+
         </div>
         """, unsafe_allow_html=True)
 
     with c3:
+
         st.markdown("""
-        <div class="card">
-            <div class="heading">GUIDE NAME</div>
-            <div class="guide">
-                Md.Abdul Aziz<br><br>
-                <b>Designation</b><br><br>
-                Co Lead &amp; Trainer AICW
-            </div>
+        <div class="info-card">
+
+        <div class="card-title">GUIDE NAME</div>
+
+        <div class="card-text">
+
+        <b>Md. Abdul Aziz</b><br><br>
+
+        <b>Designation</b><br><br>
+
+        Co Lead & Trainer AICW
+
+        </div>
+
         </div>
         """, unsafe_allow_html=True)
 
+    st.markdown(
+        '<div class="footer">YarnX – The Future of Yarn Inspection</div>',
+        unsafe_allow_html=True
+    )
+
 
 # ============================================================
-# PAGE 2
+# PAGE 2 – INSPECTION
 # ============================================================
+
 else:
 
-    st.markdown(f"""
-    <div class="hero">
-        <h1>🧶 {TITLE}</h1>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="main-title">🧶 YarnX – Yarn Inspection</div>',
+        unsafe_allow_html=True
+    )
 
-    top1, top2 = st.columns([3, 1])
-    with top1:
-        mode = st.radio(
-            "Select Input Type",
-            ["🖼️ Image", "📷 Camera", "🎥 Video"],
-            horizontal=True,
+    st.markdown(
+        '<div class="subtitle">AI-Based Yarn Quality Analysis</div>',
+        unsafe_allow_html=True
+    )
+
+    # Back button
+
+    if st.button("⬅️ Back to Home"):
+
+        st.session_state.page = 1
+        st.session_state.result_image = None
+        st.session_state.result_video = None
+        st.session_state.result_text = None
+
+        st.rerun()
+
+    st.write("")
+
+    left, right = st.columns([1, 1.35], gap="large")
+
+
+    # ========================================================
+    # INPUT
+    # ========================================================
+
+    with left:
+
+        st.markdown(
+            '<div class="section-title">📥 INPUT</div>',
+            unsafe_allow_html=True
         )
-    with top2:
-        if st.button("⬅️ Back", use_container_width=True):
-            st.session_state.page = 1
-            st.session_state.result = None
-            st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
+        input_type = st.radio(
+            "Select Input Type",
+            ["🖼️ Image", "🎥 Video"],
+            horizontal=True
+        )
 
-    input_col, result_col = st.columns(2, gap="large")
+        uploaded_file = None
 
-    with input_col:
-        st.markdown('<div class="heading">📥 INPUT</div>', unsafe_allow_html=True)
+        if input_type == "🖼️ Image":
 
-        source = None
-
-        if mode == "🖼️ Image":
-            source = st.file_uploader(
-                "Upload image",
-                type=["jpg", "jpeg", "png", "webp"],
+            uploaded_file = st.file_uploader(
+                "Upload Yarn Image",
+                type=["jpg", "jpeg", "png", "webp"]
             )
-        elif mode == "📷 Camera":
-            source = st.camera_input("Capture yarn image")
+
         else:
-            source = st.file_uploader(
-                "Upload video",
-                type=["mp4", "mov", "avi", "mkv", "webm"],
+
+            uploaded_file = st.file_uploader(
+                "Upload Yarn Video",
+                type=["mp4", "avi", "mov", "mkv", "webm"]
             )
 
-        if source is not None:
-            if mode in ["🖼️ Image", "📷 Camera"]:
-                img = Image.open(source).convert("RGB")
-                # Small display: fits on one page.
-                st.image(
-                    img,
-                    caption="Original Image / Camera Capture",
-                    width=420,
-                )
-            else:
-                st.video(source)
+
+        # ----------------------------------------------------
+        # IMAGE PREVIEW
+        # ----------------------------------------------------
+
+        if uploaded_file is not None and input_type == "🖼️ Image":
+
+            image = Image.open(uploaded_file).convert("RGB")
+
+            st.markdown(
+                '<div class="preview-box"><b>Image Preview</b></div>',
+                unsafe_allow_html=True
+            )
+
+            # SMALL IMAGE
+            st.image(
+                image,
+                width=420
+            )
+
+
+        # ----------------------------------------------------
+        # VIDEO PREVIEW
+        # ----------------------------------------------------
+
+        if uploaded_file is not None and input_type == "🎥 Video":
+
+            st.markdown(
+                '<div class="preview-box"><b>Video Preview</b></div>',
+                unsafe_allow_html=True
+            )
+
+            video_bytes = uploaded_file.getvalue()
+
+            st.video(video_bytes)
+
+
+        st.write("")
 
         analyze = st.button(
-            "🔍 Analyze Image" if mode != "🎥 Video" else "🔍 Analyze Video",
-            type="primary",
-            use_container_width=True,
+            "🔍 Analyze Image / Video"
         )
 
-    with result_col:
+
+    # ========================================================
+    # RESULT
+    # ========================================================
+
+    with right:
+
         st.markdown(
-            '<div class="heading">🤖 INSPECTION RESULT</div>',
-            unsafe_allow_html=True,
+            '<div class="section-title">🤖 INSPECTION RESULT</div>',
+            unsafe_allow_html=True
         )
 
-        if st.session_state.result is None:
+        # Waiting heading stays
+        if (
+            st.session_state.result_image is None
+            and st.session_state.result_video is None
+        ):
+
             st.markdown("""
-            <div class="wait">
-                <div style="font-size:2rem">⏳</div>
-                <b>WAITING FOR ANALYSIS</b>
-                <div class="note">
-                    Analyze chesaka result ikkada display avvali.
+            <div class="waiting-box">
+
+                <div class="waiting-icon">⏳</div>
+
+                <div class="waiting-title">
+                    WAITING FOR ANALYSIS
                 </div>
+
             </div>
             """, unsafe_allow_html=True)
-        else:
-            show_result(st.session_state.result)
 
-    # --------------------------------------------------------
-    # Analyze
-    # --------------------------------------------------------
-    if analyze:
-        if source is None:
-            st.warning("First upload an image/video or capture an image.")
-            st.stop()
 
-        model_path = find_model()
+        # ----------------------------------------------------
+        # IMAGE RESULT
+        # ----------------------------------------------------
 
-        if model_path is None:
-            st.error("best.pt not found.")
-            st.info(
-                "GitHub repository lo app.py unna same folder lo "
-                "trained best.pt upload cheyyi."
+        if st.session_state.result_image is not None:
+
+            st.markdown("""
+            <div class="result-card">
+
+            <div class="result-title">
+            🔎 Inspection Result
+            </div>
+
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.image(
+                st.session_state.result_image,
+                width=420
             )
-            st.stop()
+
+            if st.session_state.result_text:
+
+                st.success(st.session_state.result_text)
+
+
+        # ----------------------------------------------------
+        # VIDEO RESULT
+        # ----------------------------------------------------
+
+        if st.session_state.result_video is not None:
+
+            st.markdown("""
+            <div class="result-card">
+
+            <div class="result-title">
+            🎥 Video Inspection Result
+            </div>
+
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.video(
+                st.session_state.result_video
+            )
+
+            if st.session_state.result_text:
+
+                st.success(st.session_state.result_text)
+
+
+# ============================================================
+# ANALYSIS
+# ============================================================
+
+if st.session_state.page == 2 and "analyze" in locals() and analyze:
+
+    if uploaded_file is None:
+
+        st.warning("Please upload an image or video first.")
+
+        st.stop()
+
+
+    if model is None:
+
+        st.error("Model could not be loaded.")
+
+        st.info(
+            "Please make sure the trained model file is present in the GitHub repository."
+        )
+
+        st.stop()
+
+
+    # ========================================================
+    # IMAGE ANALYSIS
+    # ========================================================
+
+    if input_type == "🖼️ Image":
 
         try:
-            with st.spinner("AI is analyzing..."):
-                model = load_model(str(model_path))
 
-                if mode in ["🖼️ Image", "📷 Camera"]:
-                    img = Image.open(source).convert("RGB")
-                    annotated, detections = image_predict(model, img)
+            image = Image.open(uploaded_file).convert("RGB")
 
-                    st.session_state.result = {
-                        "detections": detections,
-                        "image": annotated,
-                        "video": None,
-                    }
-                else:
-                    video_bytes, detections = process_video(model, source)
+            results = model.predict(
+                source=np.array(image),
+                conf=0.20,
+                iou=0.45,
+                imgsz=640,
+                verbose=False
+            )
 
-                    st.session_state.result = {
-                        "detections": detections,
-                        "image": None,
-                        "video": video_bytes,
-                    }
+            result = results[0]
+
+            plotted = result.plot()
+
+            plotted = cv2.cvtColor(
+                plotted,
+                cv2.COLOR_BGR2RGB
+            )
+
+            st.session_state.result_image = plotted
+
+            names = model.names
+
+            detected = []
+
+            if result.boxes is not None:
+
+                for cls, conf in zip(
+                    result.boxes.cls.tolist(),
+                    result.boxes.conf.tolist()
+                ):
+
+                    class_name = names[int(cls)]
+
+                    detected.append(
+                        f"{class_name} ({conf * 100:.1f}%)"
+                    )
+
+
+            if detected:
+
+                st.session_state.result_text = (
+                    "Detected defects: " + ", ".join(detected)
+                )
+
+            else:
+
+                st.session_state.result_text = (
+                    "No yarn defect detected in the uploaded image."
+                )
 
             st.rerun()
 
+
         except Exception as e:
+
             st.error("Analysis failed.")
-            st.code(str(e))
+
+            st.exception(e)
+
+
+    # ========================================================
+    # VIDEO ANALYSIS
+    # ========================================================
+
+    else:
+
+        input_path = None
+        output_path = None
+
+        try:
+
+            # Save uploaded video
+
+            suffix = Path(uploaded_file.name).suffix
+
+            input_file = tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=suffix
+            )
+
+            input_file.write(
+                uploaded_file.getbuffer()
+            )
+
+            input_file.close()
+
+            input_path = input_file.name
+
+
+            # Output file
+
+            output_file = tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=".mp4"
+            )
+
+            output_file.close()
+
+            output_path = output_file.name
+
+
+            # ------------------------------------------------
+            # Open video
+            # ------------------------------------------------
+
+            cap = cv2.VideoCapture(input_path)
+
+            if not cap.isOpened():
+
+                st.error(
+                    "Video could not be opened. Please upload a valid video."
+                )
+
+                st.stop()
+
+
+            fps = cap.get(
+                cv2.CAP_PROP_FPS
+            )
+
+            if fps <= 0 or np.isnan(fps):
+
+                fps = 20.0
+
+
+            width = int(
+                cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            )
+
+            height = int(
+                cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            )
+
+
+            # Prevent extremely large output
+
+            MAX_WIDTH = 720
+
+            if width > MAX_WIDTH:
+
+                scale = MAX_WIDTH / width
+
+                width = MAX_WIDTH
+
+                height = int(height * scale)
+
+
+            # Make dimensions even
+
+            width = width - (width % 2)
+            height = height - (height % 2)
+
+
+            # ------------------------------------------------
+            # Temporary AVI writer
+            # ------------------------------------------------
+
+            temp_avi = tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=".avi"
+            )
+
+            temp_avi.close()
+
+
+            fourcc = cv2.VideoWriter_fourcc(
+                *"MJPG"
+            )
+
+            writer = cv2.VideoWriter(
+                temp_avi.name,
+                fourcc,
+                fps,
+                (width, height)
+            )
+
+
+            detected_classes = set()
+
+            frame_count = 0
+
+
+            # ------------------------------------------------
+            # Process every frame
+            # ------------------------------------------------
+
+            while True:
+
+                ret, frame = cap.read()
+
+                if not ret:
+                    break
+
+                frame_count += 1
+
+
+                # Resize frame
+
+                frame = cv2.resize(
+                    frame,
+                    (width, height),
+                    interpolation=cv2.INTER_AREA
+                )
+
+
+                # YOLO detection
+
+                results = model.predict(
+                    source=frame,
+                    conf=0.20,
+                    iou=0.45,
+                    imgsz=640,
+                    verbose=False
+                )
+
+
+                result = results[0]
+
+
+                # Collect classes
+
+                if result.boxes is not None:
+
+                    for cls in result.boxes.cls.tolist():
+
+                        detected_classes.add(
+                            model.names[int(cls)]
+                        )
+
+
+                # Draw detections
+
+                annotated = result.plot()
+
+
+                writer.write(
+                    annotated
+                )
+
+
+            cap.release()
+            writer.release()
+
+
+            # ------------------------------------------------
+            # Convert AVI -> MP4
+            # ------------------------------------------------
+
+            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+
+            subprocess.run(
+                [
+                    ffmpeg_path,
+                    "-y",
+                    "-i",
+                    temp_avi.name,
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "veryfast",
+                    "-crf",
+                    "28",
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-movflags",
+                    "+faststart",
+                    output_path
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True
+            )
+
+
+            # ------------------------------------------------
+            # Save result
+            # ------------------------------------------------
+
+            with open(
+                output_path,
+                "rb"
+            ) as f:
+
+                video_data = f.read()
+
+
+            st.session_state.result_video = video_data
+
+
+            if detected_classes:
+
+                st.session_state.result_text = (
+                    "Detected defects: "
+                    + ", ".join(sorted(detected_classes))
+                )
+
+            else:
+
+                st.session_state.result_text = (
+                    "No yarn defect detected in the uploaded video."
+                )
+
+
+            # Cleanup
+
+            try:
+                os.remove(input_path)
+            except:
+                pass
+
+            try:
+                os.remove(temp_avi.name)
+            except:
+                pass
+
+            try:
+                os.remove(output_path)
+            except:
+                pass
+
+
+            st.rerun()
+
+
+        except Exception as e:
+
+            st.error("Video analysis failed.")
+
+            st.exception(e)
+
+            try:
+
+                cap.release()
+
+            except:
+
+                pass
