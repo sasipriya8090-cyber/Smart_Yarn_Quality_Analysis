@@ -22,7 +22,7 @@ CONF = 0.25
 # IMPORTANT:
 # Put best.pt in the SAME GitHub folder as app.py.
 MODEL_LOCATIONS = [
-    Path("best.pt"),
+    Path("best (6).pt"),
     Path("weights/best.pt"),
     Path("models/best.pt"),
     Path("yarn_model_100ep/weights/best.pt"),
