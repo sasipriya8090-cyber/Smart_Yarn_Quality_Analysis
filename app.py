@@ -121,7 +121,8 @@ st.markdown("""
 
     padding: 0 20px;
 
-    margin-top: 4px;
+    /* FIX: heading slightly lower without increasing page length */
+    margin-top: 16px;
     margin-bottom: 20px;
 
     overflow: hidden;
@@ -348,13 +349,14 @@ def show_fixed_image(
     background="#f5faff"
 ):
 
-    # FIX:
-    # Uploaded images and analyzed image arrays are already RGB.
-    # Do NOT convert RGB -> BGR -> RGB here.
+    # Uploaded/analyzed images are already RGB.
+    # Do NOT convert RGB -> BGR -> RGB.
 
     if isinstance(image, np.ndarray):
 
-        image = Image.fromarray(image.astype(np.uint8))
+        image = Image.fromarray(
+            image.astype(np.uint8)
+        )
 
     elif not isinstance(image, Image.Image):
 
@@ -480,7 +482,7 @@ def show_fixed_video(
 
 
 # ============================================================
-# DRAW YOLO BOXES FOR IMAGE / CAMERA
+# DRAW YOLO BOXES
 # ============================================================
 
 def draw_yolo_boxes(
@@ -488,7 +490,7 @@ def draw_yolo_boxes(
     result
 ):
 
-    # Image input is RGB.
+    # Image is RGB here
     output = frame.copy()
 
     defects = []
@@ -538,8 +540,7 @@ def draw_yolo_boxes(
         })
 
 
-        # RED BOX
-        # Since image is RGB, red = (255, 0, 0)
+        # RED BOX FOR RGB IMAGE
 
         cv2.rectangle(
             output,
@@ -1443,6 +1444,8 @@ else:
                                 )
 
 
+                                # RED BOX
+
                                 cv2.rectangle(
                                     processed_frame,
 
@@ -1455,6 +1458,8 @@ else:
                                     6
                                 )
 
+
+                                # LABEL
 
                                 label = (
                                     f"{name} "
@@ -1492,6 +1497,8 @@ else:
                                 )
 
 
+                                # LABEL BACKGROUND
+
                                 cv2.rectangle(
                                     processed_frame,
 
@@ -1515,6 +1522,8 @@ else:
                                     -1
                                 )
 
+
+                                # LABEL TEXT
 
                                 cv2.putText(
                                     processed_frame,
