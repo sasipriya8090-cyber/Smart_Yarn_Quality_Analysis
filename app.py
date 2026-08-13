@@ -21,7 +21,7 @@ st.set_page_config(
 # LOAD MODEL
 # =========================================================
 
-MODEL_PATH = "best.pt"
+MODEL_PATH = "best (6).pt"
 
 @st.cache_resource
 def load_model():
