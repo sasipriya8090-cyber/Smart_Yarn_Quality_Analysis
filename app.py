@@ -75,7 +75,7 @@ if "video_defects" not in st.session_state:
 
 
 # ============================================================
-# HELPER FOR HTML
+# HTML HELPER
 # ============================================================
 
 def render_html(html):
@@ -93,15 +93,35 @@ st.markdown("""
 <style>
 
 /* ============================================================
-   COLORFUL APP BACKGROUND
+   MORE COLORFUL APP BACKGROUND
    ============================================================ */
 
 .stApp {
     background:
+        radial-gradient(
+            circle at 10% 15%,
+            rgba(186, 104, 200, 0.18) 0%,
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 20%,
+            rgba(66, 165, 245, 0.18) 0%,
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 20% 85%,
+            rgba(77, 182, 172, 0.14) 0%,
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 85%,
+            rgba(244, 143, 177, 0.16) 0%,
+            transparent 30%
+        ),
         linear-gradient(
             135deg,
-            #f8f0ff 0%,
-            #eef7ff 45%,
+            #f7efff 0%,
+            #edf7ff 45%,
             #fff1f7 100%
         );
 
@@ -120,7 +140,7 @@ st.markdown("""
 
 
 /* ============================================================
-   YARNX TITLE - COMPLETE RECTANGLE
+   YARNX TITLE
    ============================================================ */
 
 .main-title {
@@ -141,7 +161,6 @@ st.markdown("""
     margin-top: 0;
     margin-bottom: 20px;
 
-    /* MOVE HEADING DOWN WITHOUT INCREASING PAGE HEIGHT */
     transform: translateY(18px);
 
     overflow: hidden;
@@ -357,7 +376,7 @@ div[data-testid="stRadio"] label {
 
 
 # ============================================================
-# FIXED IMAGE DISPLAY
+# IMAGE DISPLAY
 # ============================================================
 
 def show_fixed_image(
@@ -367,9 +386,6 @@ def show_fixed_image(
     border_color="#90caf9",
     background="#f5faff"
 ):
-
-    # Uploaded and analyzed images are RGB.
-    # No BGR -> RGB conversion here.
 
     if isinstance(image, np.ndarray):
 
@@ -436,7 +452,7 @@ def show_fixed_image(
 
 
 # ============================================================
-# FIXED VIDEO DISPLAY
+# VIDEO DISPLAY
 # ============================================================
 
 def show_fixed_video(
@@ -449,11 +465,7 @@ def show_fixed_video(
 
     try:
 
-        with open(
-            video_path,
-            "rb"
-        ) as f:
-
+        with open(video_path, "rb") as f:
             video_bytes = f.read()
 
         encoded = base64.b64encode(
@@ -501,15 +513,11 @@ def show_fixed_video(
 
 
 # ============================================================
-# DRAW YOLO BOXES
+# DRAW YOLO BOXES FOR IMAGE
 # ============================================================
 
-def draw_yolo_boxes(
-    frame,
-    result
-):
+def draw_yolo_boxes(frame, result):
 
-    # Image input is RGB.
     output = frame.copy()
 
     defects = []
@@ -518,7 +526,6 @@ def draw_yolo_boxes(
         result.boxes is None
         or len(result.boxes) == 0
     ):
-
         return output, defects
 
 
@@ -547,6 +554,7 @@ def draw_yolo_boxes(
 
         defect_name = model.names[class_id]
 
+
         defects.append({
             "name": defect_name,
             "confidence": confidence,
@@ -559,7 +567,7 @@ def draw_yolo_boxes(
         })
 
 
-        # RED BOX FOR RGB IMAGE
+        # RED BOX
 
         cv2.rectangle(
             output,
@@ -646,9 +654,7 @@ def draw_yolo_boxes(
 # VIDEO CONVERSION
 # ============================================================
 
-def convert_video_for_browser(
-    input_path
-):
+def convert_video_for_browser(input_path):
 
     try:
 
@@ -710,10 +716,6 @@ def convert_video_for_browser(
 
 if st.session_state.page == "home":
 
-    # ========================================================
-    # TITLE BOX
-    # ========================================================
-
     render_html("""
     <div class="main-title">
         🧶 YarnX – The Future of Yarn Inspection
@@ -722,7 +724,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TOP PROJECT SECTION
+    # TOP SECTION
     # ========================================================
 
     left, right = st.columns(
@@ -758,8 +760,6 @@ if st.session_state.page == "home":
 
         st.write("")
 
-
-        # PREDICT BUTTON
 
         if st.button(
             "🔍 PREDICT",
@@ -834,7 +834,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TEAM MEMBERS
+    # TEAM
     # ========================================================
 
     with team:
@@ -934,10 +934,6 @@ if st.session_state.page == "home":
 
 else:
 
-    # ========================================================
-    # TITLE BOX
-    # ========================================================
-
     render_html("""
     <div class="main-title">
         🧶 YarnX – The Future of Yarn Inspection
@@ -946,7 +942,7 @@ else:
 
 
     # ========================================================
-    # BACK BUTTON
+    # BACK
     # ========================================================
 
     if st.button(
@@ -968,7 +964,7 @@ else:
 
 
     # ========================================================
-    # EQUAL INPUT + OUTPUT
+    # INPUT + OUTPUT
     # ========================================================
 
     left, right = st.columns(
@@ -978,7 +974,7 @@ else:
 
 
     # ========================================================
-    # INPUT SIDE
+    # INPUT
     # ========================================================
 
     with left:
@@ -1004,7 +1000,7 @@ else:
 
 
         # ====================================================
-        # IMAGE INPUT
+        # IMAGE
         # ====================================================
 
         if input_type == "🖼️ Image":
@@ -1037,10 +1033,8 @@ else:
 
                 show_fixed_image(
                     image,
-
                     width=400,
                     height=240,
-
                     border_color="#90caf9",
                     background="#f5faff"
                 )
@@ -1086,7 +1080,7 @@ else:
 
 
         # ====================================================
-        # CAMERA INPUT
+        # CAMERA
         # ====================================================
 
         elif input_type == "📷 Camera":
@@ -1110,10 +1104,8 @@ else:
 
                 show_fixed_image(
                     image,
-
                     width=400,
                     height=240,
-
                     border_color="#90caf9",
                     background="#f5faff"
                 )
@@ -1159,7 +1151,7 @@ else:
 
 
         # ====================================================
-        # VIDEO INPUT
+        # VIDEO
         # ====================================================
 
         else:
@@ -1202,10 +1194,8 @@ else:
 
                 show_fixed_video(
                     preview_file.name,
-
                     width=400,
                     height=240,
-
                     border_color="#90caf9",
                     background="#f5faff"
                 )
@@ -1219,8 +1209,6 @@ else:
                     with st.spinner(
                         "Analyzing video... Please wait."
                     ):
-
-                        # SAVE INPUT VIDEO
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1241,8 +1229,6 @@ else:
                             input_temp.name
                         )
 
-
-                        # OPEN VIDEO
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1280,8 +1266,6 @@ else:
                         if fps <= 0:
                             fps = 25
 
-
-                        # OUTPUT VIDEO
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1393,17 +1377,14 @@ else:
 
 
                                     current_boxes.append({
-
                                         "box": (
                                             x1,
                                             y1,
                                             x2,
                                             y2
                                         ),
-
                                         "name":
                                             defect_name,
-
                                         "confidence":
                                             confidence
                                     })
@@ -1433,9 +1414,7 @@ else:
 
                             if len(current_boxes) > 0:
 
-                                last_boxes = (
-                                    current_boxes
-                                )
+                                last_boxes = current_boxes
 
 
                             if len(current_boxes) > 0:
@@ -1446,9 +1425,7 @@ else:
 
                             else:
 
-                                boxes_to_draw = (
-                                    last_boxes
-                                )
+                                boxes_to_draw = last_boxes
 
 
                             processed_frame = (
@@ -1475,13 +1452,9 @@ else:
 
                                 cv2.rectangle(
                                     processed_frame,
-
                                     (x1, y1),
-
                                     (x2, y2),
-
                                     (0, 0, 255),
-
                                     6
                                 )
 
@@ -1524,8 +1497,6 @@ else:
                                 )
 
 
-                                # LABEL BACKGROUND
-
                                 cv2.rectangle(
                                     processed_frame,
 
@@ -1540,7 +1511,6 @@ else:
                                         x1
                                         + text_width
                                         + 12,
-
                                         label_y + 4
                                     ),
 
@@ -1549,8 +1519,6 @@ else:
                                     -1
                                 )
 
-
-                                # LABEL TEXT
 
                                 cv2.putText(
                                     processed_frame,
@@ -1579,14 +1547,10 @@ else:
                             )
 
 
-                        # RELEASE
-
                         cap.release()
 
                         writer.release()
 
-
-                        # CONVERT VIDEO
 
                         final_video = (
                             convert_video_for_browser(
@@ -1599,11 +1563,9 @@ else:
                             final_video
                         )
 
-
                         st.session_state.video_defects = (
                             all_defects
                         )
-
 
                         st.session_state.image_output = None
 
@@ -1613,7 +1575,6 @@ else:
                         st.success(
                             "✅ Video analysis completed."
                         )
-
 
                         st.rerun()
 
@@ -1645,10 +1606,8 @@ else:
 
             show_fixed_image(
                 st.session_state.image_output,
-
                 width=500,
                 height=300,
-
                 border_color="#ce93d8",
                 background="#fcf5ff"
             )
@@ -1679,7 +1638,8 @@ else:
                     <div class="defect-card">
                         🔴 <strong>Defect:</strong> {defect["name"]}
                         <span style="margin-left:24px;">
-                            📊 <strong>Confidence:</strong> {defect["confidence"] * 100:.2f}%
+                            📊 <strong>Confidence:</strong>
+                            {defect["confidence"] * 100:.2f}%
                         </span>
                     </div>
                     """)
@@ -1710,10 +1670,8 @@ else:
 
             show_fixed_video(
                 st.session_state.video_output,
-
                 width=500,
                 height=300,
-
                 border_color="#ce93d8",
                 background="#fcf5ff"
             )
@@ -1746,7 +1704,8 @@ else:
                     <div class="defect-card">
                         🔴 <strong>Defect:</strong> {name}
                         <span style="margin-left:24px;">
-                            📊 <strong>Confidence:</strong> {confidence * 100:.2f}%
+                            📊 <strong>Confidence:</strong>
+                            {confidence * 100:.2f}%
                         </span>
                     </div>
                     """)
@@ -1762,7 +1721,7 @@ else:
 
 
         # ====================================================
-        # DEFAULT MESSAGE
+        # DEFAULT
         # ====================================================
 
         else:
