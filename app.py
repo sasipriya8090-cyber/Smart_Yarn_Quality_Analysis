@@ -80,6 +80,10 @@ if "video_defects" not in st.session_state:
 st.markdown("""
 <style>
 
+/* ============================================================
+   GENERAL
+   ============================================================ */
+
 .block-container {
     padding-top: 1.8rem;
     padding-bottom: 1rem;
@@ -87,16 +91,32 @@ st.markdown("""
 
 
 /* ============================================================
-   MAIN TITLE
+   SAME TITLE RECTANGLE ON BOTH PAGES
    ============================================================ */
 
 .main-title {
+
+    width: 100%;
+    min-height: 64px;
+
+    box-sizing: border-box;
+
     border: 2px solid #6a1b9a;
-    border-radius: 14px;
-    padding: 12px;
+
+    border-radius: 0 0 14px 14px;
+
+    padding: 10px 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
     text-align: center;
 
     font-size: 28px;
+
     font-weight: 800;
 
     color: #4a148c;
@@ -108,7 +128,7 @@ st.markdown("""
         #fce4ec
     );
 
-    margin-bottom: 14px;
+    margin-bottom: 18px;
 }
 
 
@@ -119,13 +139,16 @@ st.markdown("""
 .stButton > button {
 
     width: 100%;
+
     min-height: 46px;
 
-    border: 0 !important;
+    border: none !important;
+
     border-radius: 12px !important;
 
-    font-weight: 800 !important;
     font-size: 16px !important;
+
+    font-weight: 800 !important;
 
     color: white !important;
 
@@ -165,111 +188,86 @@ st.markdown("""
 .stButton > button:active {
 
     color: white !important;
-    border: 0 !important;
 
-    box-shadow:
-        0 5px 14px rgba(70, 55, 150, 0.24) !important;
+    border: none !important;
+
+    outline: none !important;
 }
 
 
 /* ============================================================
-   INFORMATION CARDS
+   INFORMATION CARD HEADINGS
    ============================================================ */
 
-.info-card {
-
-    min-height: 220px;
-
-    padding: 20px 22px;
-
-    border: 1px solid #d7d9e8;
-    border-radius: 16px;
-
-    background: linear-gradient(
-        145deg,
-        #ffffff 0%,
-        #f8f9ff 100%
-    );
-
-    box-shadow:
-        0 5px 18px rgba(60, 50, 120, 0.08);
-
-    box-sizing: border-box;
-}
-
-
-.info-card h3 {
-
-    margin: 0 0 16px 0;
+.info-heading {
 
     color: #32146f;
 
-    font-size: 20px;
+    font-size: 19px;
+
     font-weight: 800;
+
+    margin-bottom: 14px;
 }
 
 
-.team-item {
+/* ============================================================
+   TEAM TEXT
+   ============================================================ */
 
-    margin: 9px 0;
-
-    color: #24324a;
+.team-text {
 
     font-size: 15px;
 
-    line-height: 1.45;
+    color: #24324a;
+
+    margin: 8px 0;
 }
 
 
-.email-item {
+/* ============================================================
+   GMAIL
+   ============================================================ */
 
-    margin: 9px 0;
+.email-text {
 
     font-size: 14px;
 
-    line-height: 1.45;
+    color: #315bb5;
+
+    margin: 9px 0;
 
     word-break: break-word;
 }
 
 
-.email-item a {
-
-    color: #315bb5;
-
-    text-decoration: none;
-}
-
-
-.email-item a:hover {
-
-    text-decoration: underline;
-}
-
+/* ============================================================
+   GUIDE
+   ============================================================ */
 
 .guide-label {
 
-    margin-top: 14px;
-    margin-bottom: 5px;
+    font-size: 13px;
+
+    font-weight: 800;
 
     color: #5b5f73;
 
-    font-size: 13px;
-    font-weight: 800;
+    margin-top: 10px;
+
+    margin-bottom: 3px;
 
     text-transform: uppercase;
-
-    letter-spacing: 0.5px;
 }
 
 
 .guide-value {
 
-    color: #24324a;
-
     font-size: 15px;
 
-    line-height: 1.5;
+    color: #24324a;
+
+    margin-bottom: 10px;
 }
 
 
@@ -666,28 +664,19 @@ def convert_video_for_browser(
 
 
     command = [
-
         ffmpeg,
-
         "-y",
-
         "-i",
         input_path,
-
         "-c:v",
         "libx264",
-
         "-preset",
         "fast",
-
         "-pix_fmt",
         "yuv420p",
-
         "-movflags",
         "+faststart",
-
         "-an",
-
         output_path
     ]
 
@@ -696,11 +685,8 @@ def convert_video_for_browser(
 
         subprocess.run(
             command,
-
             stdout=subprocess.PIPE,
-
             stderr=subprocess.PIPE,
-
             check=True
         )
 
@@ -717,9 +703,9 @@ def convert_video_for_browser(
 
 if st.session_state.page == "home":
 
-    # --------------------------------------------------------
-    # TITLE
-    # --------------------------------------------------------
+    # ========================================================
+    # SAME TITLE
+    # ========================================================
 
     st.markdown("""
     <div class="main-title">
@@ -728,9 +714,9 @@ if st.session_state.page == "home":
     """, unsafe_allow_html=True)
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # MAIN CONTENT
-    # --------------------------------------------------------
+    # ========================================================
 
     left, right = st.columns(
         [35, 65],
@@ -738,29 +724,40 @@ if st.session_state.page == "home":
     )
 
 
-    # --------------------------------------------------------
-    # LEFT PROJECT CARD
-    # --------------------------------------------------------
+    # ========================================================
+    # LEFT CARD
+    # ========================================================
 
     with left:
 
         with st.container(border=True):
 
-            st.markdown("""
-            <h2 style="text-align:center;">
-                AI Career for Women
-                <br>
-                (AICW)
-            </h2>
-            """, unsafe_allow_html=True)
+            st.markdown(
+                """
+                <h2 style="
+                    text-align:center;
+                    color:#24324a;
+                ">
+                    AI Career for Women
+                    <br>
+                    (AICW)
+                </h2>
+                """,
+                unsafe_allow_html=True
+            )
 
-            st.markdown("""
-            <h3 style="text-align:center;">
-                Capstone Project
-            </h3>
-            """, unsafe_allow_html=True)
+            st.markdown(
+                """
+                <h3 style="
+                    text-align:center;
+                    color:#24324a;
+                ">
+                    Capstone Project
+                </h3>
+                """,
+                unsafe_allow_html=True
+            )
 
-            st.write("")
             st.write("")
             st.write("")
             st.write("")
@@ -769,7 +766,7 @@ if st.session_state.page == "home":
         st.write("")
 
 
-        # PREDICT BUTTON
+        # PREDICT
 
         if st.button(
             "PREDICT",
@@ -781,9 +778,9 @@ if st.session_state.page == "home":
             st.rerun()
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # PROJECT DESCRIPTION
-    # --------------------------------------------------------
+    # ========================================================
 
     with right:
 
@@ -793,14 +790,12 @@ if st.session_state.page == "home":
                 "Project Description"
             )
 
-
             st.write("""
             YarnX is an AI-powered yarn quality inspection
             system designed to automatically detect and
             identify yarn defects using Computer Vision
             and Deep Learning.
             """)
-
 
             st.write("""
             The system accepts yarn images, camera input,
@@ -809,7 +804,6 @@ if st.session_state.page == "home":
             regions by drawing bounding boxes around
             detected defects.
             """)
-
 
             st.write("""
             The system displays the detected defect,
@@ -833,105 +827,119 @@ if st.session_state.page == "home":
     )
 
 
-    # --------------------------------------------------------
-    # TEAM MEMBERS
-    # --------------------------------------------------------
+    # ========================================================
+    # TEAM MEMBERS BOX
+    # ========================================================
 
     with team:
 
-        st.markdown("""
-        <div class="info-card">
+        with st.container(border=True):
 
-            <h3>👥 TEAM MEMBERS</h3>
+            st.markdown(
+                "### 👥 TEAM MEMBERS"
+            )
 
-            <div class="team-item">
-                1. Gutti.Pavani Devi Priya
-            </div>
+            st.markdown(
+                '<div class="team-text">1. Gutti.Pavani Devi Priya</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="team-item">
-                2. Somasani.Sasi Priya
-            </div>
+            st.markdown(
+                '<div class="team-text">2. Somasani.Sasi Priya</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="team-item">
-                3. Galidevara.Rama Devi
-            </div>
+            st.markdown(
+                '<div class="team-text">3. Galidevara.Rama Devi</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="team-item">
-                4. Rambala.Harshitha Sai Lakshmi
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+            st.markdown(
+                '<div class="team-text">4. Rambala.Harshitha Sai Lakshmi</div>',
+                unsafe_allow_html=True
+            )
 
 
-    # --------------------------------------------------------
-    # GMAIL
-    # --------------------------------------------------------
+    # ========================================================
+    # GMAIL BOX
+    # ========================================================
 
     with gmail:
 
-        st.markdown("""
-        <div class="info-card">
+        with st.container(border=True):
 
-            <h3>✉️ GMAIL</h3>
+            st.markdown(
+                "### ✉️ GMAIL"
+            )
 
-            <div class="email-item">
-                <a href="mailto:gutthipavanidevipriya@gmail.com">
-                    gutthipavanidevipriya@gmail.com
-                </a>
-            </div>
+            st.markdown(
+                '<div class="email-text">'
+                'gutthipavanidevipriya@gmail.com'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="email-item">
-                <a href="mailto:Sasipriya8090@gmail.com">
-                    Sasipriya8090@gmail.com
-                </a>
-            </div>
+            st.markdown(
+                '<div class="email-text">'
+                'Sasipriya8090@gmail.com'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="email-item">
-                <a href="mailto:ramadevigalidevara0@gmail.com">
-                    ramadevigalidevara0@gmail.com
-                </a>
-            </div>
+            st.markdown(
+                '<div class="email-text">'
+                'ramadevigalidevara0@gmail.com'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="email-item">
-                <a href="mailto:harshitharambala3@gmail.com">
-                    harshitharambala3@gmail.com
-                </a>
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+            st.markdown(
+                '<div class="email-text">'
+                'harshitharambala3@gmail.com'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
 
-    # --------------------------------------------------------
-    # GUIDE
-    # --------------------------------------------------------
+    # ========================================================
+    # GUIDE BOX
+    # ========================================================
 
     with guide:
 
-        st.markdown("""
-        <div class="info-card">
+        with st.container(border=True):
 
-            <h3>🎓 GUIDE</h3>
+            st.markdown(
+                "### 🎓 GUIDE"
+            )
 
-            <div class="guide-label">
-                Guide Name
-            </div>
+            st.markdown(
+                '<div class="guide-label">'
+                'Guide Name'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="guide-value">
-                Md. Abdul Aziz
-            </div>
+            st.markdown(
+                '<div class="guide-value">'
+                'Md. Abdul Aziz'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="guide-label">
-                Designation
-            </div>
+            st.markdown(
+                '<div class="guide-label">'
+                'Designation'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
-            <div class="guide-value">
-                Co Lead &amp; Trainer AICW
-            </div>
-
-        </div>
-        """, unsafe_allow_html=True)
+            st.markdown(
+                '<div class="guide-value">'
+                'Co Lead &amp; Trainer AICW'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
 
 # ============================================================
@@ -940,9 +948,9 @@ if st.session_state.page == "home":
 
 else:
 
-    # --------------------------------------------------------
-    # TITLE
-    # --------------------------------------------------------
+    # ========================================================
+    # SAME TITLE RECTANGLE
+    # ========================================================
 
     st.markdown("""
     <div class="main-title">
@@ -951,9 +959,9 @@ else:
     """, unsafe_allow_html=True)
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # BACK BUTTON
-    # --------------------------------------------------------
+    # ========================================================
 
     if st.button(
         "⬅ Back"
@@ -970,8 +978,11 @@ else:
         st.rerun()
 
 
+    st.write("")
+
+
     # ========================================================
-    # EQUAL INPUT + OUTPUT COLUMNS
+    # EQUAL INPUT + OUTPUT
     # ========================================================
 
     left, right = st.columns(
@@ -990,7 +1001,6 @@ else:
             "📥 INPUT"
         )
 
-
         st.write(
             "Select Input Type:"
         )
@@ -1008,7 +1018,7 @@ else:
 
 
         # ====================================================
-        # IMAGE INPUT
+        # IMAGE
         # ====================================================
 
         if input_type == "🖼️ Image":
@@ -1049,8 +1059,6 @@ else:
                     background="#f5faff"
                 )
 
-
-                # ANALYZE IMAGE BUTTON
 
                 if st.button(
                     "🔍 Analyze Image",
@@ -1093,7 +1101,7 @@ else:
 
 
         # ====================================================
-        # CAMERA INPUT
+        # CAMERA
         # ====================================================
 
         elif input_type == "📷 Camera":
@@ -1125,8 +1133,6 @@ else:
                     background="#f5faff"
                 )
 
-
-                # ANALYZE CAMERA BUTTON
 
                 if st.button(
                     "🔍 Analyze Camera",
@@ -1169,7 +1175,7 @@ else:
 
 
         # ====================================================
-        # VIDEO INPUT
+        # VIDEO
         # ====================================================
 
         else:
@@ -1190,9 +1196,9 @@ else:
 
             if uploaded_video:
 
-                # ------------------------------------------------
-                # PREVIEW VIDEO
-                # ------------------------------------------------
+                # --------------------------------------------
+                # INPUT VIDEO
+                # --------------------------------------------
 
                 preview_file = (
                     tempfile.NamedTemporaryFile(
@@ -1225,9 +1231,9 @@ else:
                 )
 
 
-                # ------------------------------------------------
-                # ANALYZE VIDEO BUTTON
-                # ------------------------------------------------
+                # --------------------------------------------
+                # ANALYZE VIDEO
+                # --------------------------------------------
 
                 if st.button(
                     "🔍 Analyze Video",
@@ -1238,9 +1244,7 @@ else:
                         "Analyzing video... Please wait."
                     ):
 
-                        # ----------------------------------------
-                        # SAVE INPUT VIDEO
-                        # ----------------------------------------
+                        # SAVE VIDEO
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1262,9 +1266,7 @@ else:
                         )
 
 
-                        # ----------------------------------------
                         # OPEN VIDEO
-                        # ----------------------------------------
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1300,12 +1302,11 @@ else:
 
 
                         if fps <= 0:
+
                             fps = 25
 
 
-                        # ----------------------------------------
                         # OUTPUT VIDEO
-                        # ----------------------------------------
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1332,8 +1333,11 @@ else:
 
                         writer = cv2.VideoWriter(
                             raw_output,
+
                             fourcc,
+
                             fps,
+
                             (width, height)
                         )
 
@@ -1349,18 +1353,14 @@ else:
                             st.stop()
 
 
-                        # ----------------------------------------
                         # DEFECT STORAGE
-                        # ----------------------------------------
 
                         all_defects = {}
 
                         last_boxes = []
 
 
-                        # ----------------------------------------
                         # PROCESS EVERY FRAME
-                        # ----------------------------------------
 
                         while True:
 
@@ -1370,12 +1370,9 @@ else:
 
 
                             if not ret:
+
                                 break
 
-
-                            # ------------------------------------
-                            # YOLO PREDICTION
-                            # ------------------------------------
 
                             result = model.predict(
                                 source=frame,
@@ -1387,9 +1384,7 @@ else:
                             current_boxes = []
 
 
-                            # ------------------------------------
                             # DETECTIONS
-                            # ------------------------------------
 
                             if (
                                 result.boxes is not None
@@ -1449,7 +1444,7 @@ else:
                                     })
 
 
-                                    # SAVE HIGHEST CONFIDENCE
+                                    # HIGHEST CONFIDENCE
 
                                     if (
                                         defect_name
@@ -1473,9 +1468,7 @@ else:
                                         ] = confidence
 
 
-                            # ------------------------------------
-                            # CONTINUE LAST BOX
-                            # ------------------------------------
+                            # LAST BOX
 
                             if len(current_boxes) > 0:
 
@@ -1497,9 +1490,7 @@ else:
                                 )
 
 
-                            # ------------------------------------
                             # DRAW BOXES
-                            # ------------------------------------
 
                             processed_frame = (
                                 frame.copy()
@@ -1625,27 +1616,21 @@ else:
                                 )
 
 
-                            # ------------------------------------
                             # SAVE FRAME
-                            # ------------------------------------
 
                             writer.write(
                                 processed_frame
                             )
 
 
-                        # ----------------------------------------
                         # RELEASE
-                        # ----------------------------------------
 
                         cap.release()
 
                         writer.release()
 
 
-                        # ----------------------------------------
-                        # CONVERT TO BROWSER MP4
-                        # ----------------------------------------
+                        # CONVERT
 
                         final_video = (
                             convert_video_for_browser(
@@ -1689,7 +1674,7 @@ else:
 
 
         # ====================================================
-        # IMAGE OUTPUT
+        # IMAGE RESULT
         # ====================================================
 
         if (
@@ -1771,7 +1756,7 @@ else:
 
 
         # ====================================================
-        # VIDEO OUTPUT
+        # VIDEO RESULT
         # ====================================================
 
         elif (
@@ -1855,7 +1840,7 @@ else:
 
 
         # ====================================================
-        # WAITING MESSAGE
+        # WAITING
         # ====================================================
 
         else:
