@@ -81,70 +81,68 @@ st.markdown("""
 <style>
 
 /* ============================================================
-   GENERAL
+   PAGE
    ============================================================ */
 
 .block-container {
-    padding-top: 1.8rem;
-    padding-bottom: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
 }
 
 
 /* ============================================================
-   SAME TITLE RECTANGLE ON BOTH PAGES
+   YARNX HEADING - COMPLETE RECTANGLE
    ============================================================ */
 
 .main-title {
-
     width: 100%;
-    min-height: 64px;
+    height: 72px;
 
     box-sizing: border-box;
 
     border: 2px solid #6a1b9a;
+    border-radius: 14px;
 
-    border-radius: 0 0 14px 14px;
-
-    padding: 10px 20px;
+    padding: 0 20px;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
     text-align: center;
 
     font-size: 28px;
-
     font-weight: 800;
 
     color: #4a148c;
 
     background: linear-gradient(
         90deg,
-        #f3e5f5,
-        #e3f2fd,
-        #fce4ec
+        #f3e5f5 0%,
+        #e3f2fd 50%,
+        #fce4ec 100%
     );
 
-    margin-bottom: 18px;
+    margin-top: 0px;
+    margin-bottom: 20px;
+
+    overflow: hidden;
 }
 
 
 /* ============================================================
-   VIOLET + BLUE BUTTONS
+   ALL BUTTONS - VIOLET + BLUE
    ============================================================ */
 
 .stButton > button {
 
     width: 100%;
 
-    min-height: 46px;
+    min-height: 48px;
 
     border: none !important;
 
-    border-radius: 12px !important;
+    border-radius: 13px !important;
 
     font-size: 16px !important;
 
@@ -160,7 +158,7 @@ st.markdown("""
     ) !important;
 
     box-shadow:
-        0 5px 14px rgba(70, 55, 150, 0.22) !important;
+        0 5px 14px rgba(70, 55, 150, 0.25) !important;
 
     transition: all 0.2s ease-in-out !important;
 }
@@ -192,27 +190,14 @@ st.markdown("""
     border: none !important;
 
     outline: none !important;
+
+    box-shadow:
+        0 5px 14px rgba(70, 55, 150, 0.25) !important;
 }
 
 
 /* ============================================================
-   INFORMATION CARD HEADINGS
-   ============================================================ */
-
-.info-heading {
-
-    color: #32146f;
-
-    font-size: 19px;
-
-    font-weight: 800;
-
-    margin-bottom: 14px;
-}
-
-
-/* ============================================================
-   TEAM TEXT
+   TEAM / GMAIL / GUIDE TEXT
    ============================================================ */
 
 .team-text {
@@ -222,12 +207,10 @@ st.markdown("""
     color: #24324a;
 
     margin: 8px 0;
+
+    line-height: 1.5;
 }
 
-
-/* ============================================================
-   GMAIL
-   ============================================================ */
 
 .email-text {
 
@@ -235,15 +218,13 @@ st.markdown("""
 
     color: #315bb5;
 
-    margin: 9px 0;
+    margin: 10px 0;
 
     word-break: break-word;
+
+    line-height: 1.5;
 }
 
-
-/* ============================================================
-   GUIDE
-   ============================================================ */
 
 .guide-label {
 
@@ -253,9 +234,9 @@ st.markdown("""
 
     color: #5b5f73;
 
-    margin-top: 10px;
+    margin-top: 14px;
 
-    margin-bottom: 3px;
+    margin-bottom: 5px;
 
     text-transform: uppercase;
 }
@@ -267,7 +248,9 @@ st.markdown("""
 
     color: #24324a;
 
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+
+    line-height: 1.5;
 }
 
 
@@ -329,11 +312,20 @@ st.markdown("""
 
     border-radius: 9px;
 
-    padding: 7px 10px;
+    padding: 8px 10px;
 
-    margin-top: 5px;
+    margin-top: 6px;
 
     background: #fff8f8;
+}
+
+
+/* ============================================================
+   RADIO BUTTON
+   ============================================================ */
+
+div[data-testid="stRadio"] label {
+    font-weight: 600;
 }
 
 </style>
@@ -548,7 +540,9 @@ def draw_yolo_boxes(
         })
 
 
+        # ----------------------------------------------------
         # RED BOUNDING BOX
+        # ----------------------------------------------------
 
         cv2.rectangle(
             output,
@@ -559,7 +553,9 @@ def draw_yolo_boxes(
         )
 
 
+        # ----------------------------------------------------
         # LABEL
+        # ----------------------------------------------------
 
         label = (
             f"{defect_name} "
@@ -704,7 +700,7 @@ def convert_video_for_browser(
 if st.session_state.page == "home":
 
     # ========================================================
-    # SAME TITLE
+    # COMPLETE TITLE BOX
     # ========================================================
 
     st.markdown("""
@@ -715,7 +711,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # MAIN CONTENT
+    # PROJECT TOP SECTION
     # ========================================================
 
     left, right = st.columns(
@@ -725,51 +721,54 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # LEFT CARD
+    # AICW CARD
     # ========================================================
 
     with left:
 
         with st.container(border=True):
 
-            st.markdown(
-                """
-                <h2 style="
-                    text-align:center;
+            st.markdown("""
+            <div style="
+                height:250px;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                text-align:center;
+            ">
+
+                <div style="
+                    font-size:32px;
+                    font-weight:700;
                     color:#24324a;
+                    line-height:1.35;
                 ">
                     AI Career for Women
                     <br>
                     (AICW)
-                </h2>
-                """,
-                unsafe_allow_html=True
-            )
+                </div>
 
-            st.markdown(
-                """
-                <h3 style="
-                    text-align:center;
+                <div style="
+                    margin-top:35px;
+                    font-size:25px;
+                    font-weight:700;
                     color:#24324a;
                 ">
                     Capstone Project
-                </h3>
-                """,
-                unsafe_allow_html=True
-            )
+                </div>
 
-            st.write("")
-            st.write("")
-            st.write("")
+            </div>
+            """, unsafe_allow_html=True)
 
 
         st.write("")
 
 
-        # PREDICT
+        # PREDICT BUTTON
 
         if st.button(
-            "PREDICT",
+            "🔍 PREDICT",
             use_container_width=True
         ):
 
@@ -786,9 +785,17 @@ if st.session_state.page == "home":
 
         with st.container(border=True):
 
-            st.subheader(
-                "Project Description"
-            )
+            st.markdown("""
+            <div style="
+                font-size:28px;
+                font-weight:800;
+                color:#4a148c;
+                margin-bottom:18px;
+            ">
+                Project Description
+            </div>
+            """, unsafe_allow_html=True)
+
 
             st.write("""
             YarnX is an AI-powered yarn quality inspection
@@ -797,6 +804,7 @@ if st.session_state.page == "home":
             and Deep Learning.
             """)
 
+
             st.write("""
             The system accepts yarn images, camera input,
             and videos for inspection. A trained YOLO model
@@ -804,6 +812,7 @@ if st.session_state.page == "home":
             regions by drawing bounding boxes around
             detected defects.
             """)
+
 
             st.write("""
             The system displays the detected defect,
@@ -819,6 +828,7 @@ if st.session_state.page == "home":
     # ========================================================
 
     st.write("")
+    st.write("")
 
 
     team, gmail, guide = st.columns(
@@ -828,7 +838,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TEAM MEMBERS BOX
+    # TEAM MEMBERS
     # ========================================================
 
     with team:
@@ -836,32 +846,28 @@ if st.session_state.page == "home":
         with st.container(border=True):
 
             st.markdown(
-                "### 👥 TEAM MEMBERS"
+                "### 👩‍💻 TEAM MEMBERS"
             )
 
-            st.markdown(
-                '<div class="team-text">1. Gutti.Pavani Devi Priya</div>',
-                unsafe_allow_html=True
+            st.write(
+                "1. Gutti.Pavani Devi Priya"
             )
 
-            st.markdown(
-                '<div class="team-text">2. Somasani.Sasi Priya</div>',
-                unsafe_allow_html=True
+            st.write(
+                "2. Somasani.Sasi Priya"
             )
 
-            st.markdown(
-                '<div class="team-text">3. Galidevara.Rama Devi</div>',
-                unsafe_allow_html=True
+            st.write(
+                "3. Galidevara.Rama Devi"
             )
 
-            st.markdown(
-                '<div class="team-text">4. Rambala.Harshitha Sai Lakshmi</div>',
-                unsafe_allow_html=True
+            st.write(
+                "4. Rambala.Harshitha Sai Lakshmi"
             )
 
 
     # ========================================================
-    # GMAIL BOX
+    # GMAIL
     # ========================================================
 
     with gmail:
@@ -869,40 +875,40 @@ if st.session_state.page == "home":
         with st.container(border=True):
 
             st.markdown(
-                "### ✉️ GMAIL"
+                "### 📧 GMAIL"
             )
 
             st.markdown(
-                '<div class="email-text">'
+                '<span style="color:#315bb5;">'
                 'gutthipavanidevipriya@gmail.com'
-                '</div>',
+                '</span>',
                 unsafe_allow_html=True
             )
 
             st.markdown(
-                '<div class="email-text">'
+                '<span style="color:#315bb5;">'
                 'Sasipriya8090@gmail.com'
-                '</div>',
+                '</span>',
                 unsafe_allow_html=True
             )
 
             st.markdown(
-                '<div class="email-text">'
+                '<span style="color:#315bb5;">'
                 'ramadevigalidevara0@gmail.com'
-                '</div>',
+                '</span>',
                 unsafe_allow_html=True
             )
 
             st.markdown(
-                '<div class="email-text">'
+                '<span style="color:#315bb5;">'
                 'harshitharambala3@gmail.com'
-                '</div>',
+                '</span>',
                 unsafe_allow_html=True
             )
 
 
     # ========================================================
-    # GUIDE BOX
+    # GUIDE
     # ========================================================
 
     with guide:
@@ -910,35 +916,19 @@ if st.session_state.page == "home":
         with st.container(border=True):
 
             st.markdown(
-                "### 🎓 GUIDE"
+                "### 🎓 GUIDE NAME"
+            )
+
+            st.write(
+                "Md. Abdul Aziz"
             )
 
             st.markdown(
-                '<div class="guide-label">'
-                'Guide Name'
-                '</div>',
-                unsafe_allow_html=True
+                "### DESIGNATION"
             )
 
-            st.markdown(
-                '<div class="guide-value">'
-                'Md. Abdul Aziz'
-                '</div>',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                '<div class="guide-label">'
-                'Designation'
-                '</div>',
-                unsafe_allow_html=True
-            )
-
-            st.markdown(
-                '<div class="guide-value">'
-                'Co Lead &amp; Trainer AICW'
-                '</div>',
-                unsafe_allow_html=True
+            st.write(
+                "Co Lead & Trainer AICW"
             )
 
 
@@ -949,7 +939,7 @@ if st.session_state.page == "home":
 else:
 
     # ========================================================
-    # SAME TITLE RECTANGLE
+    # COMPLETE TITLE BOX
     # ========================================================
 
     st.markdown("""
@@ -992,7 +982,7 @@ else:
 
 
     # ========================================================
-    # INPUT SIDE
+    # INPUT
     # ========================================================
 
     with left:
@@ -1196,9 +1186,9 @@ else:
 
             if uploaded_video:
 
-                # --------------------------------------------
-                # INPUT VIDEO
-                # --------------------------------------------
+                # ------------------------------------------------
+                # INPUT VIDEO PREVIEW
+                # ------------------------------------------------
 
                 preview_file = (
                     tempfile.NamedTemporaryFile(
@@ -1231,9 +1221,9 @@ else:
                 )
 
 
-                # --------------------------------------------
+                # ------------------------------------------------
                 # ANALYZE VIDEO
-                # --------------------------------------------
+                # ------------------------------------------------
 
                 if st.button(
                     "🔍 Analyze Video",
@@ -1333,11 +1323,8 @@ else:
 
                         writer = cv2.VideoWriter(
                             raw_output,
-
                             fourcc,
-
                             fps,
-
                             (width, height)
                         )
 
@@ -1373,6 +1360,8 @@ else:
 
                                 break
 
+
+                            # YOLO PREDICTION
 
                             result = model.predict(
                                 source=frame,
@@ -1468,7 +1457,7 @@ else:
                                         ] = confidence
 
 
-                            # LAST BOX
+                            # KEEP LAST DETECTED BOX
 
                             if len(current_boxes) > 0:
 
@@ -1490,7 +1479,7 @@ else:
                                 )
 
 
-                            # DRAW BOXES
+                            # DRAW PROCESSED FRAME
 
                             processed_frame = (
                                 frame.copy()
@@ -1630,7 +1619,7 @@ else:
                         writer.release()
 
 
-                        # CONVERT
+                        # CONVERT VIDEO
 
                         final_video = (
                             convert_video_for_browser(
