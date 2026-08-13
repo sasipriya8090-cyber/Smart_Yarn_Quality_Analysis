@@ -1055,7 +1055,6 @@ else:
 
                     st.session_state.video_defects = {}
 
-
                     st.rerun()
 
 
@@ -1128,7 +1127,6 @@ else:
                     st.session_state.video_output = None
 
                     st.session_state.video_defects = {}
-
 
                     st.rerun()
 
@@ -1652,17 +1650,16 @@ else:
                 )
 
 
+                # FIXED: unwanted HTML code will not appear
+
                 for defect in defects:
 
                     render_html(f"""
                     <div class="defect-card">
-                        🔴 <b>Defect:</b>
-                        {defect["name"]}
-
-                        &nbsp;&nbsp;
-
-                        📊 <b>Confidence:</b>
-                        {defect["confidence"] * 100:.2f}%
+                        🔴 <strong>Defect:</strong> {defect["name"]}
+                        <span style="margin-left:24px;">
+                            📊 <strong>Confidence:</strong> {defect["confidence"] * 100:.2f}%
+                        </span>
                     </div>
                     """)
 
@@ -1720,19 +1717,18 @@ else:
                 )
 
 
+                # FIXED: unwanted HTML code will not appear
+
                 for name, confidence in (
                     defects.items()
                 ):
 
                     render_html(f"""
                     <div class="defect-card">
-                        🔴 <b>Defect:</b>
-                        {name}
-
-                        &nbsp;&nbsp;
-
-                        📊 <b>Confidence:</b>
-                        {confidence * 100:.2f}%
+                        🔴 <strong>Defect:</strong> {name}
+                        <span style="margin-left:24px;">
+                            📊 <strong>Confidence:</strong> {confidence * 100:.2f}%
+                        </span>
                     </div>
                     """)
 
