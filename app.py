@@ -7,12 +7,12 @@ import numpy as np
 import streamlit as st
 import torch
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 
 
 # ============================================================
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
@@ -43,11 +43,9 @@ torch.load = patched_torch_load
 def load_model():
 
     if not os.path.exists(MODEL_PATH):
-
         st.error(
             f"❌ Model file not found: {MODEL_PATH}"
         )
-
         st.stop()
 
     return YOLO(MODEL_PATH)
@@ -63,18 +61,14 @@ model = load_model()
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
-
 if "image_output" not in st.session_state:
     st.session_state.image_output = None
-
 
 if "image_defects" not in st.session_state:
     st.session_state.image_defects = []
 
-
 if "video_output" not in st.session_state:
     st.session_state.video_output = None
-
 
 if "video_defects" not in st.session_state:
     st.session_state.video_defects = {}
@@ -86,481 +80,397 @@ if "video_defects" not in st.session_state:
 
 st.markdown(
     """
-    <style>
+<style>
 
-    /* ========================================================
-       PAGE
-       ======================================================== */
+/* ============================================================
+   PAGE
+   ============================================================ */
 
-    .block-container {
+.block-container {
+    padding-top: 1.2rem !important;
+    padding-bottom: 1.5rem !important;
+}
 
-        padding-top: 2.0rem !important;
 
-        padding-bottom: 1.5rem !important;
+/* ============================================================
+   YARNX TOP HEADING
+   ============================================================ */
 
-        max-width: 100% !important;
-    }
+.yarnx-title {
+    width: 100%;
+    height: 72px;
 
+    box-sizing: border-box;
 
-    /* ========================================================
-       YARNX TITLE
-       ======================================================== */
+    border: 2px solid #6a1b9a;
+    border-radius: 14px;
 
-    .yarnx-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-        width: 100%;
+    padding: 0 20px;
 
-        min-height: 78px;
+    margin: 4px 0 18px 0;
 
-        box-sizing: border-box;
+    text-align: center;
 
-        border: 2px solid #6a1b9a;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
 
-        border-radius: 14px;
+    color: #4a148c;
 
-        display: flex;
+    background: linear-gradient(
+        90deg,
+        #f3e5f5 0%,
+        #e3f2fd 50%,
+        #fce4ec 100%
+    );
 
-        align-items: center;
+    overflow: visible;
+}
 
-        justify-content: center;
 
-        padding: 12px 25px;
+/* ============================================================
+   FIRST PAGE AICW TEXT
+   ============================================================ */
 
-        margin: 0 0 18px 0;
+.aicw-card {
+    min-height: 245px;
 
-        text-align: center;
+    display: flex;
+    flex-direction: column;
 
-        font-size: 28px;
+    align-items: center;
+    justify-content: space-between;
 
-        font-weight: 800;
+    text-align: center;
 
-        line-height: 1.25;
+    padding: 28px 15px 22px 15px;
 
-        color: #43248a;
+    box-sizing: border-box;
+}
 
-        background: linear-gradient(
-            90deg,
-            #f3e5f5 0%,
-            #e3f2fd 50%,
-            #fce4ec 100%
-        );
+.aicw-main {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.25;
 
-        overflow: visible;
-    }
+    color: #24324a;
 
+    margin: 0;
+}
 
-    /* ========================================================
-       TOP CARDS
-       ======================================================== */
+.aicw-sub {
+    font-size: 30px;
+    font-weight: 700;
 
-    .project-card {
+    line-height: 1.25;
 
-        border: 1px solid #d9d9d9;
+    color: #24324a;
 
-        border-radius: 10px;
+    margin-top: 8px;
+}
 
-        background: white;
+.capstone {
+    font-size: 25px;
+    font-weight: 700;
 
-        box-sizing: border-box;
-    }
+    color: #24324a;
 
+    margin: 0;
+}
 
-    /* ========================================================
-       AICW CARD
-       ======================================================== */
 
-    .aicw-content {
+/* ============================================================
+   PROJECT DESCRIPTION
+   ============================================================ */
 
-        min-height: 265px;
+.project-heading {
+    font-size: 30px;
+    font-weight: 700;
 
-        display: flex;
+    color: #4a148c;
 
-        flex-direction: column;
+    margin: 0 0 18px 0;
+}
 
-        align-items: center;
+.project-text {
+    font-size: 16px;
 
-        justify-content: space-between;
+    color: #24324a;
 
-        text-align: center;
+    line-height: 1.7;
 
-        padding: 22px 15px;
-    }
+    margin-bottom: 16px;
+}
 
 
-    .aicw-title {
+/* ============================================================
+   PREDICT BUTTON
+   ============================================================ */
 
-        font-size: 32px;
+.predict-button .stButton > button {
 
-        font-weight: 700;
+    width: 100%;
 
-        color: #24324a;
+    height: 46px;
 
-        line-height: 1.2;
+    border: 1px solid #d1d5dc !important;
 
-        margin: 0;
-    }
+    border-radius: 10px !important;
 
+    background: #f3f5f8 !important;
 
-    .aicw-subtitle {
+    color: #24324a !important;
 
-        font-size: 30px;
+    font-size: 15px !important;
 
-        font-weight: 700;
+    font-weight: 600 !important;
 
-        color: #24324a;
+    box-shadow: none !important;
 
-        line-height: 1.2;
+    transform: none !important;
+}
 
-        margin-top: 10px;
-    }
+.predict-button .stButton > button:hover {
 
+    background: #edf0f4 !important;
 
-    .capstone-title {
+    color: #24324a !important;
 
-        font-size: 25px;
+    border: 1px solid #c8ccd4 !important;
 
-        font-weight: 700;
+    box-shadow: none !important;
 
-        color: #24324a;
+    transform: none !important;
+}
 
-        margin: 0;
-    }
 
+/* ============================================================
+   SECOND PAGE BUTTONS
+   ============================================================ */
 
-    /* ========================================================
-       PROJECT DESCRIPTION
-       ======================================================== */
+.analyze-button .stButton > button {
 
-    .project-heading {
+    width: 100%;
 
-        font-size: 30px;
+    min-height: 48px;
 
-        font-weight: 700;
+    border: none !important;
 
-        color: #4a148c;
+    border-radius: 13px !important;
 
-        margin-bottom: 18px;
-    }
+    background: linear-gradient(
+        135deg,
+        #6a1b9a,
+        #1976d2
+    ) !important;
 
+    color: white !important;
 
-    .project-text {
+    font-size: 15px !important;
 
-        font-size: 16px;
+    font-weight: 700 !important;
 
-        color: #24324a;
+    box-shadow:
+        0 5px 14px rgba(70,55,150,0.25) !important;
+}
 
-        line-height: 1.75;
 
-        margin-bottom: 16px;
-    }
+/* ============================================================
+   BACK BUTTON
+   ============================================================ */
 
+.back-button .stButton > button {
 
-    /* ========================================================
-       PREDICT BUTTON
-       ======================================================== */
+    width: auto;
 
-    .predict-area .stButton > button {
+    min-width: 78px;
 
-        width: 100%;
+    height: 44px;
 
-        height: 46px;
+    border: none !important;
 
-        border: 1px solid #d2d5dc !important;
+    border-radius: 10px !important;
 
-        border-radius: 10px !important;
+    background: linear-gradient(
+        135deg,
+        #6a1b9a,
+        #1976d2
+    ) !important;
 
-        background: #f4f6f9 !important;
+    color: white !important;
 
-        color: #24324a !important;
+    font-weight: 700 !important;
+}
 
-        font-size: 15px !important;
 
-        font-weight: 600 !important;
+/* ============================================================
+   BOTTOM SECTION
+   ============================================================ */
 
-        box-shadow: none !important;
-    }
+.bottom-heading {
 
+    font-size: 17px;
 
-    .predict-area .stButton > button:hover {
+    font-weight: 700;
 
-        background: #eef0f5 !important;
+    color: #24324a;
 
-        border: 1px solid #c5c9d2 !important;
+    margin-bottom: 18px;
+}
 
-        color: #24324a !important;
+.bottom-text {
 
-        transform: none !important;
+    font-size: 15px;
 
-        box-shadow: none !important;
-    }
+    color: #24324a;
 
+    line-height: 2.0;
+}
 
-    /* ========================================================
-       BACK BUTTON
-       ======================================================== */
+.email-text {
 
-    .back-area .stButton > button {
+    font-size: 15px;
 
-        width: auto;
+    line-height: 2.0;
 
-        min-width: 78px;
+    word-break: break-word;
+}
 
-        height: 44px;
+.email-text a {
 
-        border-radius: 10px !important;
+    color: #315bb5;
 
-        border: none !important;
+    text-decoration: underline;
+}
 
-        background: linear-gradient(
-            135deg,
-            #6a1b9a,
-            #1976d2
-        ) !important;
+.guide-text {
 
-        color: white !important;
+    font-size: 15px;
 
-        font-weight: 700 !important;
+    color: #24324a;
 
-        box-shadow:
-            0 5px 12px rgba(70, 55, 150, 0.20) !important;
-    }
+    line-height: 1.7;
+}
 
 
-    /* ========================================================
-       ANALYZE BUTTON
-       ======================================================== */
+/* ============================================================
+   QUALITY RESULT
+   ============================================================ */
 
-    .analyze-area .stButton > button {
+.good-quality {
 
-        width: 100%;
+    width: 100%;
 
-        min-height: 48px;
+    box-sizing: border-box;
 
-        border: none !important;
+    border: 2px solid #4f7f42;
 
-        border-radius: 13px !important;
+    border-radius: 12px;
 
-        background: linear-gradient(
-            135deg,
-            #6a1b9a,
-            #1976d2
-        ) !important;
+    padding: 10px;
 
-        color: white !important;
+    text-align: center;
 
-        font-weight: 700 !important;
+    font-size: 21px;
 
-        box-shadow:
-            0 5px 14px rgba(70, 55, 150, 0.25) !important;
-    }
+    font-weight: 700;
 
+    color: #2e6330;
 
-    /* ========================================================
-       QUALITY RESULT
-       ======================================================== */
+    background: #edf7ea;
 
-    .good-quality {
+    margin-top: 12px;
+}
 
-        width: 100%;
 
-        box-sizing: border-box;
+.bad-quality {
 
-        border: 2px solid #4f7f42;
+    width: 100%;
 
-        border-radius: 12px;
+    box-sizing: border-box;
 
-        padding: 10px;
+    border: 2px solid #c62828;
 
-        text-align: center;
+    border-radius: 12px;
 
-        font-size: 20px;
+    padding: 10px;
 
-        font-weight: 700;
+    text-align: center;
 
-        color: #2e6330;
+    font-size: 21px;
 
-        background: #edf7ea;
+    font-weight: 700;
 
-        margin-top: 12px;
-    }
+    color: #b71c1c;
 
+    background: #fff0f1;
 
-    .bad-quality {
+    margin-top: 12px;
+}
 
-        width: 100%;
 
-        box-sizing: border-box;
+/* ============================================================
+   DEFECT CARD
+   ============================================================ */
 
-        border: 2px solid #c62828;
+.defect-card {
 
-        border-radius: 12px;
+    width: 100%;
 
-        padding: 10px;
+    box-sizing: border-box;
 
-        text-align: center;
+    border: 1px solid #ef9a9a;
 
-        font-size: 20px;
+    border-radius: 9px;
 
-        font-weight: 700;
+    padding: 12px 14px;
 
-        color: #b71c1c;
+    margin-top: 8px;
 
-        background: #fff0f1;
+    background: #fffafa;
 
-        margin-top: 12px;
-    }
+    color: #24324a;
 
+    font-size: 16px;
 
-    /* ========================================================
-       DEFECT CARD
-       ======================================================== */
+    line-height: 1.8;
+}
 
-    .defect-card {
+.defect-label {
+    font-weight: 700;
+    color: #24324a;
+}
 
-        width: 100%;
 
-        box-sizing: border-box;
+/* ============================================================
+   IMAGE
+   ============================================================ */
 
-        border: 1px solid #ef9a9a;
+div[data-testid="stImage"] img {
+    border-radius: 10px;
+}
 
-        border-radius: 10px;
 
-        padding: 14px 16px;
+/* ============================================================
+   RADIO
+   ============================================================ */
 
-        margin-top: 9px;
+div[data-testid="stRadio"] label {
+    font-weight: 600;
+}
 
-        background: #fffafa;
-
-        color: #24324a;
-
-        font-size: 16px;
-
-        line-height: 1.7;
-    }
-
-
-    .defect-name {
-
-        color: #24324a;
-
-        font-weight: 700;
-    }
-
-
-    .confidence-value {
-
-        color: #24324a;
-
-        font-weight: 600;
-    }
-
-
-    /* ========================================================
-       IMAGE / VIDEO BOX
-       ======================================================== */
-
-    .media-label {
-
-        font-size: 15px;
-
-        font-weight: 700;
-
-        color: #24324a;
-
-        margin-bottom: 8px;
-    }
-
-
-    /* ========================================================
-       BOTTOM INFORMATION
-       ======================================================== */
-
-    .bottom-heading {
-
-        font-size: 17px;
-
-        font-weight: 700;
-
-        color: #24324a;
-
-        margin-bottom: 18px;
-    }
-
-
-    .bottom-text {
-
-        font-size: 15px;
-
-        color: #24324a;
-
-        line-height: 2.0;
-
-        margin: 0;
-    }
-
-
-    .email-text {
-
-        font-size: 15px;
-
-        color: #315bb5;
-
-        line-height: 2.0;
-
-        margin: 0;
-
-        word-break: break-word;
-    }
-
-
-    .guide-name {
-
-        font-size: 15px;
-
-        color: #24324a;
-
-        margin-bottom: 22px;
-    }
-
-
-    .designation {
-
-        font-size: 15px;
-
-        color: #24324a;
-    }
-
-
-    .designation-heading {
-
-        font-size: 15px;
-
-        font-weight: 700;
-
-        color: #24324a;
-
-        margin-bottom: 12px;
-    }
-
-
-    /* ========================================================
-       RADIO
-       ======================================================== */
-
-    div[data-testid="stRadio"] label {
-
-        font-weight: 600;
-    }
-
-
-    </style>
-    """,
+</style>
+""",
     unsafe_allow_html=True
 )
 
 
 # ============================================================
-# TITLE FUNCTION
+# TITLE
 # ============================================================
 
 def show_title():
@@ -578,34 +488,24 @@ def show_title():
 # ============================================================
 # IMAGE DISPLAY
 #
-# IMPORTANT:
-# We DO NOT convert RGB -> BGR here.
-# Uploaded PIL image is already RGB.
+# PIL IMAGE IS ALREADY RGB.
+# NO BGR/RGB CONVERSION HERE.
 # ============================================================
 
-def show_image(
-    image,
-    width=400
-):
+def show_image(image, width=400):
 
     if isinstance(image, np.ndarray):
 
-        # Image arrays in this app are RGB.
-        image_to_show = Image.fromarray(
+        image = Image.fromarray(
             image.astype(np.uint8)
         )
 
-    elif isinstance(image, Image.Image):
-
-        image_to_show = image.convert("RGB")
-
     else:
 
-        image_to_show = image
-
+        image = image.convert("RGB")
 
     st.image(
-        image_to_show,
+        image,
         width=width
     )
 
@@ -614,17 +514,19 @@ def show_image(
 # DRAW YOLO BOXES ON RGB IMAGE
 #
 # IMPORTANT:
-# OpenCV normally uses BGR.
-# But this image is RGB.
-# Therefore RED = (255, 0, 0)
+# Image is RGB.
+# PIL ImageDraw is used.
+# Therefore original colors remain unchanged.
+# Only red box + label are added.
 # ============================================================
 
-def draw_yolo_boxes_rgb(
-    image_rgb,
-    result
-):
+def draw_yolo_boxes(image_rgb, result):
 
-    output = image_rgb.copy()
+    image = Image.fromarray(
+        image_rgb.astype(np.uint8)
+    ).convert("RGB")
+    
+    draw = ImageDraw.Draw(image)
 
     defects = []
 
@@ -634,8 +536,28 @@ def draw_yolo_boxes_rgb(
         or len(result.boxes) == 0
     ):
 
-        return output, defects
+        return np.array(image), defects
 
+
+    # --------------------------------------------------------
+    # FONT
+    # --------------------------------------------------------
+
+    try:
+
+        font = ImageFont.truetype(
+            "DejaVuSans-Bold.ttf",
+            18
+        )
+
+    except Exception:
+
+        font = ImageFont.load_default()
+
+
+    # --------------------------------------------------------
+    # DRAW EACH DETECTION
+    # --------------------------------------------------------
 
     for box in result.boxes:
 
@@ -645,7 +567,6 @@ def draw_yolo_boxes_rgb(
             .numpy()
             .astype(int)
         )
-
 
         x1, y1, x2, y2 = coords
 
@@ -685,27 +606,26 @@ def draw_yolo_boxes_rgb(
         )
 
 
-        # ====================================================
-        # RED BOUNDING BOX
-        # RGB RED = (255, 0, 0)
-        # ====================================================
+        # ----------------------------------------------------
+        # RED BOX
+        # ----------------------------------------------------
 
-        cv2.rectangle(
-            output,
+        for offset in range(5):
 
-            (x1, y1),
+            draw.rectangle(
+                [
+                    x1 - offset,
+                    y1 - offset,
+                    x2 + offset,
+                    y2 + offset
+                ],
+                outline=(255, 0, 0)
+            )
 
-            (x2, y2),
 
-            (255, 0, 0),
-
-            5
-        )
-
-
-        # ====================================================
+        # ----------------------------------------------------
         # LABEL
-        # ====================================================
+        # ----------------------------------------------------
 
         label = (
             f"{defect_name} "
@@ -713,98 +633,73 @@ def draw_yolo_boxes_rgb(
         )
 
 
-        font = cv2.FONT_HERSHEY_SIMPLEX
-
-        font_scale = 0.70
-
-        thickness = 2
-
-
-        text_size, baseline = (
-            cv2.getTextSize(
-                label,
-                font,
-                font_scale,
-                thickness
-            )
-        )
-
-
-        text_width, text_height = text_size
-
-
-        label_y = max(
-            y1,
-            text_height + 15
-        )
-
-
-        # ====================================================
-        # RED LABEL BACKGROUND
-        # ====================================================
-
-        cv2.rectangle(
-            output,
-
-            (
-                x1,
-
-                label_y
-                - text_height
-                - 12
-            ),
-
-            (
-                x1
-                + text_width
-                + 12,
-
-                label_y
-                + 4
-            ),
-
-            (255, 0, 0),
-
-            -1
-        )
-
-
-        # ====================================================
-        # WHITE LABEL TEXT
-        # ====================================================
-
-        cv2.putText(
-            output,
-
+        bbox = draw.textbbox(
+            (0, 0),
             label,
+            font=font
+        )
 
+
+        text_width = (
+            bbox[2] - bbox[0]
+        )
+
+        text_height = (
+            bbox[3] - bbox[1]
+        )
+
+
+        label_top = max(
+            0,
+            y1 - text_height - 12
+        )
+
+
+        label_bottom = (
+            label_top
+            + text_height
+            + 10
+        )
+
+
+        # ----------------------------------------------------
+        # RED LABEL BACKGROUND
+        # ----------------------------------------------------
+
+        draw.rectangle(
+            [
+                x1,
+                label_top,
+                x1 + text_width + 12,
+                label_bottom
+            ],
+            fill=(255, 0, 0)
+        )
+
+
+        # ----------------------------------------------------
+        # WHITE LABEL
+        # ----------------------------------------------------
+
+        draw.text(
             (
                 x1 + 6,
-                label_y - 6
+                label_top + 4
             ),
-
-            font,
-
-            font_scale,
-
-            (255, 255, 255),
-
-            thickness,
-
-            cv2.LINE_AA
+            label,
+            fill=(255, 255, 255),
+            font=font
         )
 
 
-    return output, defects
+    return np.array(image), defects
 
 
 # ============================================================
 # VIDEO CONVERSION
 # ============================================================
 
-def convert_video_for_browser(
-    input_path
-):
+def convert_video_for_browser(input_path):
 
     try:
 
@@ -878,16 +773,15 @@ def convert_video_for_browser(
 
 if st.session_state.page == "home":
 
-
     # ========================================================
-    # YARNX TITLE
+    # TOP HEADING
     # ========================================================
 
     show_title()
 
 
     # ========================================================
-    # TOP TWO CARDS
+    # TOP TWO COLUMNS
     # ========================================================
 
     left, right = st.columns(
@@ -897,7 +791,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # AICW
+    # LEFT AICW CARD
     # ========================================================
 
     with left:
@@ -908,22 +802,21 @@ if st.session_state.page == "home":
 
             st.markdown(
                 """
-                <div class="aicw-content">
+                <div class="aicw-card">
 
                     <div>
 
-                        <div class="aicw-title">
+                        <div class="aicw-main">
                             AI Career for Women
                         </div>
 
-                        <div class="aicw-subtitle">
+                        <div class="aicw-sub">
                             (AICW)
                         </div>
 
                     </div>
 
-
-                    <div class="capstone-title">
+                    <div class="capstone">
                         Capstone Project
                     </div>
 
@@ -934,7 +827,7 @@ if st.session_state.page == "home":
 
 
         st.markdown(
-            '<div class="predict-area">',
+            '<div class="predict-button">',
             unsafe_allow_html=True
         )
 
@@ -956,7 +849,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # PROJECT DESCRIPTION
+    # RIGHT PROJECT DESCRIPTION
     # ========================================================
 
     with right:
@@ -1007,9 +900,9 @@ if st.session_state.page == "home":
                 <div class="project-text">
                     The system displays the detected defect,
                     confidence score, and final quality result as
-                    GOOD or BAD. This helps reduce manual
-                    inspection effort and supports faster and more
-                    accurate yarn quality assessment.
+                    GOOD or BAD. This helps reduce manual inspection
+                    effort and supports faster and more accurate
+                    yarn quality assessment.
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -1021,10 +914,13 @@ if st.session_state.page == "home":
     # ========================================================
 
     st.write("")
+    st.write("")
 
 
     # ========================================================
-    # BOTTOM INFORMATION
+    # BOTTOM THREE SECTIONS
+    #
+    # NO BOXES — SAME AS YOUR REFERENCE IMAGE
     # ========================================================
 
     team, gmail, guide = st.columns(
@@ -1053,11 +949,14 @@ if st.session_state.page == "home":
             """
             <div class="bottom-text">
 
-                1. &nbsp; Gutti.Pavani Devi Priya<br><br>
+                1. &nbsp; Gutti.Pavani Devi Priya
+                <br><br>
 
-                2. &nbsp; Somasani.Sasi Priya<br><br>
+                2. &nbsp; Somasani.Sasi Priya
+                <br><br>
 
-                3. &nbsp; Galidevara.Rama Devi<br><br>
+                3. &nbsp; Galidevara.Rama Devi
+                <br><br>
 
                 4. &nbsp; Rambala.Harshitha Sai Lakshmi
 
@@ -1090,16 +989,19 @@ if st.session_state.page == "home":
                 <a href="mailto:gutthipavanidevipriya@gmail.com">
                     gutthipavanidevipriya@gmail.com
                 </a>
+
                 <br><br>
 
                 <a href="mailto:Sasipriya8090@gmail.com">
                     Sasipriya8090@gmail.com
                 </a>
+
                 <br><br>
 
                 <a href="mailto:ramadevigalidevara0@gmail.com">
                     ramadevigalidevara0@gmail.com
                 </a>
+
                 <br><br>
 
                 <a href="mailto:harshitharambala3@gmail.com">
@@ -1130,27 +1032,17 @@ if st.session_state.page == "home":
 
         st.markdown(
             """
-            <div class="guide-name">
+            <div class="guide-text">
                 Md. Abdul Aziz
             </div>
-            """,
-            unsafe_allow_html=True
-        )
 
+            <br>
 
-        st.markdown(
-            """
-            <div class="designation-heading">
+            <div class="bottom-heading">
                 DESIGNATION
             </div>
-            """,
-            unsafe_allow_html=True
-        )
 
-
-        st.markdown(
-            """
-            <div class="designation">
+            <div class="guide-text">
                 Co Lead & Trainer AICW
             </div>
             """,
@@ -1164,9 +1056,8 @@ if st.session_state.page == "home":
 
 else:
 
-
     # ========================================================
-    # TITLE
+    # TOP HEADING
     # ========================================================
 
     show_title()
@@ -1177,23 +1068,19 @@ else:
     # ========================================================
 
     st.markdown(
-        '<div class="back-area">',
+        '<div class="back-button">',
         unsafe_allow_html=True
     )
 
 
-    if st.button(
-        "⬅ Back"
-    ):
+    if st.button("⬅ Back"):
 
         st.session_state.page = "home"
 
         st.session_state.image_output = None
-
         st.session_state.image_defects = []
 
         st.session_state.video_output = None
-
         st.session_state.video_defects = {}
 
         st.rerun()
@@ -1219,7 +1106,7 @@ else:
 
 
     # ========================================================
-    # INPUT SIDE
+    # INPUT
     # ========================================================
 
     with left:
@@ -1246,7 +1133,7 @@ else:
 
 
         # ====================================================
-        # IMAGE INPUT
+        # IMAGE
         # ====================================================
 
         if input_type == "🖼️ Image":
@@ -1272,17 +1159,12 @@ else:
                 ).convert("RGB")
 
 
-                st.markdown(
-                    '<div class="media-label">'
-                    'INPUT PREVIEW'
-                    '</div>',
-                    unsafe_allow_html=True
+                st.write(
+                    "**INPUT PREVIEW**"
                 )
 
 
-                # =================================================
                 # ACTUAL ORIGINAL IMAGE
-                # =================================================
 
                 show_image(
                     image,
@@ -1294,7 +1176,7 @@ else:
 
 
                 st.markdown(
-                    '<div class="analyze-area">',
+                    '<div class="analyze-button">',
                     unsafe_allow_html=True
                 )
 
@@ -1308,7 +1190,6 @@ else:
                         "Analyzing yarn..."
                     ):
 
-                        # PIL RGB -> NumPy RGB
                         image_rgb = np.array(
                             image
                         )
@@ -1324,11 +1205,10 @@ else:
 
 
                     # IMPORTANT:
-                    # draw_yolo_boxes_rgb keeps
-                    # original image colors.
+                    # RGB image stays RGB.
 
                     output_image, defects = (
-                        draw_yolo_boxes_rgb(
+                        draw_yolo_boxes(
                             image_rgb,
                             result
                         )
@@ -1360,7 +1240,7 @@ else:
 
 
         # ====================================================
-        # CAMERA INPUT
+        # CAMERA
         # ====================================================
 
         elif input_type == "📷 Camera":
@@ -1377,11 +1257,8 @@ else:
                 ).convert("RGB")
 
 
-                st.markdown(
-                    '<div class="media-label">'
-                    'CAMERA PREVIEW'
-                    '</div>',
-                    unsafe_allow_html=True
+                st.write(
+                    "**CAMERA PREVIEW**"
                 )
 
 
@@ -1395,7 +1272,7 @@ else:
 
 
                 st.markdown(
-                    '<div class="analyze-area">',
+                    '<div class="analyze-button">',
                     unsafe_allow_html=True
                 )
 
@@ -1424,7 +1301,7 @@ else:
 
 
                     output_image, defects = (
-                        draw_yolo_boxes_rgb(
+                        draw_yolo_boxes(
                             image_rgb,
                             result
                         )
@@ -1456,7 +1333,7 @@ else:
 
 
         # ====================================================
-        # VIDEO INPUT
+        # VIDEO
         # ====================================================
 
         else:
@@ -1477,14 +1354,9 @@ else:
 
             if uploaded_video:
 
-                # =================================================
-                # SAVE ORIGINAL INPUT VIDEO
-                # =================================================
-
                 preview_file = (
                     tempfile.NamedTemporaryFile(
                         delete=False,
-
                         suffix=".mp4"
                     )
                 )
@@ -1498,15 +1370,12 @@ else:
                 preview_file.close()
 
 
-                st.markdown(
-                    '<div class="media-label">'
-                    'INPUT VIDEO'
-                    '</div>',
-                    unsafe_allow_html=True
+                st.write(
+                    "**INPUT VIDEO**"
                 )
 
 
-                # Actual video
+                # ACTUAL VIDEO
 
                 st.video(
                     preview_file.name
@@ -1517,7 +1386,7 @@ else:
 
 
                 st.markdown(
-                    '<div class="analyze-area">',
+                    '<div class="analyze-button">',
                     unsafe_allow_html=True
                 )
 
@@ -1531,14 +1400,13 @@ else:
                         "Analyzing video... Please wait."
                     ):
 
-                        # -----------------------------------------
-                        # SAVE INPUT VIDEO
-                        # -----------------------------------------
+                        # ----------------------------------------
+                        # SAVE INPUT
+                        # ----------------------------------------
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
                                 delete=False,
-
                                 suffix=".mp4"
                             )
                         )
@@ -1557,9 +1425,9 @@ else:
                         )
 
 
-                        # -----------------------------------------
+                        # ----------------------------------------
                         # OPEN VIDEO
-                        # -----------------------------------------
+                        # ----------------------------------------
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1595,18 +1463,16 @@ else:
 
 
                         if fps <= 0:
-
                             fps = 25
 
 
-                        # -----------------------------------------
-                        # OUTPUT VIDEO
-                        # -----------------------------------------
+                        # ----------------------------------------
+                        # OUTPUT
+                        # ----------------------------------------
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
                                 delete=False,
-
                                 suffix=".mp4"
                             )
                         )
@@ -1651,13 +1517,12 @@ else:
 
                         all_defects = {}
 
-
                         last_boxes = []
 
 
-                        # -----------------------------------------
+                        # ----------------------------------------
                         # PROCESS VIDEO
-                        # -----------------------------------------
+                        # ----------------------------------------
 
                         while True:
 
@@ -1670,8 +1535,8 @@ else:
                                 break
 
 
-                            # Video frame from OpenCV
-                            # is BGR.
+                            # OpenCV frame is BGR.
+                            # Keep it BGR for YOLO.
 
                             result = model.predict(
                                 source=frame,
@@ -1744,8 +1609,6 @@ else:
                                     )
 
 
-                                    # Keep highest confidence
-
                                     if (
                                         defect_name
                                         not in all_defects
@@ -1793,12 +1656,9 @@ else:
                             )
 
 
-                            # -------------------------------------
-                            # DRAW VIDEO BOXES
-                            #
-                            # Video is BGR.
-                            # RED = (0, 0, 255)
-                            # -------------------------------------
+                            # ------------------------------------
+                            # RED BOXES
+                            # ------------------------------------
 
                             for detection in boxes_to_draw:
 
@@ -1816,6 +1676,8 @@ else:
                                     detection["confidence"]
                                 )
 
+
+                                # BGR RED
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1841,7 +1703,7 @@ else:
                                 )
 
 
-                                font_scale = 0.70
+                                font_scale = 0.75
 
                                 thickness = 2
 
@@ -1849,11 +1711,8 @@ else:
                                 text_size, baseline = (
                                     cv2.getTextSize(
                                         label,
-
                                         font,
-
                                         font_scale,
-
                                         thickness
                                     )
                                 )
@@ -1866,7 +1725,6 @@ else:
 
                                 label_y = max(
                                     y1,
-
                                     text_height + 15
                                 )
 
@@ -1876,7 +1734,6 @@ else:
 
                                     (
                                         x1,
-
                                         label_y
                                         - text_height
                                         - 12
@@ -1886,7 +1743,6 @@ else:
                                         x1
                                         + text_width
                                         + 12,
-
                                         label_y + 4
                                     ),
 
@@ -1903,7 +1759,6 @@ else:
 
                                     (
                                         x1 + 6,
-
                                         label_y - 6
                                     ),
 
@@ -1924,18 +1779,14 @@ else:
                             )
 
 
-                        # -----------------------------------------
-                        # RELEASE VIDEO
-                        # -----------------------------------------
-
                         cap.release()
 
                         writer.release()
 
 
-                        # -----------------------------------------
+                        # ----------------------------------------
                         # BROWSER COMPATIBILITY
-                        # -----------------------------------------
+                        # ----------------------------------------
 
                         final_video = (
                             convert_video_for_browser(
@@ -1988,20 +1839,13 @@ else:
             is not None
         ):
 
-            st.markdown(
-                '<div class="media-label">'
-                'ANALYZED IMAGE'
-                '</div>',
-                unsafe_allow_html=True
+            st.write(
+                "**ANALYZED IMAGE**"
             )
 
 
-            # =================================================
-            # ACTUAL IMAGE
-            #
-            # image_output is RGB.
-            # NO COLOR CONVERSION.
-            # =================================================
+            # ACTUAL ANALYZED IMAGE
+            # ORIGINAL COLORS PRESERVED
 
             show_image(
                 st.session_state.image_output,
@@ -2016,7 +1860,7 @@ else:
 
 
             # =================================================
-            # BAD QUALITY
+            # BAD
             # =================================================
 
             if len(defects) > 0:
@@ -2036,18 +1880,11 @@ else:
                 )
 
 
-                # =================================================
-                # CLEAN DEFECT DETAILS
-                #
-                # NO RAW HTML TAGS
-                # =================================================
-
                 for defect in defects:
 
                     defect_name = str(
                         defect["name"]
                     )
-
 
                     confidence = (
                         defect["confidence"]
@@ -2055,28 +1892,26 @@ else:
                     )
 
 
+                    # IMPORTANT:
+                    # This is rendered HTML.
+                    # It will NOT show <b> or &nbsp;.
+
                     st.markdown(
                         f"""
                         <div class="defect-card">
-
                             🔴
-                            <span class="defect-name">
+                            <span class="defect-label">
                                 Defect:
                             </span>
-
                             {defect_name}
 
-                            <br><br>
+                            <br>
 
                             📊
-                            <span class="defect-name">
+                            <span class="defect-label">
                                 Confidence:
                             </span>
-
-                            <span class="confidence-value">
-                                {confidence:.2f}%
-                            </span>
-
+                            {confidence:.2f}%
                         </div>
                         """,
                         unsafe_allow_html=True
@@ -2084,7 +1919,7 @@ else:
 
 
             # =================================================
-            # GOOD QUALITY
+            # GOOD
             # =================================================
 
             else:
@@ -2108,15 +1943,12 @@ else:
             is not None
         ):
 
-            st.markdown(
-                '<div class="media-label">'
-                'ANALYZED VIDEO'
-                '</div>',
-                unsafe_allow_html=True
+            st.write(
+                "**ANALYZED VIDEO**"
             )
 
 
-            # Actual analyzed video
+            # ACTUAL VIDEO
 
             st.video(
                 st.session_state.video_output
@@ -2129,7 +1961,7 @@ else:
 
 
             # =================================================
-            # BAD QUALITY
+            # BAD
             # =================================================
 
             if len(defects) > 0:
@@ -2155,35 +1987,27 @@ else:
 
                     name = str(name)
 
-                    confidence_percent = (
+                    confidence = (
                         confidence * 100
                     )
 
 
-                    # Clean HTML rendered card
-
                     st.markdown(
                         f"""
                         <div class="defect-card">
-
                             🔴
-                            <span class="defect-name">
+                            <span class="defect-label">
                                 Defect:
                             </span>
-
                             {name}
 
-                            <br><br>
+                            <br>
 
                             📊
-                            <span class="defect-name">
+                            <span class="defect-label">
                                 Confidence:
                             </span>
-
-                            <span class="confidence-value">
-                                {confidence_percent:.2f}%
-                            </span>
-
+                            {confidence:.2f}%
                         </div>
                         """,
                         unsafe_allow_html=True
@@ -2191,7 +2015,7 @@ else:
 
 
             # =================================================
-            # GOOD QUALITY
+            # GOOD
             # =================================================
 
             else:
@@ -2207,7 +2031,7 @@ else:
 
 
         # ====================================================
-        # DEFAULT RESULT
+        # NO RESULT YET
         # ====================================================
 
         else:
