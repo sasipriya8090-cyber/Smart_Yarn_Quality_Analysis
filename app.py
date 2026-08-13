@@ -75,7 +75,7 @@ if "video_defects" not in st.session_state:
 
 
 # ============================================================
-# HELPER FOR HTML
+# HTML HELPER
 # ============================================================
 
 def render_html(html):
@@ -93,12 +93,14 @@ st.markdown("""
 <style>
 
 /* ============================================================
-   MAIN PAGE
+   PAGE TOP SPACE
    ============================================================ */
 
 .block-container {
-    padding-top: 1.2rem;
-    padding-bottom: 1.5rem;
+
+    padding-top: 3.5rem !important;
+
+    padding-bottom: 1.5rem !important;
 }
 
 
@@ -107,29 +109,34 @@ st.markdown("""
    ============================================================ */
 
 .main-title {
+
     width: 100%;
+
     height: 72px;
 
     box-sizing: border-box;
 
     border: 2px solid #6a1b9a;
-    border-radius: 14px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: 14px;
 
     padding: 0 20px;
 
-    margin-top: 4px;
-    margin-bottom: 20px;
+    margin: 0 0 20px 0;
 
-    overflow: hidden;
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
 
     text-align: center;
 
     font-size: 28px;
+
     font-weight: 800;
+
+    line-height: 1.2;
 
     color: #4a148c;
 
@@ -142,11 +149,13 @@ st.markdown("""
 
     box-shadow:
         0 2px 8px rgba(90, 50, 130, 0.08);
+
+    overflow: visible;
 }
 
 
 /* ============================================================
-   BUTTONS
+   BUTTONS - VIOLET + BLUE
    ============================================================ */
 
 .stButton > button {
@@ -216,9 +225,13 @@ st.markdown("""
    ============================================================ */
 
 .team-text {
+
     font-size: 15px;
+
     color: #24324a;
+
     margin: 8px 0;
+
     line-height: 1.5;
 }
 
@@ -228,10 +241,15 @@ st.markdown("""
    ============================================================ */
 
 .email-text {
+
     font-size: 14px;
+
     color: #315bb5;
+
     margin: 10px 0;
+
     word-break: break-word;
+
     line-height: 1.5;
 }
 
@@ -241,19 +259,29 @@ st.markdown("""
    ============================================================ */
 
 .guide-label {
+
     font-size: 13px;
+
     font-weight: 800;
+
     color: #5b5f73;
+
     margin-top: 14px;
+
     margin-bottom: 5px;
+
     text-transform: uppercase;
 }
 
 
 .guide-value {
+
     font-size: 15px;
+
     color: #24324a;
+
     margin-bottom: 12px;
+
     line-height: 1.5;
 }
 
@@ -329,6 +357,7 @@ st.markdown("""
    ============================================================ */
 
 div[data-testid="stRadio"] label {
+
     font-weight: 600;
 }
 
@@ -392,6 +421,7 @@ def show_fixed_image(
         overflow:hidden;
         box-sizing:border-box;
     ">
+
         <img
             src="data:image/png;base64,{encoded}"
             style="
@@ -403,10 +433,9 @@ def show_fixed_image(
                 display:block;
             "
         >
+
     </div>
     """)
-
-    st.write("")
 
 
 # ============================================================
@@ -447,6 +476,7 @@ def show_fixed_video(
             justify-content:center;
             overflow:hidden;
         ">
+
             <video
                 controls
                 style="
@@ -457,15 +487,16 @@ def show_fixed_video(
                     object-fit:contain;
                 "
             >
+
                 <source
                     src="data:video/mp4;base64,{encoded}"
                     type="video/mp4"
                 >
+
             </video>
+
         </div>
         """)
-
-        st.write("")
 
     except Exception as e:
 
@@ -475,7 +506,7 @@ def show_fixed_video(
 
 
 # ============================================================
-# DRAW YOLO BOXES
+# YOLO BOUNDING BOX
 # ============================================================
 
 def draw_yolo_boxes(
@@ -520,6 +551,7 @@ def draw_yolo_boxes(
 
         defect_name = model.names[class_id]
 
+
         defects.append({
             "name": defect_name,
             "confidence": confidence,
@@ -532,7 +564,9 @@ def draw_yolo_boxes(
         })
 
 
-        # RED BOX
+        # ----------------------------------------------------
+        # RED BOUNDING BOX
+        # ----------------------------------------------------
 
         cv2.rectangle(
             output,
@@ -543,18 +577,22 @@ def draw_yolo_boxes(
         )
 
 
+        # ----------------------------------------------------
         # LABEL
+        # ----------------------------------------------------
 
         label = (
             f"{defect_name} "
             f"{confidence * 100:.1f}%"
         )
 
+
         font = cv2.FONT_HERSHEY_SIMPLEX
 
         font_scale = 0.75
 
         thickness = 2
+
 
         text_size, baseline = cv2.getTextSize(
             label,
@@ -563,7 +601,9 @@ def draw_yolo_boxes(
             thickness
         )
 
+
         text_width, text_height = text_size
+
 
         label_y = max(
             y1,
@@ -644,19 +684,28 @@ def convert_video_for_browser(
 
 
     command = [
+
         ffmpeg,
+
         "-y",
+
         "-i",
         input_path,
+
         "-c:v",
         "libx264",
+
         "-preset",
         "fast",
+
         "-pix_fmt",
         "yuv420p",
+
         "-movflags",
         "+faststart",
+
         "-an",
+
         output_path
     ]
 
@@ -665,8 +714,11 @@ def convert_video_for_browser(
 
         subprocess.run(
             command,
+
             stdout=subprocess.PIPE,
+
             stderr=subprocess.PIPE,
+
             check=True
         )
 
@@ -684,7 +736,7 @@ def convert_video_for_browser(
 if st.session_state.page == "home":
 
     # ========================================================
-    # TITLE BOX
+    # COMPLETE TITLE BOX
     # ========================================================
 
     render_html("""
@@ -695,7 +747,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TOP PROJECT SECTION
+    # TOP SECTION
     # ========================================================
 
     left, right = st.columns(
@@ -705,7 +757,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # AICW CARD
+    # AICW BOX
     # ========================================================
 
     with left:
@@ -713,26 +765,44 @@ if st.session_state.page == "home":
         with st.container(border=True):
 
             st.markdown(
-                "## AI Career for Women"
-            )
+                """
+                <div style="
+                    height:250px;
+                    display:flex;
+                    flex-direction:column;
+                    align-items:center;
+                    justify-content:center;
+                    text-align:center;
+                ">
 
-            st.markdown(
-                "## (AICW)"
-            )
+                    <div style="
+                        font-size:32px;
+                        font-weight:700;
+                        color:#24324a;
+                        line-height:1.35;
+                    ">
+                        AI Career for Women
+                        <br>
+                        (AICW)
+                    </div>
 
-            st.write("")
+                    <div style="
+                        margin-top:35px;
+                        font-size:25px;
+                        font-weight:700;
+                        color:#24324a;
+                    ">
+                        Capstone Project
+                    </div>
 
-            st.write("")
-
-            st.markdown(
-                "### Capstone Project"
+                </div>
+                """,
+                unsafe_allow_html=True
             )
 
 
         st.write("")
 
-
-        # PREDICT BUTTON
 
         if st.button(
             "🔍 PREDICT",
@@ -908,7 +978,7 @@ if st.session_state.page == "home":
 else:
 
     # ========================================================
-    # TITLE BOX
+    # SAME COMPLETE TITLE BOX
     # ========================================================
 
     render_html("""
@@ -919,7 +989,7 @@ else:
 
 
     # ========================================================
-    # BACK BUTTON
+    # BACK
     # ========================================================
 
     if st.button(
@@ -951,7 +1021,7 @@ else:
 
 
     # ========================================================
-    # INPUT SIDE
+    # INPUT
     # ========================================================
 
     with left:
@@ -959,6 +1029,7 @@ else:
         st.subheader(
             "📥 INPUT"
         )
+
 
         st.write(
             "Select Input Type:"
@@ -977,7 +1048,7 @@ else:
 
 
         # ====================================================
-        # IMAGE INPUT
+        # IMAGE
         # ====================================================
 
         if input_type == "🖼️ Image":
@@ -1060,7 +1131,7 @@ else:
 
 
         # ====================================================
-        # CAMERA INPUT
+        # CAMERA
         # ====================================================
 
         elif input_type == "📷 Camera":
@@ -1134,7 +1205,7 @@ else:
 
 
         # ====================================================
-        # VIDEO INPUT
+        # VIDEO
         # ====================================================
 
         else:
@@ -1154,8 +1225,6 @@ else:
 
 
             if uploaded_video:
-
-                # INPUT VIDEO PREVIEW
 
                 preview_file = (
                     tempfile.NamedTemporaryFile(
@@ -1188,8 +1257,6 @@ else:
                 )
 
 
-                # ANALYZE VIDEO
-
                 if st.button(
                     "🔍 Analyze Video",
                     use_container_width=True
@@ -1198,8 +1265,6 @@ else:
                     with st.spinner(
                         "Analyzing video... Please wait."
                     ):
-
-                        # SAVE INPUT VIDEO
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1220,8 +1285,6 @@ else:
                             input_temp.name
                         )
 
-
-                        # OPEN VIDEO
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1257,10 +1320,9 @@ else:
 
 
                         if fps <= 0:
+
                             fps = 25
 
-
-                        # OUTPUT VIDEO
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1309,7 +1371,9 @@ else:
                         last_boxes = []
 
 
+                        # ----------------------------------------
                         # PROCESS VIDEO
+                        # ----------------------------------------
 
                         while True:
 
@@ -1450,8 +1514,6 @@ else:
                                 )
 
 
-                                # RED BOX
-
                                 cv2.rectangle(
                                     processed_frame,
 
@@ -1464,8 +1526,6 @@ else:
                                     6
                                 )
 
-
-                                # LABEL
 
                                 label = (
                                     f"{name} "
@@ -1503,8 +1563,6 @@ else:
                                 )
 
 
-                                # LABEL BACKGROUND
-
                                 cv2.rectangle(
                                     processed_frame,
 
@@ -1528,8 +1586,6 @@ else:
                                     -1
                                 )
 
-
-                                # LABEL TEXT
 
                                 cv2.putText(
                                     processed_frame,
@@ -1558,14 +1614,10 @@ else:
                             )
 
 
-                        # RELEASE
-
                         cap.release()
 
                         writer.release()
 
-
-                        # CONVERT VIDEO
 
                         final_video = (
                             convert_video_for_browser(
@@ -1747,7 +1799,7 @@ else:
 
 
         # ====================================================
-        # DEFAULT MESSAGE
+        # DEFAULT
         # ====================================================
 
         else:
