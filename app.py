@@ -1,8 +1,6 @@
 import os
 import tempfile
 import subprocess
-import base64
-from io import BytesIO
 
 import cv2
 import numpy as np
@@ -62,17 +60,26 @@ model = load_model()
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
-if "image_output" not in st.session_state:
-    st.session_state.image_output = None
+if "image_input" not in st.session_state:
+    st.session_state.image_input = None
+
+if "image_result" not in st.session_state:
+    st.session_state.image_result = None
 
 if "image_defects" not in st.session_state:
     st.session_state.image_defects = []
+
+if "image_quality" not in st.session_state:
+    st.session_state.image_quality = None
 
 if "video_output" not in st.session_state:
     st.session_state.video_output = None
 
 if "video_defects" not in st.session_state:
     st.session_state.video_defects = {}
+
+if "video_quality" not in st.session_state:
+    st.session_state.video_quality = None
 
 
 # ============================================================
@@ -83,27 +90,23 @@ st.markdown(
     """
     <style>
 
-    /* ========================================================
-       PAGE
-       ======================================================== */
-
     .block-container {
-        padding-top: 1.6rem;
+        padding-top: 1.5rem;
         padding-bottom: 1rem;
     }
 
-
-    /* ========================================================
-       MAIN TITLE
-       ======================================================== */
+    /* ---------------- TITLE ---------------- */
 
     .main-title {
         border: 2px solid #6a1b9a;
         border-radius: 16px;
         padding: 14px;
+
         text-align: center;
+
         font-size: 30px;
         font-weight: 800;
+
         color: #4a148c;
 
         background: linear-gradient(
@@ -119,20 +122,16 @@ st.markdown(
             0 4px 12px rgba(106, 27, 154, 0.12);
     }
 
-
-    /* ========================================================
-       BUTTON
-       ======================================================== */
+    /* ---------------- BUTTON ---------------- */
 
     .stButton > button {
-        height: 52px;
+        height: 50px;
 
         border-radius: 14px;
 
         border: none;
 
-        font-size: 18px;
-
+        font-size: 17px;
         font-weight: 800;
 
         color: white;
@@ -146,12 +145,7 @@ st.markdown(
 
         box-shadow:
             0 5px 14px rgba(106, 27, 154, 0.30);
-
-        transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease;
     }
-
 
     .stButton > button:hover {
         color: white;
@@ -162,60 +156,45 @@ st.markdown(
             0 8px 20px rgba(106, 27, 154, 0.40);
     }
 
-
-    /* ========================================================
-       GOOD QUALITY
-       ======================================================== */
+    /* ---------------- QUALITY ---------------- */
 
     .good-quality {
         border: 2px solid #2e7d32;
-
         border-radius: 12px;
 
-        padding: 9px;
+        padding: 10px;
 
         text-align: center;
 
-        font-size: 21px;
-
-        font-weight: bold;
+        font-size: 20px;
+        font-weight: 800;
 
         color: #1b5e20;
 
         background: #e8f5e9;
 
-        margin-top: 10px;
+        margin-top: 8px;
     }
-
-
-    /* ========================================================
-       BAD QUALITY
-       ======================================================== */
 
     .bad-quality {
         border: 2px solid #c62828;
-
         border-radius: 12px;
 
-        padding: 9px;
+        padding: 10px;
 
         text-align: center;
 
-        font-size: 21px;
-
-        font-weight: bold;
+        font-size: 20px;
+        font-weight: 800;
 
         color: #b71c1c;
 
         background: #ffebee;
 
-        margin-top: 10px;
+        margin-top: 8px;
     }
 
-
-    /* ========================================================
-       DEFECT
-       ======================================================== */
+    /* ---------------- DEFECT CARD ---------------- */
 
     .defect-card {
         border: 1px solid #ef9a9a;
@@ -236,316 +215,289 @@ st.markdown(
 
 
 # ============================================================
-# FIXED IMAGE DISPLAY
+# CLASSIFICATION HELPERS
 # ============================================================
 
-def show_fixed_image(
-    image,
-    width=300,
-    height=190,
-    border_color="#90caf9",
-    background="#f5faff"
-):
-
-    if isinstance(image, np.ndarray):
-
-        image = cv2.cvtColor(
-            image,
-            cv2.COLOR_BGR2RGB
-        )
-
-        image = Image.fromarray(image)
-
-    image = image.copy()
-
-    image.thumbnail(
-        (
-            width - 12,
-            height - 12
-        ),
-        Image.Resampling.LANCZOS
-    )
-
-    buffer = BytesIO()
-
-    image.save(
-        buffer,
-        format="PNG"
-    )
-
-    encoded = base64.b64encode(
-        buffer.getvalue()
-    ).decode("utf-8")
-
-    html = f"""
-    <div style="
-        width:{width}px;
-        height:{height}px;
-        margin:8px auto 12px auto;
-        border:2px solid {border_color};
-        border-radius:12px;
-        background:{background};
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        overflow:hidden;
-        box-sizing:border-box;
-    ">
-
-        <img
-            src="data:image/png;base64,{encoded}"
-            style="
-                max-width:{width - 12}px;
-                max-height:{height - 12}px;
-                width:auto;
-                height:auto;
-                object-fit:contain;
-                display:block;
-            "
-        >
-
-    </div>
-    """
-
-    st.components.v1.html(
-        html,
-        height=height + 30
-    )
-
-
-# ============================================================
-# FIXED VIDEO DISPLAY
-# ============================================================
-
-def show_fixed_video(
-    video_path,
-    width=300,
-    height=190,
-    border_color="#90caf9",
-    background="#f5faff"
-):
+def get_class_name(class_id):
 
     try:
-
-        with open(
-            video_path,
-            "rb"
-        ) as file:
-
-            video_bytes = file.read()
-
-        encoded = base64.b64encode(
-            video_bytes
-        ).decode("utf-8")
-
-        html = f"""
-        <div style="
-            width:{width}px;
-            height:{height}px;
-            margin:8px auto 12px auto;
-            border:2px solid {border_color};
-            border-radius:12px;
-            background:{background};
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            overflow:hidden;
-        ">
-
-            <video
-                controls
-                style="
-                    width:{width - 4}px;
-                    max-width:{width - 4}px;
-                    max-height:{height - 4}px;
-                    height:auto;
-                    object-fit:contain;
-                "
-            >
-
-                <source
-                    src="data:video/mp4;base64,{encoded}"
-                    type="video/mp4"
-                >
-
-            </video>
-
-        </div>
-        """
-
-        st.components.v1.html(
-            html,
-            height=height + 30
-        )
-
-    except Exception as error:
-
-        st.error(
-            f"❌ Unable to display video: {error}"
-        )
+        return str(model.names[class_id]).lower().strip()
+    except Exception:
+        return "unknown"
 
 
-# ============================================================
-# DRAW YOLO BOXES
-# ============================================================
+def classify_detection(class_name):
 
-def draw_yolo_boxes(
-    frame,
-    result
-):
+    name = class_name.lower().replace("_", " ").replace("-", " ")
 
-    output = frame.copy()
-
-    defects = []
+    # --------------------------------------------
+    # LOOP / GOOD
+    # --------------------------------------------
 
     if (
-        result.boxes is None
-        or len(result.boxes) == 0
+        "loop" in name
+        or "good" in name
+        or "normal" in name
     ):
-
-        return output, defects
-
-
-    for box in result.boxes:
-
-        coords = (
-            box.xyxy[0]
-            .cpu()
-            .numpy()
-            .astype(int)
-        )
-
-        x1, y1, x2, y2 = coords
+        return "good"
 
 
-        confidence = float(
-            box.conf[0]
-            .cpu()
-            .item()
-        )
+    # --------------------------------------------
+    # PROTRUDING / BAD
+    # --------------------------------------------
+
+    if (
+        "protrud" in name
+        or "defect" in name
+        or "bad" in name
+        or "fault" in name
+    ):
+        return "bad"
 
 
-        class_id = int(
-            box.cls[0]
-            .cpu()
-            .item()
-        )
+    # --------------------------------------------
+    # UNKNOWN DETECTION
+    # Treat unknown detected object as BAD
+    # --------------------------------------------
 
-
-        defect_name = model.names[class_id]
-
-
-        defects.append(
-            {
-                "name": defect_name,
-                "confidence": confidence,
-                "box": (
-                    x1,
-                    y1,
-                    x2,
-                    y2
-                )
-            }
-        )
-
-
-        # ----------------------------------------------------
-        # RED BOUNDING BOX
-        # ----------------------------------------------------
-
-        cv2.rectangle(
-            output,
-            (x1, y1),
-            (x2, y2),
-            (0, 0, 255),
-            6
-        )
-
-
-        # ----------------------------------------------------
-        # LABEL
-        # ----------------------------------------------------
-
-        label = (
-            f"{defect_name} "
-            f"{confidence * 100:.1f}%"
-        )
-
-
-        font = cv2.FONT_HERSHEY_SIMPLEX
-
-        font_scale = 0.75
-
-        thickness = 2
-
-
-        text_size, _ = cv2.getTextSize(
-            label,
-            font,
-            font_scale,
-            thickness
-        )
-
-
-        text_width, text_height = text_size
-
-
-        label_y = max(
-            y1,
-            text_height + 15
-        )
-
-
-        cv2.rectangle(
-            output,
-
-            (
-                x1,
-                label_y
-                - text_height
-                - 12
-            ),
-
-            (
-                x1
-                + text_width
-                + 12,
-                label_y + 4
-            ),
-
-            (0, 0, 255),
-
-            -1
-        )
-
-
-        cv2.putText(
-            output,
-
-            label,
-
-            (
-                x1 + 6,
-                label_y - 6
-            ),
-
-            font,
-
-            font_scale,
-
-            (255, 255, 255),
-
-            thickness,
-
-            cv2.LINE_AA
-        )
-
-
-    return output, defects
+    return "bad"
 
 
 # ============================================================
-# CONVERT VIDEO FOR BROWSER
+# DRAW IMAGE RESULT
+# ============================================================
+
+def process_image(image):
+
+    image_array = np.array(image)
+
+    result = model.predict(
+        source=image_array,
+        conf=0.10,
+        verbose=False
+    )[0]
+
+
+    output = image_array.copy()
+
+    detections = []
+
+    has_good = False
+    has_bad = False
+
+
+    if (
+        result.boxes is not None
+        and len(result.boxes) > 0
+    ):
+
+        for box in result.boxes:
+
+            coords = (
+                box.xyxy[0]
+                .cpu()
+                .numpy()
+                .astype(int)
+            )
+
+            x1, y1, x2, y2 = coords
+
+
+            confidence = float(
+                box.conf[0]
+                .cpu()
+                .item()
+            )
+
+
+            class_id = int(
+                box.cls[0]
+                .cpu()
+                .item()
+            )
+
+
+            class_name = get_class_name(
+                class_id
+            )
+
+
+            category = classify_detection(
+                class_name
+            )
+
+
+            if category == "good":
+
+                has_good = True
+
+                box_color = (
+                    0,
+                    180,
+                    0
+                )
+
+                display_name = "LOOP FIBER"
+
+            else:
+
+                has_bad = True
+
+                box_color = (
+                    0,
+                    0,
+                    255
+                )
+
+                display_name = "PROTRUDING FIBER"
+
+
+            detections.append(
+                {
+                    "name": display_name,
+                    "original_class": class_name,
+                    "confidence": confidence,
+                    "category": category,
+                    "box": (
+                        x1,
+                        y1,
+                        x2,
+                        y2
+                    )
+                }
+            )
+
+
+            # ----------------------------------------
+            # BOX
+            # ----------------------------------------
+
+            cv2.rectangle(
+                output,
+
+                (x1, y1),
+
+                (x2, y2),
+
+                box_color,
+
+                5
+            )
+
+
+            # ----------------------------------------
+            # LABEL
+            # ----------------------------------------
+
+            label = (
+                f"{display_name} "
+                f"{confidence * 100:.1f}%"
+            )
+
+
+            font = cv2.FONT_HERSHEY_SIMPLEX
+
+            font_scale = 0.70
+
+            thickness = 2
+
+
+            text_size, _ = cv2.getTextSize(
+                label,
+                font,
+                font_scale,
+                thickness
+            )
+
+
+            text_width, text_height = (
+                text_size
+            )
+
+
+            label_y = max(
+                y1,
+                text_height + 15
+            )
+
+
+            cv2.rectangle(
+                output,
+
+                (
+                    x1,
+                    label_y
+                    - text_height
+                    - 12
+                ),
+
+                (
+                    x1
+                    + text_width
+                    + 12,
+
+                    label_y + 4
+                ),
+
+                box_color,
+
+                -1
+            )
+
+
+            cv2.putText(
+                output,
+
+                label,
+
+                (
+                    x1 + 6,
+                    label_y - 6
+                ),
+
+                font,
+
+                font_scale,
+
+                (
+                    255,
+                    255,
+                    255
+                ),
+
+                thickness,
+
+                cv2.LINE_AA
+            )
+
+
+    # ========================================================
+    # QUALITY
+    # ========================================================
+
+    if has_bad:
+
+        quality = "BAD"
+
+    elif has_good:
+
+        quality = "GOOD"
+
+    else:
+
+        # No detection = GOOD
+        quality = "GOOD"
+
+
+    return (
+        output,
+        detections,
+        quality
+    )
+
+
+# ============================================================
+# VIDEO PROCESSING
 # ============================================================
 
 def convert_video_for_browser(
@@ -577,15 +529,21 @@ def convert_video_for_browser(
         "-y",
         "-i",
         input_path,
+
         "-c:v",
         "libx264",
+
         "-preset",
         "fast",
+
         "-pix_fmt",
         "yuv420p",
+
         "-movflags",
         "+faststart",
+
         "-an",
+
         output_path
     ]
 
@@ -606,17 +564,393 @@ def convert_video_for_browser(
         return input_path
 
 
+def process_video(
+    input_path
+):
+
+    cap = cv2.VideoCapture(
+        input_path
+    )
+
+
+    if not cap.isOpened():
+
+        raise RuntimeError(
+            "Unable to open video."
+        )
+
+
+    width = int(
+        cap.get(
+            cv2.CAP_PROP_FRAME_WIDTH
+        )
+    )
+
+
+    height = int(
+        cap.get(
+            cv2.CAP_PROP_FRAME_HEIGHT
+        )
+    )
+
+
+    fps = cap.get(
+        cv2.CAP_PROP_FPS
+    )
+
+
+    if fps <= 0:
+        fps = 25
+
+
+    output_file = tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".mp4"
+    )
+
+    output_file.close()
+
+
+    output_path = output_file.name
+
+
+    fourcc = cv2.VideoWriter_fourcc(
+        *"mp4v"
+    )
+
+
+    writer = cv2.VideoWriter(
+        output_path,
+        fourcc,
+        fps,
+        (width, height)
+    )
+
+
+    last_boxes = []
+
+    all_defects = {}
+
+    has_bad = False
+
+    has_good = False
+
+
+    while True:
+
+        ret, frame = cap.read()
+
+
+        if not ret:
+            break
+
+
+        result = model.predict(
+            source=frame,
+            conf=0.10,
+            verbose=False
+        )[0]
+
+
+        current_boxes = []
+
+
+        if (
+            result.boxes is not None
+            and len(result.boxes) > 0
+        ):
+
+            for box in result.boxes:
+
+                coords = (
+                    box.xyxy[0]
+                    .cpu()
+                    .numpy()
+                    .astype(int)
+                )
+
+
+                x1, y1, x2, y2 = coords
+
+
+                confidence = float(
+                    box.conf[0]
+                    .cpu()
+                    .item()
+                )
+
+
+                class_id = int(
+                    box.cls[0]
+                    .cpu()
+                    .item()
+                )
+
+
+                class_name = get_class_name(
+                    class_id
+                )
+
+
+                category = classify_detection(
+                    class_name
+                )
+
+
+                if category == "good":
+
+                    has_good = True
+
+                    box_color = (
+                        0,
+                        180,
+                        0
+                    )
+
+                    display_name = (
+                        "LOOP FIBER"
+                    )
+
+                else:
+
+                    has_bad = True
+
+                    box_color = (
+                        0,
+                        0,
+                        255
+                    )
+
+                    display_name = (
+                        "PROTRUDING FIBER"
+                    )
+
+
+                current_boxes.append(
+                    {
+                        "box": (
+                            x1,
+                            y1,
+                            x2,
+                            y2
+                        ),
+                        "color": box_color,
+                        "name": display_name,
+                        "confidence": confidence
+                    }
+                )
+
+
+                if display_name not in all_defects:
+
+                    all_defects[
+                        display_name
+                    ] = confidence
+
+                elif (
+                    confidence
+                    >
+                    all_defects[
+                        display_name
+                    ]
+                ):
+
+                    all_defects[
+                        display_name
+                    ] = confidence
+
+
+        # ====================================================
+        # KEEP LAST BOXES
+        # ====================================================
+
+        if len(current_boxes) > 0:
+
+            last_boxes = current_boxes
+
+
+        boxes_to_draw = (
+            current_boxes
+            if len(current_boxes) > 0
+            else last_boxes
+        )
+
+
+        processed = frame.copy()
+
+
+        # ====================================================
+        # DRAW BOXES
+        # ====================================================
+
+        for detection in boxes_to_draw:
+
+            x1, y1, x2, y2 = (
+                detection["box"]
+            )
+
+            box_color = (
+                detection["color"]
+            )
+
+            name = (
+                detection["name"]
+            )
+
+            confidence = (
+                detection["confidence"]
+            )
+
+
+            cv2.rectangle(
+                processed,
+
+                (x1, y1),
+
+                (x2, y2),
+
+                box_color,
+
+                5
+            )
+
+
+            label = (
+                f"{name} "
+                f"{confidence * 100:.1f}%"
+            )
+
+
+            font = cv2.FONT_HERSHEY_SIMPLEX
+
+            font_scale = 0.70
+
+            thickness = 2
+
+
+            text_size, _ = (
+                cv2.getTextSize(
+                    label,
+                    font,
+                    font_scale,
+                    thickness
+                )
+            )
+
+
+            text_width, text_height = (
+                text_size
+            )
+
+
+            label_y = max(
+                y1,
+                text_height + 15
+            )
+
+
+            cv2.rectangle(
+                processed,
+
+                (
+                    x1,
+                    label_y
+                    - text_height
+                    - 12
+                ),
+
+                (
+                    x1
+                    + text_width
+                    + 12,
+
+                    label_y + 4
+                ),
+
+                box_color,
+
+                -1
+            )
+
+
+            cv2.putText(
+                processed,
+
+                label,
+
+                (
+                    x1 + 6,
+                    label_y - 6
+                ),
+
+                font,
+
+                font_scale,
+
+                (
+                    255,
+                    255,
+                    255
+                ),
+
+                thickness,
+
+                cv2.LINE_AA
+            )
+
+
+        writer.write(
+            processed
+        )
+
+
+    cap.release()
+
+    writer.release()
+
+
+    # ========================================================
+    # FINAL QUALITY
+    # ========================================================
+
+    if has_bad:
+
+        quality = "BAD"
+
+    elif has_good:
+
+        quality = "GOOD"
+
+    else:
+
+        quality = "GOOD"
+
+
+    browser_video = (
+        convert_video_for_browser(
+            output_path
+        )
+    )
+
+
+    return (
+        browser_video,
+        all_defects,
+        quality
+    )
+
+
 # ============================================================
 # ============================================================
-# FIRST PAGE
+# HOME PAGE
 # ============================================================
 # ============================================================
 
 if st.session_state.page == "home":
 
-    # ========================================================
+    # --------------------------------------------------------
     # TITLE
-    # ========================================================
+    # --------------------------------------------------------
 
     st.markdown(
         """
@@ -628,9 +962,9 @@ if st.session_state.page == "home":
     )
 
 
-    # ========================================================
-    # TOP SECTION
-    # ========================================================
+    # --------------------------------------------------------
+    # TOP
+    # --------------------------------------------------------
 
     left, right = st.columns(
         [35, 65],
@@ -684,22 +1018,20 @@ if st.session_state.page == "home":
         st.write("")
 
 
-        # ====================================================
-        # PREDICT BUTTON
-        # ====================================================
-
         if st.button(
             "🔍  PREDICT",
             use_container_width=True
         ):
 
-            st.session_state.page = "inspection"
+            st.session_state.page = (
+                "inspection"
+            )
 
             st.rerun()
 
 
     # ========================================================
-    # PROJECT DESCRIPTION
+    # DESCRIPTION
     # ========================================================
 
     with right:
@@ -737,14 +1069,13 @@ if st.session_state.page == "home":
 
                 <p>
                 The system accepts yarn images, camera input,
-                and videos for inspection. A trained
-                <b>YOLO model</b> analyzes the yarn and
-                identifies defective regions by drawing
-                bounding boxes around detected defects.
+                and videos for inspection. A trained YOLO model
+                analyzes the yarn and identifies defective
+                regions using bounding boxes.
                 </p>
 
                 <p>
-                The system displays the detected defect,
+                The system displays the detected fiber,
                 confidence score, and final quality result
                 as <b>GOOD</b> or <b>BAD</b>. This helps
                 reduce manual inspection effort and supports
@@ -759,7 +1090,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TEAM INFORMATION
+    # TEAM / EMAIL / GUIDE
     # ========================================================
 
     st.write("")
@@ -772,7 +1103,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TEAM MEMBERS
+    # TEAM
     # ========================================================
 
     with team_col:
@@ -821,7 +1152,7 @@ if st.session_state.page == "home":
             )
 
             st.write(
-                "ramadevigalidevara0@gmail.com"
+                "ramadevidevigiladevara0@gmail.com"
             )
 
             st.write(
@@ -856,7 +1187,7 @@ if st.session_state.page == "home":
 
 # ============================================================
 # ============================================================
-# SECOND PAGE
+# INSPECTION PAGE
 # ============================================================
 # ============================================================
 
@@ -884,22 +1215,25 @@ else:
 
         st.session_state.page = "home"
 
-        st.session_state.image_output = None
+        st.session_state.image_input = None
+        st.session_state.image_result = None
         st.session_state.image_defects = []
+        st.session_state.image_quality = None
 
         st.session_state.video_output = None
         st.session_state.video_defects = {}
+        st.session_state.video_quality = None
 
         st.rerun()
 
 
     # ========================================================
-    # TWO COLUMNS
+    # INPUT / RESULT
     # ========================================================
 
     left, right = st.columns(
-        [35, 65],
-        gap="small"
+        [38, 62],
+        gap="medium"
     )
 
 
@@ -955,17 +1289,21 @@ else:
                 ).convert("RGB")
 
 
-                st.write(
-                    "**INPUT PREVIEW**"
+                # Store original input
+                st.session_state.image_input = (
+                    image.copy()
                 )
 
 
-                show_fixed_image(
+                st.write(
+                    "**INPUT IMAGE**"
+                )
+
+
+                # ORIGINAL IMAGE
+                st.image(
                     image,
-                    width=300,
-                    height=190,
-                    border_color="#90caf9",
-                    background="#f5faff"
+                    width=300
                 )
 
 
@@ -978,33 +1316,38 @@ else:
                         "Analyzing yarn..."
                     ):
 
-                        result = model.predict(
-                            source=np.array(image),
-                            conf=0.15,
-                            verbose=False
-                        )[0]
-
-
-                    output_image, defects = (
-                        draw_yolo_boxes(
-                            np.array(image),
-                            result
+                        (
+                            result_image,
+                            detections,
+                            quality
+                        ) = process_image(
+                            image
                         )
-                    )
 
 
-                    st.session_state.image_output = (
-                        output_image
+                    st.session_state.image_result = (
+                        result_image
                     )
 
                     st.session_state.image_defects = (
-                        defects
+                        detections
                     )
 
-                    st.session_state.video_output = None
+                    st.session_state.image_quality = (
+                        quality
+                    )
 
-                    st.session_state.video_defects = {}
+                    st.session_state.video_output = (
+                        None
+                    )
 
+                    st.session_state.video_defects = (
+                        {}
+                    )
+
+                    st.session_state.video_quality = (
+                        None
+                    )
 
                     st.rerun()
 
@@ -1027,17 +1370,19 @@ else:
                 ).convert("RGB")
 
 
-                st.write(
-                    "**CAMERA PREVIEW**"
+                st.session_state.image_input = (
+                    image.copy()
                 )
 
 
-                show_fixed_image(
+                st.write(
+                    "**INPUT IMAGE**"
+                )
+
+
+                st.image(
                     image,
-                    width=300,
-                    height=190,
-                    border_color="#90caf9",
-                    background="#f5faff"
+                    width=300
                 )
 
 
@@ -1050,33 +1395,30 @@ else:
                         "Analyzing yarn..."
                     ):
 
-                        result = model.predict(
-                            source=np.array(image),
-                            conf=0.15,
-                            verbose=False
-                        )[0]
-
-
-                    output_image, defects = (
-                        draw_yolo_boxes(
-                            np.array(image),
-                            result
+                        (
+                            result_image,
+                            detections,
+                            quality
+                        ) = process_image(
+                            image
                         )
-                    )
 
 
-                    st.session_state.image_output = (
-                        output_image
+                    st.session_state.image_result = (
+                        result_image
                     )
 
                     st.session_state.image_defects = (
-                        defects
+                        detections
                     )
 
-                    st.session_state.video_output = None
+                    st.session_state.image_quality = (
+                        quality
+                    )
 
-                    st.session_state.video_defects = {}
-
+                    st.session_state.video_output = (
+                        None
+                    )
 
                     st.rerun()
 
@@ -1101,7 +1443,7 @@ else:
 
             if uploaded_video:
 
-                preview_file = (
+                input_video_file = (
                     tempfile.NamedTemporaryFile(
                         delete=False,
                         suffix=".mp4"
@@ -1109,12 +1451,12 @@ else:
                 )
 
 
-                preview_file.write(
+                input_video_file.write(
                     uploaded_video.getvalue()
                 )
 
 
-                preview_file.close()
+                input_video_file.close()
 
 
                 st.write(
@@ -1122,12 +1464,8 @@ else:
                 )
 
 
-                show_fixed_video(
-                    preview_file.name,
-                    width=300,
-                    height=190,
-                    border_color="#90caf9",
-                    background="#f5faff"
+                st.video(
+                    uploaded_video
                 )
 
 
@@ -1140,436 +1478,46 @@ else:
                         "Analyzing video... Please wait."
                     ):
 
-                        input_temp = (
-                            tempfile.NamedTemporaryFile(
-                                delete=False,
-                                suffix=".mp4"
-                            )
+                        (
+                            video_result,
+                            defects,
+                            quality
+                        ) = process_video(
+                            input_video_file.name
                         )
 
 
-                        input_temp.write(
-                            uploaded_video.getvalue()
-                        )
-
-
-                        input_temp.close()
-
-
-                        input_path = (
-                            input_temp.name
-                        )
-
-
-                        # ------------------------------------
-                        # OPEN VIDEO
-                        # ------------------------------------
-
-                        cap = cv2.VideoCapture(
-                            input_path
-                        )
-
-
-                        if not cap.isOpened():
-
-                            st.error(
-                                "❌ Unable to open uploaded video."
-                            )
-
-                            st.stop()
-
-
-                        width = int(
-                            cap.get(
-                                cv2.CAP_PROP_FRAME_WIDTH
-                            )
-                        )
-
-
-                        height = int(
-                            cap.get(
-                                cv2.CAP_PROP_FRAME_HEIGHT
-                            )
-                        )
-
-
-                        fps = cap.get(
-                            cv2.CAP_PROP_FPS
-                        )
-
-
-                        if fps <= 0:
-                            fps = 25
-
-
-                        # ------------------------------------
-                        # OUTPUT
-                        # ------------------------------------
-
-                        output_temp = (
-                            tempfile.NamedTemporaryFile(
-                                delete=False,
-                                suffix=".mp4"
-                            )
-                        )
-
-
-                        output_temp.close()
-
-
-                        raw_output = (
-                            output_temp.name
-                        )
-
-
-                        fourcc = (
-                            cv2.VideoWriter_fourcc(
-                                *"mp4v"
-                            )
-                        )
-
-
-                        writer = cv2.VideoWriter(
-                            raw_output,
-                            fourcc,
-                            fps,
-                            (width, height)
-                        )
-
-
-                        if not writer.isOpened():
-
-                            cap.release()
-
-                            st.error(
-                                "❌ Unable to create output video."
-                            )
-
-                            st.stop()
-
-
-                        # ------------------------------------
-                        # DEFECT STORAGE
-                        # ------------------------------------
-
-                        all_defects = {}
-
-                        # Last detected boxes remain visible
-                        # until the video ends.
-
-                        last_boxes = []
-
-
-                        # ------------------------------------
-                        # PROCESS VIDEO
-                        # ------------------------------------
-
-                        while True:
-
-                            ret, frame = cap.read()
-
-
-                            if not ret:
-                                break
-
-
-                            # IMPORTANT:
-                            # model.track() IS NOT USED.
-                            # This avoids the previous "tap"
-                            # tracker error.
-
-                            result = model.predict(
-                                source=frame,
-                                conf=0.10,
-                                verbose=False
-                            )[0]
-
-
-                            current_boxes = []
-
-
-                            # --------------------------------
-                            # DETECT DEFECTS
-                            # --------------------------------
-
-                            if (
-                                result.boxes is not None
-                                and len(result.boxes) > 0
-                            ):
-
-                                for box in result.boxes:
-
-                                    coords = (
-                                        box.xyxy[0]
-                                        .cpu()
-                                        .numpy()
-                                        .astype(int)
-                                    )
-
-
-                                    x1, y1, x2, y2 = coords
-
-
-                                    confidence = float(
-                                        box.conf[0]
-                                        .cpu()
-                                        .item()
-                                    )
-
-
-                                    class_id = int(
-                                        box.cls[0]
-                                        .cpu()
-                                        .item()
-                                    )
-
-
-                                    defect_name = (
-                                        model.names[
-                                            class_id
-                                        ]
-                                    )
-
-
-                                    current_boxes.append(
-                                        {
-                                            "box": (
-                                                x1,
-                                                y1,
-                                                x2,
-                                                y2
-                                            ),
-                                            "name":
-                                                defect_name,
-                                            "confidence":
-                                                confidence
-                                        }
-                                    )
-
-
-                                    # Save defect
-                                    # highest confidence.
-
-                                    if (
-                                        defect_name
-                                        not in all_defects
-                                    ):
-
-                                        all_defects[
-                                            defect_name
-                                        ] = confidence
-
-                                    elif (
-                                        confidence
-                                        >
-                                        all_defects[
-                                            defect_name
-                                        ]
-                                    ):
-
-                                        all_defects[
-                                            defect_name
-                                        ] = confidence
-
-
-                            # --------------------------------
-                            # KEEP LAST DETECTION
-                            # --------------------------------
-
-                            if len(current_boxes) > 0:
-
-                                last_boxes = (
-                                    current_boxes
-                                )
-
-
-                            if len(current_boxes) > 0:
-
-                                boxes_to_draw = (
-                                    current_boxes
-                                )
-
-                            else:
-
-                                boxes_to_draw = (
-                                    last_boxes
-                                )
-
-
-                            processed_frame = (
-                                frame.copy()
-                            )
-
-
-                            # --------------------------------
-                            # DRAW RED BOXES
-                            # --------------------------------
-
-                            for detection in (
-                                boxes_to_draw
-                            ):
-
-                                x1, y1, x2, y2 = (
-                                    detection["box"]
-                                )
-
-                                name = (
-                                    detection["name"]
-                                )
-
-                                confidence = (
-                                    detection["confidence"]
-                                )
-
-
-                                cv2.rectangle(
-                                    processed_frame,
-                                    (x1, y1),
-                                    (x2, y2),
-                                    (0, 0, 255),
-                                    6
-                                )
-
-
-                                label = (
-                                    f"{name} "
-                                    f"{confidence * 100:.1f}%"
-                                )
-
-
-                                font = (
-                                    cv2
-                                    .FONT_HERSHEY_SIMPLEX
-                                )
-
-
-                                font_scale = 0.75
-
-                                thickness = 2
-
-
-                                text_size, _ = (
-                                    cv2.getTextSize(
-                                        label,
-                                        font,
-                                        font_scale,
-                                        thickness
-                                    )
-                                )
-
-
-                                text_width, text_height = (
-                                    text_size
-                                )
-
-
-                                label_y = max(
-                                    y1,
-                                    text_height + 15
-                                )
-
-
-                                cv2.rectangle(
-                                    processed_frame,
-
-                                    (
-                                        x1,
-                                        label_y
-                                        - text_height
-                                        - 12
-                                    ),
-
-                                    (
-                                        x1
-                                        + text_width
-                                        + 12,
-                                        label_y + 4
-                                    ),
-
-                                    (0, 0, 255),
-
-                                    -1
-                                )
-
-
-                                cv2.putText(
-                                    processed_frame,
-
-                                    label,
-
-                                    (
-                                        x1 + 6,
-                                        label_y - 6
-                                    ),
-
-                                    font,
-
-                                    font_scale,
-
-                                    (255, 255, 255),
-
-                                    thickness,
-
-                                    cv2.LINE_AA
-                                )
-
-
-                            writer.write(
-                                processed_frame
-                            )
-
-
-                        # ------------------------------------
-                        # RELEASE
-                        # ------------------------------------
-
-                        cap.release()
-
-                        writer.release()
-
-
-                        # ------------------------------------
-                        # BROWSER VIDEO
-                        # ------------------------------------
-
-                        final_video = (
-                            convert_video_for_browser(
-                                raw_output
-                            )
-                        )
-
-
-                        st.session_state.video_output = (
-                            final_video
-                        )
-
-
-                        st.session_state.video_defects = (
-                            all_defects
-                        )
-
-
-                        st.session_state.image_output = None
-
-                        st.session_state.image_defects = []
-
-
-                        st.success(
-                            "✅ Video analysis completed."
-                        )
-
-
-                        st.rerun()
+                    st.session_state.video_output = (
+                        video_result
+                    )
+
+                    st.session_state.video_defects = (
+                        defects
+                    )
+
+                    st.session_state.video_quality = (
+                        quality
+                    )
+
+                    st.session_state.image_result = (
+                        None
+                    )
+
+                    st.session_state.image_input = (
+                        None
+                    )
+
+                    st.rerun()
 
 
     # ========================================================
-    # INSPECTION RESULT
+    # RESULT
     # ========================================================
 
     with right:
 
         st.subheader(
-            "🤖 INSPECTION RESULT"
+            "🤖 RESULT"
         )
 
 
@@ -1578,7 +1526,7 @@ else:
         # ====================================================
 
         if (
-            st.session_state.image_output
+            st.session_state.image_result
             is not None
         ):
 
@@ -1587,29 +1535,47 @@ else:
             )
 
 
-            show_fixed_image(
-                st.session_state.image_output,
-                width=400,
-                height=240,
-                border_color="#ce93d8",
-                background="#fcf5ff"
+            # SAME UPLOADED IMAGE + BOXES
+            st.image(
+                st.session_state.image_result,
+                width=400
             )
 
 
-            defects = (
-                st.session_state.image_defects
+            quality = (
+                st.session_state.image_quality
             )
 
 
             # ------------------------------------------------
-            # BAD IMAGE
+            # GOOD
             # ------------------------------------------------
 
-            if len(defects) > 0:
+            if quality == "GOOD":
+
+                st.markdown(
+                    """
+                    <div class="good-quality">
+                        🟢 LOOP FIBER
+                        <br>
+                        ✅ GOOD QUALITY
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+
+            # ------------------------------------------------
+            # BAD
+            # ------------------------------------------------
+
+            else:
 
                 st.markdown(
                     """
                     <div class="bad-quality">
+                        🔴 PROTRUDING FIBER
+                        <br>
                         ❌ BAD QUALITY
                     </div>
                     """,
@@ -1618,44 +1584,29 @@ else:
 
 
                 st.write(
-                    "### 🔴 Detected Defects"
+                    "### 🔴 Detected Defect"
                 )
 
 
-                for defect in defects:
+                for detection in (
+                    st.session_state.image_defects
+                ):
 
                     st.markdown(
                         f"""
                         <div class="defect-card">
 
-                        🔴 <b>Defect:</b>
-                        {defect["name"]}
+                        🔴 <b>{detection["name"]}</b>
 
                         &nbsp;&nbsp;
 
-                        📊 <b>Confidence:</b>
-                        {defect["confidence"] * 100:.2f}%
+                        📊 Confidence:
+                        {detection["confidence"] * 100:.2f}%
 
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-
-
-            # ------------------------------------------------
-            # GOOD IMAGE
-            # ------------------------------------------------
-
-            else:
-
-                st.markdown(
-                    """
-                    <div class="good-quality">
-                        ✅ GOOD QUALITY
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
 
 
         # ====================================================
@@ -1672,29 +1623,37 @@ else:
             )
 
 
-            show_fixed_video(
-                st.session_state.video_output,
-                width=400,
-                height=240,
-                border_color="#ce93d8",
-                background="#fcf5ff"
+            st.video(
+                st.session_state.video_output
             )
 
 
-            defects = (
-                st.session_state.video_defects
+            quality = (
+                st.session_state.video_quality
             )
 
 
-            # ------------------------------------------------
-            # BAD VIDEO
-            # ------------------------------------------------
+            if quality == "GOOD":
 
-            if len(defects) > 0:
+                st.markdown(
+                    """
+                    <div class="good-quality">
+                        🟢 LOOP FIBER
+                        <br>
+                        ✅ GOOD QUALITY
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+
+            else:
 
                 st.markdown(
                     """
                     <div class="bad-quality">
+                        🔴 PROTRUDING FIBER
+                        <br>
                         ❌ BAD QUALITY
                     </div>
                     """,
@@ -1703,46 +1662,29 @@ else:
 
 
                 st.write(
-                    "### 🔴 Detected Defects"
+                    "### 🔴 Detected Defect"
                 )
 
 
                 for name, confidence in (
-                    defects.items()
+                    st.session_state.video_defects.items()
                 ):
 
                     st.markdown(
                         f"""
                         <div class="defect-card">
 
-                        🔴 <b>Defect:</b>
-                        {name}
+                        🔴 <b>{name}</b>
 
                         &nbsp;&nbsp;
 
-                        📊 <b>Confidence:</b>
+                        📊 Confidence:
                         {confidence * 100:.2f}%
 
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-
-
-            # ------------------------------------------------
-            # GOOD VIDEO
-            # ------------------------------------------------
-
-            else:
-
-                st.markdown(
-                    """
-                    <div class="good-quality">
-                        ✅ GOOD QUALITY
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
 
 
         # ====================================================
