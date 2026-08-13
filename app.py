@@ -22,7 +22,7 @@ st.set_page_config(
 
 
 # ============================================================
-# MODEL PATH
+# MODEL
 # ============================================================
 
 MODEL_PATH = "best (6).pt"
@@ -47,7 +47,7 @@ torch.load = patched_torch_load
 
 
 # ============================================================
-# LOAD YOLO MODEL
+# LOAD MODEL
 # ============================================================
 
 @st.cache_resource
@@ -95,13 +95,11 @@ st.markdown(
     """
     <style>
 
-    /* Prevent title from being cut */
     .block-container {
         padding-top: 2rem;
         padding-bottom: 1rem;
     }
 
-    /* Main title */
     .main-title {
         border: 2px solid #222;
         padding: 12px;
@@ -111,7 +109,6 @@ st.markdown(
         margin-bottom: 14px;
     }
 
-    /* Quality result */
     .good-quality {
         border: 2px solid green;
         padding: 8px;
@@ -137,7 +134,7 @@ st.markdown(
 
 
 # ============================================================
-# DRAW BOUNDING BOXES FOR IMAGE
+# DRAW BOUNDING BOXES - IMAGE
 # ============================================================
 
 def draw_yolo_boxes(frame, result):
@@ -155,10 +152,7 @@ def draw_yolo_boxes(frame, result):
 
     for box in result.boxes:
 
-        # ----------------------------------------------------
-        # GET COORDINATES
-        # ----------------------------------------------------
-
+        # Coordinates
         coords = (
             box.xyxy[0]
             .cpu()
@@ -169,10 +163,7 @@ def draw_yolo_boxes(frame, result):
         x1, y1, x2, y2 = coords
 
 
-        # ----------------------------------------------------
-        # CONFIDENCE
-        # ----------------------------------------------------
-
+        # Confidence
         confidence = float(
             box.conf[0]
             .cpu()
@@ -180,10 +171,7 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # ----------------------------------------------------
-        # CLASS ID
-        # ----------------------------------------------------
-
+        # Class
         class_id = int(
             box.cls[0]
             .cpu()
@@ -191,17 +179,11 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # ----------------------------------------------------
-        # DEFECT NAME
-        # ----------------------------------------------------
-
+        # Defect name
         defect_name = model.names[class_id]
 
 
-        # ----------------------------------------------------
-        # SAVE DEFECT
-        # ----------------------------------------------------
-
+        # Store defect
         defects.append(
             {
                 "name": defect_name,
@@ -211,10 +193,7 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # ----------------------------------------------------
-        # DRAW THICK RED BOX
-        # ----------------------------------------------------
-
+        # Thick red bounding box
         cv2.rectangle(
             output,
             (x1, y1),
@@ -224,10 +203,7 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # ----------------------------------------------------
-        # LABEL
-        # ----------------------------------------------------
-
+        # Label
         label = (
             f"{defect_name} "
             f"{confidence * 100:.1f}%"
@@ -235,20 +211,11 @@ def draw_yolo_boxes(frame, result):
 
 
         font = cv2.FONT_HERSHEY_SIMPLEX
-
         font_scale = 0.75
-
         thickness = 2
 
 
-        # ----------------------------------------------------
-        # LABEL SIZE
-        # ----------------------------------------------------
-
-        (
-            text_size,
-            baseline
-        ) = cv2.getTextSize(
+        text_size, baseline = cv2.getTextSize(
             label,
             font,
             font_scale,
@@ -258,20 +225,13 @@ def draw_yolo_boxes(frame, result):
         text_width, text_height = text_size
 
 
-        # ----------------------------------------------------
-        # LABEL POSITION
-        # ----------------------------------------------------
-
         label_y = max(
             y1,
             text_height + 15
         )
 
 
-        # ----------------------------------------------------
-        # LABEL BACKGROUND
-        # ----------------------------------------------------
-
+        # Label background
         cv2.rectangle(
             output,
 
@@ -291,28 +251,15 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # ----------------------------------------------------
-        # LABEL TEXT
-        # ----------------------------------------------------
-
+        # Label text
         cv2.putText(
             output,
-
             label,
-
-            (
-                x1 + 6,
-                label_y - 6
-            ),
-
+            (x1 + 6, label_y - 6),
             font,
-
             font_scale,
-
             (255, 255, 255),
-
             thickness,
-
             cv2.LINE_AA
         )
 
@@ -356,7 +303,7 @@ def resize_for_display(
 
 
 # ============================================================
-# CONVERT VIDEO TO BROWSER COMPATIBLE MP4
+# CONVERT VIDEO FOR BROWSER
 # ============================================================
 
 def convert_video_for_browser(input_path):
@@ -365,9 +312,7 @@ def convert_video_for_browser(input_path):
 
         import imageio_ffmpeg
 
-        ffmpeg = (
-            imageio_ffmpeg.get_ffmpeg_exe()
-        )
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
 
     except Exception:
 
@@ -385,21 +330,15 @@ def convert_video_for_browser(input_path):
         "-y",
         "-i",
         input_path,
-
         "-c:v",
         "libx264",
-
         "-preset",
         "fast",
-
         "-pix_fmt",
         "yuv420p",
-
         "-movflags",
         "+faststart",
-
         "-an",
-
         output_path
     ]
 
@@ -443,7 +382,7 @@ if st.session_state.page == "home":
 
 
     # --------------------------------------------------------
-    # MAIN TWO COLUMNS
+    # MAIN COLUMNS
     # --------------------------------------------------------
 
     left, right = st.columns(
@@ -489,9 +428,7 @@ if st.session_state.page == "home":
         st.write("")
 
 
-        # ----------------------------------------------------
-        # PREDICT BUTTON
-        # ----------------------------------------------------
+        # Predict button
 
         if st.button(
             "PREDICT",
@@ -504,7 +441,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # RIGHT SIDE - DESCRIPTION
+    # RIGHT SIDE
     # ========================================================
 
     with right:
@@ -571,21 +508,17 @@ if st.session_state.page == "home":
             "**TEAM MEMBERS**"
         )
 
-
         st.write(
             "1. Gutti.Pavani Devi Priya"
         )
-
 
         st.write(
             "2. Somasani.Sasi Priya"
         )
 
-
         st.write(
             "3. Galidevara.Rama Devi"
         )
-
 
         st.write(
             "4. Rambala.Harshitha Sai Lakshmi"
@@ -602,21 +535,17 @@ if st.session_state.page == "home":
             "**GMAIL**"
         )
 
-
         st.write(
             "gutthipavanidevipriya@gmail.com"
         )
-
 
         st.write(
             "Sasipriya8090@gmail.com"
         )
 
-
         st.write(
             "ramadevigalidevara0@gmail.com"
         )
-
 
         st.write(
             "harshitharambala3@gmail.com"
@@ -633,16 +562,13 @@ if st.session_state.page == "home":
             "**GUIDE NAME**"
         )
 
-
         st.write(
             "Md. Abdul Aziz"
         )
 
-
         st.markdown(
             "**DESIGNATION**"
         )
-
 
         st.write(
             "Co Lead & Trainer AICW"
@@ -672,7 +598,7 @@ elif st.session_state.page == "inspection":
 
 
     # --------------------------------------------------------
-    # BACK BUTTON
+    # BACK
     # --------------------------------------------------------
 
     if st.button("⬅ Back"):
@@ -680,18 +606,16 @@ elif st.session_state.page == "inspection":
         st.session_state.page = "home"
 
         st.session_state.image_output = None
-
         st.session_state.image_defects = []
 
         st.session_state.video_output = None
-
         st.session_state.video_defects = {}
 
         st.rerun()
 
 
     # --------------------------------------------------------
-    # INPUT + OUTPUT
+    # INPUT + OUTPUT COLUMNS
     # --------------------------------------------------------
 
     left, right = st.columns(
@@ -701,7 +625,7 @@ elif st.session_state.page == "inspection":
 
 
     # ========================================================
-    # INPUT
+    # INPUT SECTION
     # ========================================================
 
     with left:
@@ -728,7 +652,7 @@ elif st.session_state.page == "inspection":
 
 
         # ====================================================
-        # IMAGE INPUT
+        # IMAGE
         # ====================================================
 
         if input_type == "🖼️ Image":
@@ -757,7 +681,7 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # SMALL INPUT IMAGE
+                # Small input image
 
                 preview = resize_for_display(
                     image,
@@ -772,9 +696,7 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # ------------------------------------------------
-                # ANALYZE IMAGE
-                # ------------------------------------------------
+                # Analyze
 
                 if st.button(
                     "🔍 Analyze Image",
@@ -807,14 +729,11 @@ elif st.session_state.page == "inspection":
                         output_image
                     )
 
-
                     st.session_state.image_defects = (
                         defects
                     )
 
-
                     st.session_state.video_output = None
-
                     st.session_state.video_defects = {}
 
 
@@ -822,7 +741,7 @@ elif st.session_state.page == "inspection":
 
 
         # ====================================================
-        # CAMERA INPUT
+        # CAMERA
         # ====================================================
 
         elif input_type == "📷 Camera":
@@ -863,7 +782,7 @@ elif st.session_state.page == "inspection":
                 ):
 
                     with st.spinner(
-                        "Analyzing camera..."
+                        "Analyzing yarn..."
                     ):
 
                         results = model.predict(
@@ -888,14 +807,11 @@ elif st.session_state.page == "inspection":
                         output_image
                     )
 
-
                     st.session_state.image_defects = (
                         defects
                     )
 
-
                     st.session_state.video_output = None
-
                     st.session_state.video_defects = {}
 
 
@@ -903,7 +819,7 @@ elif st.session_state.page == "inspection":
 
 
         # ====================================================
-        # VIDEO INPUT
+        # VIDEO
         # ====================================================
 
         elif input_type == "🎥 Video":
@@ -927,7 +843,7 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # SMALL INPUT VIDEO
+                # Small input video
 
                 st.video(
                     uploaded_video,
@@ -936,9 +852,7 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # ------------------------------------------------
-                # ANALYZE VIDEO
-                # ------------------------------------------------
+                # Analyze video
 
                 if st.button(
                     "🔍 Analyze Video",
@@ -949,9 +863,9 @@ elif st.session_state.page == "inspection":
                         "Analyzing video... Please wait."
                     ):
 
-                        # ==========================================
+                        # ======================================
                         # SAVE INPUT VIDEO
-                        # ==========================================
+                        # ======================================
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
@@ -969,14 +883,12 @@ elif st.session_state.page == "inspection":
                         input_temp.close()
 
 
-                        input_path = (
-                            input_temp.name
-                        )
+                        input_path = input_temp.name
 
 
-                        # ==========================================
+                        # ======================================
                         # OPEN VIDEO
-                        # ==========================================
+                        # ======================================
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1016,9 +928,9 @@ elif st.session_state.page == "inspection":
                             fps = 25
 
 
-                        # ==========================================
-                        # OUTPUT VIDEO
-                        # ==========================================
+                        # ======================================
+                        # OUTPUT FILE
+                        # ======================================
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1031,14 +943,12 @@ elif st.session_state.page == "inspection":
                         output_temp.close()
 
 
-                        raw_output = (
-                            output_temp.name
-                        )
+                        raw_output = output_temp.name
 
 
-                        # ==========================================
+                        # ======================================
                         # VIDEO WRITER
-                        # ==========================================
+                        # ======================================
 
                         fourcc = (
                             cv2.VideoWriter_fourcc(
@@ -1066,27 +976,27 @@ elif st.session_state.page == "inspection":
                             st.stop()
 
 
-                        # ==========================================
+                        # ======================================
                         # DEFECT STORAGE
-                        # ==========================================
+                        # ======================================
 
                         all_defects = {}
 
 
-                        # ==========================================
-                        # PREVIOUS BOX STORAGE
-                        # ==========================================
+                        # ======================================
+                        # LAST KNOWN BOXES
+                        #
+                        # Once a defect is detected,
+                        # its last box remains until
+                        # the video ends.
+                        # ======================================
 
                         last_boxes = []
 
-                        missing_frames = 0
 
-                        MAX_MISSING_FRAMES = 10
-
-
-                        # ==========================================
+                        # ======================================
                         # PROCESS EVERY FRAME
-                        # ==========================================
+                        # ======================================
 
                         while True:
 
@@ -1094,20 +1004,18 @@ elif st.session_state.page == "inspection":
 
 
                             if not ret:
-
                                 break
 
 
-                            # ======================================
-                            # YOLO PREDICTION
+                            # ==================================
+                            # YOLO PREDICT
                             #
-                            # IMPORTANT:
                             # NO model.track()
-                            # ======================================
+                            # ==================================
 
                             results = model.predict(
                                 source=frame,
-                                conf=0.15,
+                                conf=0.10,
                                 verbose=False
                             )
 
@@ -1118,9 +1026,9 @@ elif st.session_state.page == "inspection":
                             current_boxes = []
 
 
-                            # ======================================
-                            # GET DETECTIONS
-                            # ======================================
+                            # ==================================
+                            # GET CURRENT DETECTIONS
+                            # ==================================
 
                             if (
                                 result.boxes is not None
@@ -1131,6 +1039,10 @@ elif st.session_state.page == "inspection":
                                 for box in result.boxes:
 
 
+                                    # --------------------------
+                                    # Coordinates
+                                    # --------------------------
+
                                     coords = (
                                         box.xyxy[0]
                                         .cpu()
@@ -1139,10 +1051,12 @@ elif st.session_state.page == "inspection":
                                     )
 
 
-                                    x1, y1, x2, y2 = (
-                                        coords
-                                    )
+                                    x1, y1, x2, y2 = coords
 
+
+                                    # --------------------------
+                                    # Confidence
+                                    # --------------------------
 
                                     confidence = float(
                                         box.conf[0]
@@ -1150,6 +1064,10 @@ elif st.session_state.page == "inspection":
                                         .item()
                                     )
 
+
+                                    # --------------------------
+                                    # Class
+                                    # --------------------------
 
                                     class_id = int(
                                         box.cls[0]
@@ -1164,6 +1082,10 @@ elif st.session_state.page == "inspection":
                                         ]
                                     )
 
+
+                                    # --------------------------
+                                    # Store current box
+                                    # --------------------------
 
                                     current_boxes.append(
                                         {
@@ -1183,9 +1105,9 @@ elif st.session_state.page == "inspection":
                                     )
 
 
-                                    # ==================================
-                                    # SAVE DEFECT
-                                    # ==================================
+                                    # --------------------------
+                                    # Save defect
+                                    # --------------------------
 
                                     if (
                                         defect_name
@@ -1210,9 +1132,18 @@ elif st.session_state.page == "inspection":
                                         ] = confidence
 
 
-                            # ======================================
-                            # UPDATE LAST DETECTION
-                            # ======================================
+                            # ==================================
+                            # IMPORTANT:
+                            #
+                            # If current detection exists,
+                            # update last known box.
+                            #
+                            # If current detection does NOT
+                            # exist, last box is NOT deleted.
+                            #
+                            # Therefore the box continues
+                            # until video END.
+                            # ==================================
 
                             if len(current_boxes) > 0:
 
@@ -1220,52 +1151,36 @@ elif st.session_state.page == "inspection":
                                     current_boxes
                                 )
 
-                                missing_frames = 0
+
+                            # ==================================
+                            # SELECT BOXES
+                            # ==================================
+
+                            if len(current_boxes) > 0:
+
+                                boxes_to_draw = (
+                                    current_boxes
+                                )
 
                             else:
-
-                                missing_frames += 1
-
-
-                            # ======================================
-                            # BOXES TO DRAW
-                            # ======================================
-
-                            boxes_to_draw = (
-                                current_boxes
-                            )
-
-
-                            # Temporarily retain previous
-                            # detection if YOLO misses
-                            # a few frames.
-
-                            if (
-                                len(current_boxes) == 0
-                                and
-                                len(last_boxes) > 0
-                                and
-                                missing_frames
-                                <= MAX_MISSING_FRAMES
-                            ):
 
                                 boxes_to_draw = (
                                     last_boxes
                                 )
 
 
-                            # ======================================
+                            # ==================================
                             # COPY FRAME
-                            # ======================================
+                            # ==================================
 
                             processed_frame = (
                                 frame.copy()
                             )
 
 
-                            # ======================================
+                            # ==================================
                             # DRAW BOXES
-                            # ======================================
+                            # ==================================
 
                             for detection in (
                                 boxes_to_draw
@@ -1287,9 +1202,9 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ----------------------------------
-                                # THICK RED RECTANGLE
-                                # ----------------------------------
+                                # ------------------------------
+                                # RED BOX
+                                # ------------------------------
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1304,9 +1219,9 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ----------------------------------
+                                # ------------------------------
                                 # LABEL
-                                # ----------------------------------
+                                # ------------------------------
 
                                 label = (
                                     f"{name} "
@@ -1347,9 +1262,9 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ----------------------------------
+                                # ------------------------------
                                 # LABEL BACKGROUND
-                                # ----------------------------------
+                                # ------------------------------
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1375,9 +1290,9 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ----------------------------------
+                                # ------------------------------
                                 # LABEL TEXT
-                                # ----------------------------------
+                                # ------------------------------
 
                                 cv2.putText(
                                     processed_frame,
@@ -1401,27 +1316,27 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                            # ======================================
-                            # WRITE PROCESSED FRAME
-                            # ======================================
+                            # ==================================
+                            # WRITE FRAME
+                            # ==================================
 
                             writer.write(
                                 processed_frame
                             )
 
 
-                        # ==========================================
+                        # ======================================
                         # RELEASE
-                        # ==========================================
+                        # ======================================
 
                         cap.release()
 
                         writer.release()
 
 
-                        # ==========================================
-                        # BROWSER COMPATIBLE MP4
-                        # ==========================================
+                        # ======================================
+                        # BROWSER MP4
+                        # ======================================
 
                         final_video = (
                             convert_video_for_browser(
@@ -1430,9 +1345,9 @@ elif st.session_state.page == "inspection":
                         )
 
 
-                        # ==========================================
-                        # SAVE RESULT
-                        # ==========================================
+                        # ======================================
+                        # SAVE VIDEO RESULT
+                        # ======================================
 
                         st.session_state.video_output = (
                             final_video
@@ -1459,7 +1374,7 @@ elif st.session_state.page == "inspection":
 
     # ========================================================
     # ========================================================
-    # OUTPUT / INSPECTION RESULT
+    # OUTPUT SECTION
     # ========================================================
     # ========================================================
 
@@ -1471,7 +1386,7 @@ elif st.session_state.page == "inspection":
 
 
         # ====================================================
-        # IMAGE RESULT
+        # IMAGE OUTPUT
         # ====================================================
 
         if (
@@ -1485,7 +1400,7 @@ elif st.session_state.page == "inspection":
             )
 
 
-            # SMALL OUTPUT IMAGE
+            # Small output image
 
             result_image = (
                 resize_for_display(
@@ -1508,7 +1423,7 @@ elif st.session_state.page == "inspection":
 
 
             # ------------------------------------------------
-            # BAD QUALITY
+            # BAD QUALITY IMAGE
             # ------------------------------------------------
 
             if len(defects) > 0:
@@ -1543,7 +1458,7 @@ elif st.session_state.page == "inspection":
 
 
             # ------------------------------------------------
-            # GOOD QUALITY
+            # GOOD QUALITY IMAGE
             # ------------------------------------------------
 
             else:
@@ -1559,7 +1474,7 @@ elif st.session_state.page == "inspection":
 
 
         # ====================================================
-        # VIDEO RESULT
+        # VIDEO OUTPUT
         # ====================================================
 
         elif (
@@ -1573,9 +1488,9 @@ elif st.session_state.page == "inspection":
             )
 
 
-            # -----------------------------------------------
-            # READ PROCESSED VIDEO
-            # -----------------------------------------------
+            # ------------------------------------------------
+            # READ VIDEO
+            # ------------------------------------------------
 
             try:
 
@@ -1589,9 +1504,7 @@ elif st.session_state.page == "inspection":
                     )
 
 
-                # -------------------------------------------
-                # SMALL OUTPUT VIDEO
-                # -------------------------------------------
+                # Small output video
 
                 st.video(
                     video_bytes,
