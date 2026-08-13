@@ -17,7 +17,8 @@ from ultralytics import YOLO
 st.set_page_config(
     page_title="YarnX – The Future of Yarn Inspection",
     page_icon="🧶",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 
@@ -34,16 +35,21 @@ MODEL_NAMES = [
 
 def find_model():
 
+    # First check the same folder as app.py
+    base_dir = os.path.dirname(
+        os.path.abspath(__file__)
+    )
+
     locations = [
-        ".",
-        "./model",
-        "./trained_model",
-        "./trained_model/weights",
-        "./weights",
-        "/content",
-        "/content/model",
-        "/content/trained_model",
-        "/content/trained_model/weights"
+        base_dir,
+        os.path.join(base_dir, "model"),
+        os.path.join(base_dir, "trained_model"),
+        os.path.join(
+            base_dir,
+            "trained_model",
+            "weights"
+        ),
+        os.path.join(base_dir, "weights")
     ]
 
     for location in locations:
@@ -56,10 +62,14 @@ def find_model():
             )
 
             if os.path.exists(path):
+
                 return path
 
-    # Recursive search
-    for root, dirs, files in os.walk("."):
+
+    # Recursive search inside project
+    for root, dirs, files in os.walk(
+        base_dir
+    ):
 
         for name in MODEL_NAMES:
 
@@ -70,17 +80,21 @@ def find_model():
                     name
                 )
 
+
     return None
 
 
 # ============================================================
-# TORCH LOAD COMPATIBILITY
+# TORCH COMPATIBILITY
 # ============================================================
 
 _original_torch_load = torch.load
 
 
-def patched_torch_load(*args, **kwargs):
+def patched_torch_load(
+    *args,
+    **kwargs
+):
 
     kwargs.setdefault(
         "weights_only",
@@ -109,11 +123,12 @@ def load_model():
 
         st.error(
             "❌ Model file not found. "
-            "Please check that best.pt or best (6).pt "
-            "is present in the repository."
+            "Please keep best.pt / best (6).pt "
+            "inside the project."
         )
 
         st.stop()
+
 
     model = YOLO(
         model_path
@@ -130,40 +145,55 @@ model = load_model()
 # ============================================================
 
 if "page" not in st.session_state:
+
     st.session_state.page = "home"
 
+
 if "image_result" not in st.session_state:
+
     st.session_state.image_result = None
 
+
 if "image_defects" not in st.session_state:
+
     st.session_state.image_defects = []
 
+
 if "image_quality" not in st.session_state:
+
     st.session_state.image_quality = None
 
+
 if "video_output" not in st.session_state:
+
     st.session_state.video_output = None
 
+
 if "video_defects" not in st.session_state:
+
     st.session_state.video_defects = {}
 
+
 if "video_quality" not in st.session_state:
+
     st.session_state.video_quality = None
 
 
 # ============================================================
-# QUALITY SETTINGS
+# HEURISTIC QUALITY SETTINGS
 # ============================================================
 
-# These are heuristic values because the existing YOLO
-# model has only:
+# Existing model knows:
 #
 # 0 -> loop_fiber
 # 1 -> protruding_fiber
 #
-# It was not trained with Good/Bad classes.
+# It does NOT know Good/Bad.
+#
+# Therefore Good/Bad below is estimated using
+# confidence + detected region size.
 
-BAD_CONFIDENCE = 0.50
+BAD_CONFIDENCE = 0.85
 BAD_AREA_RATIO = 0.03
 
 
@@ -175,26 +205,50 @@ st.markdown(
     """
     <style>
 
+    /* ======================================================
+       PAGE
+       ====================================================== */
+
     .block-container {
-        padding-top: 1.2rem;
-        padding-bottom: 0.8rem;
-        max-width: 1500px;
+
+        padding-top: 2.0rem !important;
+        padding-bottom: 1rem !important;
+
+        max-width: 1500px !important;
     }
 
-    /* Main title */
+
+    /* ======================================================
+       MAIN TITLE
+       ====================================================== */
 
     .main-title {
+
+        width: 100%;
+
+        min-height: 66px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        box-sizing: border-box;
+
         border: 2px solid #6a1b9a;
+
         border-radius: 16px;
 
-        padding: 12px;
+        padding: 12px 20px;
 
-        text-align: center;
-
-        font-size: 29px;
-        font-weight: 800;
+        margin-bottom: 18px;
 
         color: #4a148c;
+
+        font-size: 29px;
+
+        font-weight: 800;
 
         background: linear-gradient(
             90deg,
@@ -203,15 +257,19 @@ st.markdown(
             #fce4ec
         );
 
-        margin-bottom: 15px;
+        box-shadow:
+            0 4px 12px
+            rgba(106, 27, 154, 0.12);
     }
 
 
-    /* Buttons */
+    /* ======================================================
+       BUTTONS
+       ====================================================== */
 
     .stButton > button {
 
-        min-height: 45px;
+        min-height: 46px;
 
         border-radius: 12px;
 
@@ -226,15 +284,12 @@ st.markdown(
         background: linear-gradient(
             90deg,
             #6a1b9a,
-            #8e24aa,
             #3949ab
         );
 
         box-shadow:
             0 5px 14px
-            rgba(106, 27, 154, 0.28);
-
-        transition: 0.2s;
+            rgba(106, 27, 154, 0.25);
     }
 
 
@@ -242,27 +297,47 @@ st.markdown(
 
         color: white;
 
-        transform: translateY(-2px);
+        transform: translateY(-1px);
 
         box-shadow:
             0 7px 18px
-            rgba(106, 27, 154, 0.38);
+            rgba(106, 27, 154, 0.35);
     }
 
 
-    /* Result quality */
+    /* ======================================================
+       SECTION HEADING
+       ====================================================== */
+
+    .section-heading {
+
+        font-size: 28px;
+
+        font-weight: 800;
+
+        color: #263238;
+
+        margin-top: 8px;
+
+        margin-bottom: 12px;
+    }
+
+
+    /* ======================================================
+       QUALITY
+       ====================================================== */
 
     .good-quality {
 
-        border: 2px solid #2e7d32;
+        border: 2px solid #388e3c;
 
         border-radius: 12px;
 
-        padding: 8px;
+        padding: 9px;
 
         text-align: center;
 
-        font-size: 19px;
+        font-size: 20px;
 
         font-weight: 800;
 
@@ -270,21 +345,21 @@ st.markdown(
 
         background: #e8f5e9;
 
-        margin-top: 8px;
+        margin: 10px 0;
     }
 
 
     .bad-quality {
 
-        border: 2px solid #c62828;
+        border: 2px solid #d32f2f;
 
         border-radius: 12px;
 
-        padding: 8px;
+        padding: 9px;
 
         text-align: center;
 
-        font-size: 19px;
+        font-size: 20px;
 
         font-weight: 800;
 
@@ -292,35 +367,85 @@ st.markdown(
 
         background: #ffebee;
 
+        margin: 10px 0;
+    }
+
+
+    /* ======================================================
+       RESULT TABLE
+       ====================================================== */
+
+    .fiber-table {
+
+        width: 100%;
+
+        border-collapse: collapse;
+
         margin-top: 8px;
+
+        border-radius: 10px;
+
+        overflow: hidden;
+
+        font-size: 15px;
     }
 
 
-    /* Team cards */
+    .fiber-table th {
 
-    .team-card {
+        background: #ede7f6;
 
-        border-radius: 14px;
-
-        padding: 12px;
-
-        background: #fafafa;
-
-        border: 1px solid #dddddd;
-    }
-
-
-    /* Input / Result headings */
-
-    .section-heading {
-
-        font-size: 27px;
+        color: #4a148c;
 
         font-weight: 800;
 
-        color: #263238;
+        padding: 10px;
 
-        margin-bottom: 10px;
+        text-align: left;
+
+        border-bottom: 2px solid #d1c4e9;
+    }
+
+
+    .fiber-table td {
+
+        padding: 9px 10px;
+
+        border-bottom: 1px solid #e0e0e0;
+
+        color: #263238;
+    }
+
+
+    .good-cell {
+
+        color: #2e7d32;
+
+        font-weight: 800;
+    }
+
+
+    .bad-cell {
+
+        color: #c62828;
+
+        font-weight: 800;
+    }
+
+
+    /* ======================================================
+       TEAM CARDS
+       ====================================================== */
+
+    .info-title {
+
+        font-size: 17px;
+
+        font-weight: 800;
+
+        color: #4a148c;
+
+        margin-bottom: 8px;
     }
 
 
@@ -334,7 +459,9 @@ st.markdown(
 # CLASS NAME
 # ============================================================
 
-def get_class_name(class_id):
+def get_class_name(
+    class_id
+):
 
     try:
 
@@ -351,7 +478,9 @@ def get_class_name(class_id):
 # FIBER TYPE
 # ============================================================
 
-def get_fiber_type(class_name):
+def get_fiber_type(
+    class_name
+):
 
     name = (
         class_name
@@ -360,19 +489,22 @@ def get_fiber_type(class_name):
         .replace("-", " ")
     )
 
+
     if "loop" in name:
 
-        return "LOOP FIBER"
+        return "Loop Fiber"
+
 
     if "protrud" in name:
 
-        return "PROTRUDING FIBER"
+        return "Protruding Fiber"
 
-    return name.upper()
+
+    return name.title()
 
 
 # ============================================================
-# QUALITY HEURISTIC
+# QUALITY
 # ============================================================
 
 def calculate_quality(
@@ -385,20 +517,24 @@ def calculate_quality(
         or area_ratio >= BAD_AREA_RATIO
     ):
 
-        return "BAD"
+        return "Bad Quality"
 
-    return "GOOD"
+
+    return "Good Quality"
 
 
 # ============================================================
-# PROCESS IMAGE
+# IMAGE PROCESSING
 # ============================================================
 
-def process_image(image):
+def process_image(
+    image
+):
 
     image_array = np.array(
         image
     )
+
 
     result = model.predict(
         source=image_array,
@@ -406,20 +542,29 @@ def process_image(image):
         verbose=False
     )[0]
 
+
     output = image_array.copy()
 
     detections = []
+
 
     image_height, image_width = (
         output.shape[:2]
     )
 
+
     image_area = (
-        image_height * image_width
+        image_height
+        * image_width
     )
+
 
     has_bad = False
 
+
+    # ========================================================
+    # DETECTIONS
+    # ========================================================
 
     if (
         result.boxes is not None
@@ -434,6 +579,7 @@ def process_image(image):
                 .numpy()
                 .astype(int)
             )
+
 
             x1, y1, x2, y2 = coords
 
@@ -467,6 +613,7 @@ def process_image(image):
                 x2 - x1
             )
 
+
             box_height = max(
                 0,
                 y2 - y1
@@ -492,11 +639,15 @@ def process_image(image):
             )
 
 
-            if quality == "BAD":
+            # ------------------------------------------------
+            # COLOR
+            # ------------------------------------------------
+
+            if quality == "Bad Quality":
 
                 has_bad = True
 
-                box_color = (
+                color = (
                     0,
                     0,
                     255
@@ -504,12 +655,16 @@ def process_image(image):
 
             else:
 
-                box_color = (
+                color = (
                     0,
                     180,
                     0
                 )
 
+
+            # ------------------------------------------------
+            # STORE
+            # ------------------------------------------------
 
             detections.append(
                 {
@@ -539,9 +694,13 @@ def process_image(image):
 
             cv2.rectangle(
                 output,
+
                 (x1, y1),
+
                 (x2, y2),
-                box_color,
+
+                color,
+
                 5
             )
 
@@ -558,6 +717,7 @@ def process_image(image):
             font = (
                 cv2.FONT_HERSHEY_SIMPLEX
             )
+
 
             font_scale = 0.65
 
@@ -603,7 +763,7 @@ def process_image(image):
                     label_y + 4
                 ),
 
-                box_color,
+                color,
 
                 -1
             )
@@ -635,21 +795,23 @@ def process_image(image):
             )
 
 
-    # --------------------------------------------------------
-    # FINAL QUALITY
-    # --------------------------------------------------------
+    # ========================================================
+    # OVERALL QUALITY
+    # ========================================================
 
     if len(detections) == 0:
 
-        overall_quality = "GOOD"
+        overall_quality = (
+            "NO FIBER DETECTED"
+        )
 
     elif has_bad:
 
-        overall_quality = "BAD"
+        overall_quality = "BAD QUALITY"
 
     else:
 
-        overall_quality = "GOOD"
+        overall_quality = "GOOD QUALITY"
 
 
     return (
@@ -660,7 +822,7 @@ def process_image(image):
 
 
 # ============================================================
-# BROWSER VIDEO CONVERSION
+# VIDEO CONVERSION
 # ============================================================
 
 def convert_video_for_browser(
@@ -720,12 +882,17 @@ def convert_video_for_browser(
 
         subprocess.run(
             command,
+
             stdout=subprocess.PIPE,
+
             stderr=subprocess.PIPE,
+
             check=True
         )
 
+
         return output_path
+
 
     except Exception:
 
@@ -733,7 +900,7 @@ def convert_video_for_browser(
 
 
 # ============================================================
-# PROCESS VIDEO
+# VIDEO PROCESSING
 # ============================================================
 
 def process_video(
@@ -758,11 +925,13 @@ def process_video(
         )
     )
 
+
     height = int(
         cap.get(
             cv2.CAP_PROP_FRAME_HEIGHT
         )
     )
+
 
     fps = cap.get(
         cv2.CAP_PROP_FPS
@@ -791,20 +960,27 @@ def process_video(
 
     writer = cv2.VideoWriter(
         raw_output,
+
         fourcc,
+
         fps,
+
         (width, height)
     )
 
 
     last_boxes = []
 
-    all_defects = {}
+    detected_types = {}
 
     has_bad = False
 
     has_good = False
 
+
+    # ========================================================
+    # FRAME LOOP
+    # ========================================================
 
     while True:
 
@@ -826,6 +1002,15 @@ def process_video(
         current_boxes = []
 
 
+        image_area = (
+            width * height
+        )
+
+
+        # ----------------------------------------------------
+        # DETECT
+        # ----------------------------------------------------
+
         if (
             result.boxes is not None
             and len(result.boxes) > 0
@@ -839,6 +1024,7 @@ def process_video(
                     .numpy()
                     .astype(int)
                 )
+
 
                 x1, y1, x2, y2 = coords
 
@@ -872,14 +1058,10 @@ def process_video(
                     x2 - x1
                 )
 
+
                 box_height = max(
                     0,
                     y2 - y1
-                )
-
-
-                image_area = (
-                    width * height
                 )
 
 
@@ -902,11 +1084,11 @@ def process_video(
                 )
 
 
-                if quality == "BAD":
+                if quality == "Bad Quality":
 
                     has_bad = True
 
-                    box_color = (
+                    color = (
                         0,
                         0,
                         255
@@ -916,7 +1098,7 @@ def process_video(
 
                     has_good = True
 
-                    box_color = (
+                    color = (
                         0,
                         180,
                         0
@@ -939,37 +1121,23 @@ def process_video(
                         "quality":
                             quality,
 
-                        "confidence":
-                            confidence,
-
                         "color":
-                            box_color
+                            color
                     }
                 )
 
 
                 key = (
-                    f"{fiber_type} | "
-                    f"{quality}"
+                    fiber_type,
+                    quality
                 )
 
 
-                if key not in all_defects:
-
-                    all_defects[key] = (
-                        confidence
-                    )
-
-                else:
-
-                    all_defects[key] = max(
-                        all_defects[key],
-                        confidence
-                    )
+                detected_types[key] = True
 
 
         # ----------------------------------------------------
-        # Keep boxes visible when detection temporarily drops
+        # KEEP BOXES VISIBLE
         # ----------------------------------------------------
 
         if len(current_boxes) > 0:
@@ -977,21 +1145,19 @@ def process_video(
             last_boxes = current_boxes
 
 
-        if len(current_boxes) > 0:
-
-            boxes_to_draw = current_boxes
-
-        else:
-
-            boxes_to_draw = last_boxes
+        boxes_to_draw = (
+            current_boxes
+            if len(current_boxes) > 0
+            else last_boxes
+        )
 
 
         processed = frame.copy()
 
 
-        # ----------------------------------------------------
-        # DRAW VIDEO BOXES
-        # ----------------------------------------------------
+        # ====================================================
+        # DRAW BOXES
+        # ====================================================
 
         for detection in boxes_to_draw:
 
@@ -999,15 +1165,18 @@ def process_video(
                 detection["box"]
             )
 
+
             fiber_type = (
                 detection["fiber_type"]
             )
+
 
             quality = (
                 detection["quality"]
             )
 
-            box_color = (
+
+            color = (
                 detection["color"]
             )
 
@@ -1019,7 +1188,7 @@ def process_video(
 
                 (x2, y2),
 
-                box_color,
+                color,
 
                 5
             )
@@ -1033,6 +1202,7 @@ def process_video(
             font = (
                 cv2.FONT_HERSHEY_SIMPLEX
             )
+
 
             font_scale = 0.65
 
@@ -1078,7 +1248,7 @@ def process_video(
                     label_y + 4
                 ),
 
-                box_color,
+                color,
 
                 -1
             )
@@ -1120,21 +1290,23 @@ def process_video(
     writer.release()
 
 
-    # --------------------------------------------------------
-    # FINAL VIDEO QUALITY
-    # --------------------------------------------------------
+    # ========================================================
+    # FINAL QUALITY
+    # ========================================================
 
-    if has_bad:
+    if len(detected_types) == 0:
 
-        overall_quality = "BAD"
+        overall_quality = (
+            "NO FIBER DETECTED"
+        )
 
-    elif has_good:
+    elif has_bad:
 
-        overall_quality = "GOOD"
+        overall_quality = "BAD QUALITY"
 
     else:
 
-        overall_quality = "GOOD"
+        overall_quality = "GOOD QUALITY"
 
 
     final_video = (
@@ -1146,8 +1318,192 @@ def process_video(
 
     return (
         final_video,
-        all_defects,
+        detected_types,
         overall_quality
+    )
+
+
+# ============================================================
+# RESULT TABLE
+# ============================================================
+
+def show_fiber_table(
+    detections
+):
+
+    if len(detections) == 0:
+
+        st.info(
+            "No fiber detected by the model."
+        )
+
+        return
+
+
+    rows = []
+
+    seen = set()
+
+
+    for detection in detections:
+
+        fiber = detection[
+            "fiber_type"
+        ]
+
+        quality = detection[
+            "quality"
+        ]
+
+
+        key = (
+            fiber,
+            quality
+        )
+
+
+        if key in seen:
+
+            continue
+
+
+        seen.add(key)
+
+
+        rows.append(
+            (
+                fiber,
+                quality
+            )
+        )
+
+
+    html = """
+    <table class="fiber-table">
+
+        <tr>
+            <th>Fiber Type</th>
+            <th>Quality</th>
+        </tr>
+    """
+
+
+    for fiber, quality in rows:
+
+        if quality == "Good Quality":
+
+            quality_html = (
+                '<span class="good-cell">'
+                '🟢 Good Quality'
+                '</span>'
+            )
+
+        else:
+
+            quality_html = (
+                '<span class="bad-cell">'
+                '🔴 Bad Quality'
+                '</span>'
+            )
+
+
+        html += f"""
+        <tr>
+
+            <td>
+                {fiber}
+            </td>
+
+            <td>
+                {quality_html}
+            </td>
+
+        </tr>
+        """
+
+
+    html += """
+    </table>
+    """
+
+
+    st.markdown(
+        html,
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# VIDEO RESULT TABLE
+# ============================================================
+
+def show_video_table(
+    detected_types
+):
+
+    if len(detected_types) == 0:
+
+        st.info(
+            "No fiber detected by the model."
+        )
+
+        return
+
+
+    html = """
+    <table class="fiber-table">
+
+        <tr>
+            <th>Fiber Type</th>
+            <th>Quality</th>
+        </tr>
+    """
+
+
+    for fiber, quality in (
+        detected_types.keys()
+    ):
+
+        if quality == "Good Quality":
+
+            quality_html = (
+                '<span class="good-cell">'
+                '🟢 Good Quality'
+                '</span>'
+            )
+
+        else:
+
+            quality_html = (
+                '<span class="bad-cell">'
+                '🔴 Bad Quality'
+                '</span>'
+            )
+
+
+        html += f"""
+        <tr>
+
+            <td>
+                {fiber}
+            </td>
+
+            <td>
+                {quality_html}
+            </td>
+
+        </tr>
+        """
+
+
+    html += """
+    </table>
+    """
+
+
+    st.markdown(
+        html,
+        unsafe_allow_html=True
     )
 
 
@@ -1158,6 +1514,10 @@ def process_video(
 # ============================================================
 
 if st.session_state.page == "home":
+
+    # --------------------------------------------------------
+    # TITLE
+    # --------------------------------------------------------
 
     st.markdown(
         """
@@ -1176,18 +1536,21 @@ if st.session_state.page == "home":
 
 
     # --------------------------------------------------------
-    # AICW
+    # LEFT
     # --------------------------------------------------------
 
     with left:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
                 """
                 <h2 style="
                     text-align:center;
                     color:#263238;
+                    margin-top:18px;
                 ">
                     AI Career for Women
                     <br>
@@ -1203,13 +1566,16 @@ if st.session_state.page == "home":
                 <h3 style="
                     text-align:center;
                     color:#37474f;
-                    margin-top:30px;
+                    margin-top:35px;
                 ">
                     Capstone Project
                 </h3>
                 """,
                 unsafe_allow_html=True
             )
+
+
+            st.write("")
 
 
         st.write("")
@@ -1228,12 +1594,14 @@ if st.session_state.page == "home":
 
 
     # --------------------------------------------------------
-    # PROJECT DESCRIPTION
+    # DESCRIPTION
     # --------------------------------------------------------
 
     with right:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
                 """
@@ -1298,36 +1666,48 @@ if st.session_state.page == "home":
 
     with team_col:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
-                "### 👩‍💻 TEAM MEMBERS"
+                '<div class="info-title">'
+                '👩‍💻 TEAM MEMBERS'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+
+            st.write(
+                "1. Gutti.Pavani Devi Priya"
             )
 
             st.write(
-                "1. **Gutti.Pavani Devi Priya**"
+                "2. Somasani.Sasi Priya"
             )
 
             st.write(
-                "2. **Somasani.Sasi Priya**"
+                "3. Galidevara.Rama Devi"
             )
 
             st.write(
-                "3. **Galidevara.Rama Devi**"
-            )
-
-            st.write(
-                "4. **Rambala.Harshitha Sai Lakshmi**"
+                "4. Rambala.Harshitha Sai Lakshmi"
             )
 
 
     with email_col:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
-                "### 📧 GMAIL"
+                '<div class="info-title">'
+                '📧 GMAIL'
+                '</div>',
+                unsafe_allow_html=True
             )
+
 
             st.write(
                 "gutthipavanidevipriya@gmail.com"
@@ -1348,19 +1728,30 @@ if st.session_state.page == "home":
 
     with guide_col:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
-                "### 👨‍🏫 GUIDE NAME"
+                '<div class="info-title">'
+                '👨‍🏫 GUIDE NAME'
+                '</div>',
+                unsafe_allow_html=True
             )
+
 
             st.write(
                 "**Md. Abdul Aziz**"
             )
 
+
             st.markdown(
-                "### DESIGNATION"
+                '<div class="info-title">'
+                'DESIGNATION'
+                '</div>',
+                unsafe_allow_html=True
             )
+
 
             st.write(
                 "**Co Lead & Trainer AICW**"
@@ -1375,6 +1766,10 @@ if st.session_state.page == "home":
 
 else:
 
+    # --------------------------------------------------------
+    # TITLE
+    # --------------------------------------------------------
+
     st.markdown(
         """
         <div class="main-title">
@@ -1385,7 +1780,13 @@ else:
     )
 
 
-    if st.button("⬅ Back"):
+    # --------------------------------------------------------
+    # BACK
+    # --------------------------------------------------------
+
+    if st.button(
+        "⬅ Back"
+    ):
 
         st.session_state.page = "home"
 
@@ -1400,31 +1801,24 @@ else:
         st.rerun()
 
 
+    st.write("")
+
+
     # ========================================================
-    # IMPORTANT:
-    # BALANCED SECOND PAGE
-    #
-    # Earlier:
-    # [38, 62]
-    #
-    # Now:
-    # [48, 52]
-    #
-    # So INPUT becomes wider and RESULT becomes slightly
-    # smaller.
+    # BALANCED COLUMNS
     # ========================================================
 
-    left, right = st.columns(
+    input_col, result_col = st.columns(
         [48, 52],
-        gap="medium"
+        gap="large"
     )
 
 
     # ========================================================
-    # INPUT
+    # INPUT COLUMN
     # ========================================================
 
-    with left:
+    with input_col:
 
         st.markdown(
             """
@@ -1482,7 +1876,6 @@ else:
                 )
 
 
-                # SMALL INPUT IMAGE
                 st.image(
                     image,
                     width=280
@@ -1511,17 +1904,23 @@ else:
                         result_image
                     )
 
+
                     st.session_state.image_defects = (
                         detections
                     )
+
 
                     st.session_state.image_quality = (
                         quality
                     )
 
+
                     st.session_state.video_output = None
+
                     st.session_state.video_defects = {}
+
                     st.session_state.video_quality = None
+
 
                     st.rerun()
 
@@ -1577,15 +1976,19 @@ else:
                         result_image
                     )
 
+
                     st.session_state.image_defects = (
                         detections
                     )
+
 
                     st.session_state.image_quality = (
                         quality
                     )
 
+
                     st.session_state.video_output = None
+
 
                     st.rerun()
 
@@ -1615,11 +2018,11 @@ else:
                 )
 
 
-                # SMALL INPUT VIDEO
                 st.video(
                     uploaded_video,
                     format="video/mp4",
-                    start_time=0
+                    start_time=0,
+                    width=360
                 )
 
 
@@ -1644,12 +2047,13 @@ else:
                             uploaded_video.getvalue()
                         )
 
+
                         input_file.close()
 
 
                         (
                             video_result,
-                            defects,
+                            detected_types,
                             quality
                         ) = process_video(
                             input_file.name
@@ -1660,26 +2064,32 @@ else:
                         video_result
                     )
 
+
                     st.session_state.video_defects = (
-                        defects
+                        detected_types
                     )
+
 
                     st.session_state.video_quality = (
                         quality
                     )
 
+
                     st.session_state.image_result = None
+
                     st.session_state.image_defects = []
+
                     st.session_state.image_quality = None
+
 
                     st.rerun()
 
 
     # ========================================================
-    # RESULT
+    # RESULT COLUMN
     # ========================================================
 
-    with right:
+    with result_col:
 
         st.markdown(
             """
@@ -1705,16 +2115,19 @@ else:
             )
 
 
-            # SMALL OUTPUT IMAGE
             st.image(
                 st.session_state.image_result,
                 width=350
             )
 
 
+            # ------------------------------------------------
+            # QUALITY
+            # ------------------------------------------------
+
             if (
                 st.session_state.image_quality
-                == "GOOD"
+                == "GOOD QUALITY"
             ):
 
                 st.markdown(
@@ -1726,7 +2139,11 @@ else:
                     unsafe_allow_html=True
                 )
 
-            else:
+
+            elif (
+                st.session_state.image_quality
+                == "BAD QUALITY"
+            ):
 
                 st.markdown(
                     """
@@ -1738,46 +2155,25 @@ else:
                 )
 
 
-            st.write(
-                "### Detected Fibers"
-            )
-
-
-            if len(
-                st.session_state.image_defects
-            ) == 0:
+            else:
 
                 st.info(
                     "No fiber detected."
                 )
 
 
-            for detection in (
+            # ------------------------------------------------
+            # DETECTED FIBERS
+            # ------------------------------------------------
+
+            st.markdown(
+                "### Detected Fibers"
+            )
+
+
+            show_fiber_table(
                 st.session_state.image_defects
-            ):
-
-                if (
-                    detection["quality"]
-                    == "GOOD"
-                ):
-
-                    st.success(
-                        f"🟢 Fiber Type: "
-                        f"{detection['fiber_type']} | "
-                        f"Quality: GOOD | "
-                        f"Confidence: "
-                        f"{detection['confidence'] * 100:.1f}%"
-                    )
-
-                else:
-
-                    st.error(
-                        f"🔴 Fiber Type: "
-                        f"{detection['fiber_type']} | "
-                        f"Quality: BAD | "
-                        f"Confidence: "
-                        f"{detection['confidence'] * 100:.1f}%"
-                    )
+            )
 
 
         # ====================================================
@@ -1794,17 +2190,21 @@ else:
             )
 
 
-            # SMALL OUTPUT VIDEO
             st.video(
                 st.session_state.video_output,
                 format="video/mp4",
-                start_time=0
+                start_time=0,
+                width=380
             )
 
 
+            # ------------------------------------------------
+            # QUALITY
+            # ------------------------------------------------
+
             if (
                 st.session_state.video_quality
-                == "GOOD"
+                == "GOOD QUALITY"
             ):
 
                 st.markdown(
@@ -1816,7 +2216,11 @@ else:
                     unsafe_allow_html=True
                 )
 
-            else:
+
+            elif (
+                st.session_state.video_quality
+                == "BAD QUALITY"
+            ):
 
                 st.markdown(
                     """
@@ -1828,32 +2232,29 @@ else:
                 )
 
 
-            st.write(
-                "### Detected Fibers"
-            )
-
-
-            if len(
-                st.session_state.video_defects
-            ) == 0:
+            else:
 
                 st.info(
                     "No fiber detected."
                 )
 
 
-            for name, confidence in (
-                st.session_state.video_defects.items()
-            ):
+            # ------------------------------------------------
+            # VIDEO TABLE
+            # ------------------------------------------------
 
-                st.write(
-                    f"• **{name}** — "
-                    f"{confidence * 100:.1f}%"
-                )
+            st.markdown(
+                "### Detected Fibers"
+            )
+
+
+            show_video_table(
+                st.session_state.video_defects
+            )
 
 
         # ====================================================
-        # INITIAL RESULT MESSAGE
+        # INITIAL MESSAGE
         # ====================================================
 
         else:
