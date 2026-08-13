@@ -348,14 +348,19 @@ def show_fixed_image(
     background="#f5faff"
 ):
 
+    # FIX:
+    # Uploaded images and analyzed image arrays are already RGB.
+    # Do NOT convert RGB -> BGR -> RGB here.
+
     if isinstance(image, np.ndarray):
 
-        image = cv2.cvtColor(
-            image,
-            cv2.COLOR_BGR2RGB
-        )
+        image = Image.fromarray(image.astype(np.uint8))
 
-        image = Image.fromarray(image)
+    elif not isinstance(image, Image.Image):
+
+        image = Image.fromarray(
+            np.array(image).astype(np.uint8)
+        )
 
     image = image.copy()
 
@@ -475,7 +480,7 @@ def show_fixed_video(
 
 
 # ============================================================
-# DRAW YOLO BOXES
+# DRAW YOLO BOXES FOR IMAGE / CAMERA
 # ============================================================
 
 def draw_yolo_boxes(
@@ -483,6 +488,7 @@ def draw_yolo_boxes(
     result
 ):
 
+    # Image input is RGB.
     output = frame.copy()
 
     defects = []
@@ -533,12 +539,13 @@ def draw_yolo_boxes(
 
 
         # RED BOX
+        # Since image is RGB, red = (255, 0, 0)
 
         cv2.rectangle(
             output,
             (x1, y1),
             (x2, y2),
-            (0, 0, 255),
+            (255, 0, 0),
             6
         )
 
@@ -584,7 +591,7 @@ def draw_yolo_boxes(
                 label_y + 4
             ),
 
-            (0, 0, 255),
+            (255, 0, 0),
 
             -1
         )
@@ -1153,8 +1160,6 @@ else:
 
             if uploaded_video:
 
-                # INPUT VIDEO PREVIEW
-
                 preview_file = (
                     tempfile.NamedTemporaryFile(
                         delete=False,
@@ -1186,8 +1191,6 @@ else:
                 )
 
 
-                # ANALYZE VIDEO
-
                 if st.button(
                     "🔍 Analyze Video",
                     use_container_width=True
@@ -1196,8 +1199,6 @@ else:
                     with st.spinner(
                         "Analyzing video... Please wait."
                     ):
-
-                        # SAVE INPUT VIDEO
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1218,8 +1219,6 @@ else:
                             input_temp.name
                         )
 
-
-                        # OPEN VIDEO
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1257,8 +1256,6 @@ else:
                         if fps <= 0:
                             fps = 25
 
-
-                        # OUTPUT VIDEO
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1306,8 +1303,6 @@ else:
 
                         last_boxes = []
 
-
-                        # PROCESS VIDEO
 
                         while True:
 
@@ -1448,8 +1443,6 @@ else:
                                 )
 
 
-                                # RED BOX
-
                                 cv2.rectangle(
                                     processed_frame,
 
@@ -1462,8 +1455,6 @@ else:
                                     6
                                 )
 
-
-                                # LABEL
 
                                 label = (
                                     f"{name} "
@@ -1501,8 +1492,6 @@ else:
                                 )
 
 
-                                # LABEL BACKGROUND
-
                                 cv2.rectangle(
                                     processed_frame,
 
@@ -1526,8 +1515,6 @@ else:
                                     -1
                                 )
 
-
-                                # LABEL TEXT
 
                                 cv2.putText(
                                     processed_frame,
@@ -1556,14 +1543,10 @@ else:
                             )
 
 
-                        # RELEASE
-
                         cap.release()
 
                         writer.release()
 
-
-                        # CONVERT VIDEO
 
                         final_video = (
                             convert_video_for_browser(
@@ -1650,8 +1633,6 @@ else:
                 )
 
 
-                # FIXED: unwanted HTML code will not appear
-
                 for defect in defects:
 
                     render_html(f"""
@@ -1716,8 +1697,6 @@ else:
                     "### Detected Defects"
                 )
 
-
-                # FIXED: unwanted HTML code will not appear
 
                 for name, confidence in (
                     defects.items()
