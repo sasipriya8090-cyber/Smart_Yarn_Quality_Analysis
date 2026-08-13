@@ -11,7 +11,7 @@ from ultralytics import YOLO
 
 
 # ============================================================
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
@@ -22,11 +22,10 @@ st.set_page_config(
 
 
 # ============================================================
-# MODEL CONFIGURATION
+# MODEL
 # ============================================================
 
 MODEL_PATH = "best (6).pt"
-
 
 _original_torch_load = torch.load
 
@@ -89,11 +88,8 @@ st.markdown(
        ======================================================== */
 
     .block-container {
-
         padding-top: 3.5rem !important;
-
-        padding-bottom: 1.5rem !important;
-
+        padding-bottom: 1rem !important;
     }
 
 
@@ -104,29 +100,23 @@ st.markdown(
     .main-title {
 
         width: 100%;
-
         height: 72px;
 
         box-sizing: border-box;
 
         border: 2px solid #6a1b9a;
-
         border-radius: 14px;
 
-        margin: 0 0 20px 0;
-
+        margin: 0 0 18px 0;
         padding: 0 20px;
 
         display: flex;
-
         align-items: center;
-
         justify-content: center;
 
         text-align: center;
 
         font-size: 28px;
-
         font-weight: 800;
 
         line-height: 1.2;
@@ -142,7 +132,6 @@ st.markdown(
 
         box-shadow:
             0 2px 8px rgba(90, 50, 130, 0.08);
-
     }
 
 
@@ -154,7 +143,7 @@ st.markdown(
 
         width: 100%;
 
-        min-height: 48px;
+        min-height: 46px;
 
         border: none !important;
 
@@ -177,7 +166,6 @@ st.markdown(
             0 5px 14px rgba(70, 55, 150, 0.25) !important;
 
         transition: all 0.2s ease-in-out !important;
-
     }
 
 
@@ -196,23 +184,22 @@ st.markdown(
 
         box-shadow:
             0 8px 18px rgba(70, 55, 150, 0.30) !important;
-
     }
 
 
-    .stButton > button:focus {
+    .stButton > button:focus,
+    .stButton > button:active {
 
         color: white !important;
 
         border: none !important;
 
         outline: none !important;
-
     }
 
 
     /* ========================================================
-       AICW CARD
+       FIRST PAGE AICW CARD
        ======================================================== */
 
     .aicw-title {
@@ -228,7 +215,6 @@ st.markdown(
         line-height: 1.35;
 
         margin-top: 55px;
-
     }
 
 
@@ -245,13 +231,8 @@ st.markdown(
         margin-top: 42px;
 
         margin-bottom: 45px;
-
     }
 
-
-    /* ========================================================
-       PROJECT DESCRIPTION
-       ======================================================== */
 
     .project-heading {
 
@@ -261,13 +242,12 @@ st.markdown(
 
         font-weight: 800;
 
-        margin-bottom: 18px;
-
+        margin-bottom: 16px;
     }
 
 
     /* ========================================================
-       TEAM / GUIDE
+       TEAM / EMAIL / GUIDE
        ======================================================== */
 
     .team-item {
@@ -276,10 +256,9 @@ st.markdown(
 
         color: #24324a;
 
-        margin: 10px 0;
+        margin: 9px 0;
 
-        line-height: 1.6;
-
+        line-height: 1.5;
     }
 
 
@@ -289,12 +268,11 @@ st.markdown(
 
         color: #315bb5;
 
-        margin: 13px 0;
+        margin: 10px 0;
 
-        line-height: 1.5;
+        line-height: 1.4;
 
         word-break: break-word;
-
     }
 
 
@@ -304,15 +282,94 @@ st.markdown(
 
         color: #24324a;
 
-        margin-top: 8px;
+        margin-top: 6px;
 
-        margin-bottom: 22px;
-
+        margin-bottom: 16px;
     }
 
 
     /* ========================================================
-       QUALITY RESULT
+       SECOND PAGE MEDIA BOX
+       ======================================================== */
+
+    .media-box {
+
+        width: 100%;
+
+        max-width: 390px;
+
+        height: 220px;
+
+        margin: 6px auto 10px auto;
+
+        border: 2px solid #90caf9;
+
+        border-radius: 12px;
+
+        background: #f5faff;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        overflow: hidden;
+
+        box-sizing: border-box;
+    }
+
+
+    .media-box.output-box {
+
+        border-color: #ce93d8;
+
+        background: #fcf5ff;
+    }
+
+
+    .media-box img {
+
+        max-width: 100%;
+
+        max-height: 100%;
+
+        width: auto;
+
+        height: auto;
+
+        object-fit: contain;
+
+        display: block;
+    }
+
+
+    .media-box video {
+
+        width: 100%;
+
+        height: 100%;
+
+        object-fit: contain;
+
+        display: block;
+    }
+
+
+    .media-title {
+
+        font-size: 13px;
+
+        font-weight: 800;
+
+        color: #24324a;
+
+        margin: 4px 0 4px 0;
+    }
+
+
+    /* ========================================================
+       QUALITY
        ======================================================== */
 
     .good-quality {
@@ -321,11 +378,11 @@ st.markdown(
 
         border-radius: 12px;
 
-        padding: 10px;
+        padding: 8px;
 
         text-align: center;
 
-        font-size: 21px;
+        font-size: 20px;
 
         font-weight: bold;
 
@@ -333,8 +390,7 @@ st.markdown(
 
         background: #e8f5e9;
 
-        margin-top: 12px;
-
+        margin-top: 8px;
     }
 
 
@@ -344,11 +400,11 @@ st.markdown(
 
         border-radius: 12px;
 
-        padding: 10px;
+        padding: 8px;
 
         text-align: center;
 
-        font-size: 21px;
+        font-size: 20px;
 
         font-weight: bold;
 
@@ -356,8 +412,7 @@ st.markdown(
 
         background: #ffebee;
 
-        margin-top: 12px;
-
+        margin-top: 8px;
     }
 
 
@@ -371,31 +426,15 @@ st.markdown(
 
         border-radius: 9px;
 
-        padding: 9px 12px;
+        padding: 7px 10px;
 
-        margin-top: 7px;
+        margin-top: 5px;
 
         background: #fff8f8;
 
-        font-size: 15px;
-
-    }
-
-
-    /* ========================================================
-       IMAGE CONTAINER
-       ======================================================== */
-
-    .image-label {
-
-        font-size: 14px;
-
-        font-weight: 700;
-
         color: #24324a;
 
-        margin-bottom: 5px;
-
+        font-size: 14px;
     }
 
 
@@ -406,12 +445,257 @@ st.markdown(
 
 
 # ============================================================
-# DRAW YOLO BOUNDING BOXES
+# DISPLAY IMAGE INSIDE FIXED BOX
 # ============================================================
 
-def draw_yolo_boxes(frame, result):
+def display_image_box(
+    image,
+    output=False
+):
 
-    output = frame.copy()
+    if isinstance(image, Image.Image):
+
+        pil_image = image.convert("RGB")
+
+    elif isinstance(image, np.ndarray):
+
+        if image.ndim == 3:
+
+            pil_image = Image.fromarray(
+                cv2.cvtColor(
+                    image,
+                    cv2.COLOR_BGR2RGB
+                )
+            )
+
+        else:
+
+            pil_image = Image.fromarray(
+                image
+            )
+
+    else:
+
+        return
+
+
+    # Resize only for display.
+    # Original image remains unchanged.
+
+    display_image = pil_image.copy()
+
+    display_image.thumbnail(
+        (370, 205),
+        Image.Resampling.LANCZOS
+    )
+
+
+    border_class = (
+        "media-box output-box"
+        if output
+        else "media-box"
+    )
+
+
+    st.markdown(
+        f"""
+        <div class="{border_class}">
+
+            <img
+                src="data:image/jpeg;base64,{image_to_base64(display_image)}"
+            >
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# IMAGE TO BASE64
+# ============================================================
+
+def image_to_base64(image):
+
+    import io
+    import base64
+
+    buffer = io.BytesIO()
+
+    image.save(
+        buffer,
+        format="JPEG",
+        quality=90
+    )
+
+    return base64.b64encode(
+        buffer.getvalue()
+    ).decode("utf-8")
+
+
+# ============================================================
+# VIDEO TO BROWSER PLAYABLE MP4
+# ============================================================
+
+def convert_video_to_browser_format(
+    input_path
+):
+
+    try:
+
+        import imageio_ffmpeg
+
+        ffmpeg_path = (
+            imageio_ffmpeg.get_ffmpeg_exe()
+        )
+
+    except Exception:
+
+        return input_path
+
+
+    output_path = tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".mp4"
+    ).name
+
+
+    command = [
+
+        ffmpeg_path,
+
+        "-y",
+
+        "-i",
+        input_path,
+
+        "-c:v",
+        "libx264",
+
+        "-preset",
+        "fast",
+
+        "-pix_fmt",
+        "yuv420p",
+
+        "-movflags",
+        "+faststart",
+
+        "-an",
+
+        output_path
+    ]
+
+
+    try:
+
+        subprocess.run(
+            command,
+
+            stdout=subprocess.PIPE,
+
+            stderr=subprocess.PIPE,
+
+            check=True
+        )
+
+        return output_path
+
+    except Exception:
+
+        return input_path
+
+
+# ============================================================
+# DISPLAY VIDEO INSIDE FIXED BOX
+# ============================================================
+
+def display_video_box(
+    video_path,
+    output=False
+):
+
+    try:
+
+        with open(
+            video_path,
+            "rb"
+        ) as video_file:
+
+            video_bytes = (
+                video_file.read()
+            )
+
+
+        import base64
+
+        encoded_video = (
+            base64.b64encode(
+                video_bytes
+            ).decode("utf-8")
+        )
+
+
+        border_class = (
+            "media-box output-box"
+            if output
+            else "media-box"
+        )
+
+
+        st.markdown(
+            f"""
+            <div class="{border_class}">
+
+                <video
+                    controls
+                    preload="metadata"
+                >
+
+                    <source
+                        src="data:video/mp4;base64,{encoded_video}"
+                        type="video/mp4"
+                    >
+
+                    Your browser does not support
+                    video playback.
+
+                </video>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    except Exception as e:
+
+        st.error(
+            f"❌ Video display error: {e}"
+        )
+
+
+# ============================================================
+# YOLO IMAGE DETECTION
+# ============================================================
+
+def detect_image(image):
+
+    image_array = np.array(
+        image.convert("RGB")
+    )
+
+
+    result = model.predict(
+        source=image_array,
+
+        conf=0.15,
+
+        verbose=False
+    )[0]
+
+
+    output = image_array.copy()
 
     defects = []
 
@@ -433,6 +717,7 @@ def draw_yolo_boxes(frame, result):
             .astype(int)
         )
 
+
         x1, y1, x2, y2 = coords
 
 
@@ -450,28 +735,21 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        defect_name = model.names[class_id]
+        defect_name = model.names[
+            class_id
+        ]
 
 
         defects.append(
             {
                 "name": defect_name,
 
-                "confidence": confidence,
-
-                "box": (
-                    x1,
-                    y1,
-                    x2,
-                    y2
-                )
+                "confidence": confidence
             }
         )
 
 
-        # ----------------------------------------------------
-        # BOUNDING BOX
-        # ----------------------------------------------------
+        # Bounding box
 
         cv2.rectangle(
             output,
@@ -480,15 +758,13 @@ def draw_yolo_boxes(frame, result):
 
             (x2, y2),
 
-            (0, 0, 255),
+            (255, 0, 0),
 
             5
         )
 
 
-        # ----------------------------------------------------
-        # LABEL
-        # ----------------------------------------------------
+        # Label
 
         label = (
             f"{defect_name} "
@@ -498,23 +774,27 @@ def draw_yolo_boxes(frame, result):
 
         font = cv2.FONT_HERSHEY_SIMPLEX
 
-        font_scale = 0.70
+        scale = 0.70
 
         thickness = 2
 
 
-        text_size, baseline = cv2.getTextSize(
-            label,
+        text_size, baseline = (
+            cv2.getTextSize(
+                label,
 
-            font,
+                font,
 
-            font_scale,
+                scale,
 
-            thickness
+                thickness
+            )
         )
 
 
-        text_width, text_height = text_size
+        text_width, text_height = (
+            text_size
+        )
 
 
         label_y = max(
@@ -528,15 +808,21 @@ def draw_yolo_boxes(frame, result):
 
             (
                 x1,
-                label_y - text_height - 12
+
+                label_y
+                - text_height
+                - 12
             ),
 
             (
-                x1 + text_width + 12,
+                x1
+                + text_width
+                + 12,
+
                 label_y + 4
             ),
 
-            (0, 0, 255),
+            (255, 0, 0),
 
             -1
         )
@@ -549,12 +835,13 @@ def draw_yolo_boxes(frame, result):
 
             (
                 x1 + 6,
+
                 label_y - 6
             ),
 
             font,
 
-            font_scale,
+            scale,
 
             (255, 255, 255),
 
@@ -568,12 +855,16 @@ def draw_yolo_boxes(frame, result):
 
 
 # ============================================================
-# VIDEO PROCESSING
+# PROCESS VIDEO
 # ============================================================
 
-def process_video(input_path):
+def process_video(
+    input_path
+):
 
-    cap = cv2.VideoCapture(input_path)
+    cap = cv2.VideoCapture(
+        input_path
+    )
 
 
     if not cap.isOpened():
@@ -605,16 +896,10 @@ def process_video(input_path):
         fps = 25
 
 
-    output_file = tempfile.NamedTemporaryFile(
+    raw_output = tempfile.NamedTemporaryFile(
         delete=False,
-
         suffix=".mp4"
-    )
-
-
-    output_path = output_file.name
-
-    output_file.close()
+    ).name
 
 
     fourcc = cv2.VideoWriter_fourcc(
@@ -623,7 +908,7 @@ def process_video(input_path):
 
 
     writer = cv2.VideoWriter(
-        output_path,
+        raw_output,
 
         fourcc,
 
@@ -631,6 +916,13 @@ def process_video(input_path):
 
         (width, height)
     )
+
+
+    if not writer.isOpened():
+
+        cap.release()
+
+        return None, {}
 
 
     all_defects = {}
@@ -692,7 +984,9 @@ def process_video(input_path):
                 )
 
 
-                defect_name = model.names[class_id]
+                defect_name = model.names[
+                    class_id
+                ]
 
 
                 current_boxes.append(
@@ -704,9 +998,11 @@ def process_video(input_path):
                             y2
                         ),
 
-                        "name": defect_name,
+                        "name":
+                            defect_name,
 
-                        "confidence": confidence
+                        "confidence":
+                            confidence
                     }
                 )
 
@@ -738,16 +1034,16 @@ def process_video(input_path):
             last_boxes = current_boxes
 
 
-        if len(current_boxes) > 0:
-
-            boxes_to_draw = current_boxes
-
-        else:
-
-            boxes_to_draw = last_boxes
+        boxes_to_draw = (
+            current_boxes
+            if len(current_boxes) > 0
+            else last_boxes
+        )
 
 
-        processed_frame = frame.copy()
+        processed_frame = (
+            frame.copy()
+        )
 
 
         for detection in boxes_to_draw:
@@ -758,10 +1054,10 @@ def process_video(input_path):
 
             name = detection["name"]
 
-            confidence = detection["confidence"]
+            confidence = (
+                detection["confidence"]
+            )
 
-
-            # BOX
 
             cv2.rectangle(
                 processed_frame,
@@ -770,13 +1066,11 @@ def process_video(input_path):
 
                 (x2, y2),
 
-                (0, 0, 255),
+                (255, 0, 0),
 
                 5
             )
 
-
-            # LABEL
 
             label = (
                 f"{name} "
@@ -784,21 +1078,25 @@ def process_video(input_path):
             )
 
 
-            font = cv2.FONT_HERSHEY_SIMPLEX
+            font = (
+                cv2.FONT_HERSHEY_SIMPLEX
+            )
 
-            font_scale = 0.70
+            scale = 0.70
 
             thickness = 2
 
 
-            text_size, baseline = cv2.getTextSize(
-                label,
+            text_size, baseline = (
+                cv2.getTextSize(
+                    label,
 
-                font,
+                    font,
 
-                font_scale,
+                    scale,
 
-                thickness
+                    thickness
+                )
             )
 
 
@@ -818,15 +1116,21 @@ def process_video(input_path):
 
                 (
                     x1,
-                    label_y - text_height - 12
+
+                    label_y
+                    - text_height
+                    - 12
                 ),
 
                 (
-                    x1 + text_width + 12,
+                    x1
+                    + text_width
+                    + 12,
+
                     label_y + 4
                 ),
 
-                (0, 0, 255),
+                (255, 0, 0),
 
                 -1
             )
@@ -839,12 +1143,13 @@ def process_video(input_path):
 
                 (
                     x1 + 6,
+
                     label_y - 6
                 ),
 
                 font,
 
-                font_scale,
+                scale,
 
                 (255, 255, 255),
 
@@ -864,7 +1169,16 @@ def process_video(input_path):
     writer.release()
 
 
-    return output_path, all_defects
+    # Convert to browser playable H.264
+
+    final_output = (
+        convert_video_to_browser_format(
+            raw_output
+        )
+    )
+
+
+    return final_output, all_defects
 
 
 # ============================================================
@@ -899,27 +1213,41 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # AICW BOX
+    # AICW CARD
     # ========================================================
 
     with left:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
-                '<div class="aicw-title">'
-                'AI Career for Women'
-                '<br>'
-                '(AICW)'
-                '</div>',
+                """
+                <div class="aicw-title">
+
+                    AI Career for Women
+
+                    <br>
+
+                    (AICW)
+
+                </div>
+                """,
+
                 unsafe_allow_html=True
             )
 
 
             st.markdown(
-                '<div class="capstone-title">'
-                'Capstone Project'
-                '</div>',
+                """
+                <div class="capstone-title">
+
+                    Capstone Project
+
+                </div>
+                """,
+
                 unsafe_allow_html=True
             )
 
@@ -927,51 +1255,59 @@ if st.session_state.page == "home":
         st.write("")
 
 
-        # PREDICT
-
         if st.button(
             "🔍 PREDICT",
+
             use_container_width=True
         ):
 
-            st.session_state.page = "inspection"
+            st.session_state.page = (
+                "inspection"
+            )
 
             st.rerun()
 
 
     # ========================================================
-    # PROJECT DESCRIPTION BOX
+    # PROJECT DESCRIPTION
     # ========================================================
 
     with right:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
-                '<div class="project-heading">'
-                'Project Description'
-                '</div>',
+                """
+                <div class="project-heading">
+
+                    Project Description
+
+                </div>
+                """,
+
                 unsafe_allow_html=True
             )
 
 
             st.write(
                 """
-                YarnX is an AI-powered yarn quality inspection
-                system designed to automatically detect and
-                identify yarn defects using Computer Vision
-                and Deep Learning.
+                YarnX is an AI-powered yarn quality
+                inspection system designed to automatically
+                detect and identify yarn defects using
+                Computer Vision and Deep Learning.
                 """
             )
 
 
             st.write(
                 """
-                The system accepts yarn images, camera input,
-                and videos for inspection. A trained YOLO model
-                analyzes the yarn and identifies defective
-                regions by drawing bounding boxes around
-                detected defects.
+                The system accepts yarn images, camera
+                input, and videos for inspection. A trained
+                YOLO model analyzes the yarn and identifies
+                defective regions by drawing bounding boxes
+                around detected defects.
                 """
             )
 
@@ -979,10 +1315,10 @@ if st.session_state.page == "home":
             st.write(
                 """
                 The system displays the detected defect,
-                confidence score, and final quality result as
-                GOOD or BAD. This helps reduce manual inspection
-                effort and supports faster and more accurate
-                yarn quality assessment.
+                confidence score, and final quality result
+                as GOOD or BAD. This helps reduce manual
+                inspection effort and supports faster and
+                more accurate yarn quality assessment.
                 """
             )
 
@@ -1004,12 +1340,14 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TEAM MEMBERS
+    # TEAM
     # ========================================================
 
     with team:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
                 "### 👩‍💻 TEAM MEMBERS"
@@ -1018,32 +1356,36 @@ if st.session_state.page == "home":
 
             st.markdown(
                 '<div class="team-item">'
-                '1. &nbsp; Gutti.Pavani Devi Priya'
+                '1. Gutti.Pavani Devi Priya'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
             st.markdown(
                 '<div class="team-item">'
-                '2. &nbsp; Somasani.Sasi Priya'
+                '2. Somasani.Sasi Priya'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
             st.markdown(
                 '<div class="team-item">'
-                '3. &nbsp; Galidevara.Rama Devi'
+                '3. Galidevara.Rama Devi'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
             st.markdown(
                 '<div class="team-item">'
-                '4. &nbsp; Rambala.Harshitha Sai Lakshmi'
+                '4. Rambala.Harshitha Sai Lakshmi'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
@@ -1054,7 +1396,9 @@ if st.session_state.page == "home":
 
     with gmail:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
                 "### 📧 GMAIL"
@@ -1063,40 +1407,36 @@ if st.session_state.page == "home":
 
             st.markdown(
                 '<div class="email-item">'
-                '<a href="mailto:gutthipavanidevipriya@gmail.com">'
                 'gutthipavanidevipriya@gmail.com'
-                '</a>'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
             st.markdown(
                 '<div class="email-item">'
-                '<a href="mailto:Sasipriya8090@gmail.com">'
                 'Sasipriya8090@gmail.com'
-                '</a>'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
             st.markdown(
                 '<div class="email-item">'
-                '<a href="mailto:ramadevigalidevara0@gmail.com">'
                 'ramadevigalidevara0@gmail.com'
-                '</a>'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
             st.markdown(
                 '<div class="email-item">'
-                '<a href="mailto:harshitharambala3@gmail.com">'
                 'harshitharambala3@gmail.com'
-                '</a>'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
@@ -1107,7 +1447,9 @@ if st.session_state.page == "home":
 
     with guide:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
             st.markdown(
                 "### 🎓 GUIDE NAME"
@@ -1118,6 +1460,7 @@ if st.session_state.page == "home":
                 '<div class="guide-value">'
                 'Md. Abdul Aziz'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
@@ -1131,6 +1474,7 @@ if st.session_state.page == "home":
                 '<div class="guide-value">'
                 'Co Lead & Trainer AICW'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
@@ -1151,6 +1495,7 @@ else:
             🧶 YarnX – The Future of Yarn Inspection
         </div>
         """,
+
         unsafe_allow_html=True
     )
 
@@ -1180,7 +1525,7 @@ else:
 
 
     # ========================================================
-    # EQUAL INPUT + OUTPUT
+    # EQUAL COLUMNS
     # ========================================================
 
     input_col, output_col = st.columns(
@@ -1191,7 +1536,7 @@ else:
 
 
     # ========================================================
-    # INPUT SIDE
+    # INPUT
     # ========================================================
 
     with input_col:
@@ -1220,7 +1565,7 @@ else:
 
 
         # ====================================================
-        # IMAGE INPUT
+        # IMAGE
         # ====================================================
 
         if input_type == "🖼️ Image":
@@ -1247,21 +1592,18 @@ else:
 
 
                 st.markdown(
-                    '<div class="image-label">'
+                    '<div class="media-title">'
                     'INPUT PREVIEW'
                     '</div>',
+
                     unsafe_allow_html=True
                 )
 
 
-                # IMPORTANT:
-                # Direct st.image is used.
-                # No base64 / HTML image display.
-
-                st.image(
+                display_image_box(
                     image,
 
-                    width=400
+                    output=False
                 )
 
 
@@ -1275,22 +1617,11 @@ else:
                         "Analyzing yarn..."
                     ):
 
-                        result = model.predict(
-                            source=np.array(image),
-
-                            conf=0.15,
-
-                            verbose=False
-                        )[0]
-
-
-                    output_image, defects = (
-                        draw_yolo_boxes(
-                            np.array(image),
-
-                            result
+                        output_image, defects = (
+                            detect_image(
+                                image
+                            )
                         )
-                    )
 
 
                     st.session_state.image_output = (
@@ -1312,7 +1643,7 @@ else:
 
 
         # ====================================================
-        # CAMERA INPUT
+        # CAMERA
         # ====================================================
 
         elif input_type == "📷 Camera":
@@ -1330,17 +1661,18 @@ else:
 
 
                 st.markdown(
-                    '<div class="image-label">'
+                    '<div class="media-title">'
                     'CAMERA PREVIEW'
                     '</div>',
+
                     unsafe_allow_html=True
                 )
 
 
-                st.image(
+                display_image_box(
                     image,
 
-                    width=400
+                    output=False
                 )
 
 
@@ -1354,22 +1686,11 @@ else:
                         "Analyzing yarn..."
                     ):
 
-                        result = model.predict(
-                            source=np.array(image),
-
-                            conf=0.15,
-
-                            verbose=False
-                        )[0]
-
-
-                    output_image, defects = (
-                        draw_yolo_boxes(
-                            np.array(image),
-
-                            result
+                        output_image, defects = (
+                            detect_image(
+                                image
+                            )
                         )
-                    )
 
 
                     st.session_state.image_output = (
@@ -1391,7 +1712,7 @@ else:
 
 
         # ====================================================
-        # VIDEO INPUT
+        # VIDEO
         # ====================================================
 
         else:
@@ -1412,7 +1733,7 @@ else:
 
             if uploaded_video:
 
-                video_input_file = (
+                input_video_file = (
                     tempfile.NamedTemporaryFile(
                         delete=False,
 
@@ -1421,26 +1742,27 @@ else:
                 )
 
 
-                video_input_file.write(
+                input_video_file.write(
                     uploaded_video.getvalue()
                 )
 
 
-                video_input_file.close()
+                input_video_file.close()
 
 
                 st.markdown(
-                    '<div class="image-label">'
+                    '<div class="media-title">'
                     'INPUT VIDEO'
                     '</div>',
+
                     unsafe_allow_html=True
                 )
 
 
-                # ACTUAL VIDEO
+                display_video_box(
+                    input_video_file.name,
 
-                st.video(
-                    uploaded_video.getvalue()
+                    output=False
                 )
 
 
@@ -1456,7 +1778,7 @@ else:
 
                         output_video, defects = (
                             process_video(
-                                video_input_file.name
+                                input_video_file.name
                             )
                         )
 
@@ -1464,7 +1786,7 @@ else:
                     if output_video is None:
 
                         st.error(
-                            "❌ Unable to process video."
+                            "❌ Video processing failed."
                         )
 
                     else:
@@ -1484,16 +1806,11 @@ else:
                         st.session_state.image_defects = []
 
 
-                        st.success(
-                            "✅ Video analysis completed."
-                        )
-
-
                         st.rerun()
 
 
     # ========================================================
-    # OUTPUT SIDE
+    # OUTPUT
     # ========================================================
 
     with output_col:
@@ -1513,21 +1830,18 @@ else:
         ):
 
             st.markdown(
-                '<div class="image-label">'
+                '<div class="media-title">'
                 'ANALYZED IMAGE'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
-            # IMPORTANT:
-            # Direct st.image.
-            # No base64 code.
-
-            st.image(
+            display_image_box(
                 st.session_state.image_output,
 
-                width=500
+                output=True
             )
 
 
@@ -1535,8 +1849,6 @@ else:
                 st.session_state.image_defects
             )
 
-
-            # BAD
 
             if len(defects) > 0:
 
@@ -1558,26 +1870,22 @@ else:
 
                 for defect in defects:
 
-                    st.markdown(
-                        f"""
-                        <div class="defect-card">
+                    # NORMAL STREAMLIT TEXT
+                    # NO HTML TAGS
 
-                            🔴 <b>Defect:</b>
-                            {defect["name"]}
+                    with st.container(
+                        border=True
+                    ):
 
-                            &nbsp;&nbsp;
+                        st.write(
+                            f"🔴 Defect: {defect['name']}"
+                        )
 
-                            📊 <b>Confidence:</b>
-                            {defect["confidence"] * 100:.2f}%
+                        st.write(
+                            f"📊 Confidence: "
+                            f"{defect['confidence'] * 100:.2f}%"
+                        )
 
-                        </div>
-                        """,
-
-                        unsafe_allow_html=True
-                    )
-
-
-            # GOOD
 
             else:
 
@@ -1602,46 +1910,27 @@ else:
         ):
 
             st.markdown(
-                '<div class="image-label">'
+                '<div class="media-title">'
                 'ANALYZED VIDEO'
                 '</div>',
+
                 unsafe_allow_html=True
             )
 
 
-            # ACTUAL PROCESSED VIDEO
+            # PLAYABLE FIXED VIDEO BOX
 
-            try:
+            display_video_box(
+                st.session_state.video_output,
 
-                with open(
-                    st.session_state.video_output,
-
-                    "rb"
-                ) as video_file:
-
-                    video_bytes = (
-                        video_file.read()
-                    )
-
-
-                st.video(
-                    video_bytes
-                )
-
-
-            except Exception as e:
-
-                st.error(
-                    f"❌ Unable to display video: {e}"
-                )
+                output=True
+            )
 
 
             defects = (
                 st.session_state.video_defects
             )
 
-
-            # BAD
 
             if len(defects) > 0:
 
@@ -1665,26 +1954,19 @@ else:
                     defects.items()
                 ):
 
-                    st.markdown(
-                        f"""
-                        <div class="defect-card">
+                    with st.container(
+                        border=True
+                    ):
 
-                            🔴 <b>Defect:</b>
-                            {name}
+                        st.write(
+                            f"🔴 Defect: {name}"
+                        )
 
-                            &nbsp;&nbsp;
+                        st.write(
+                            f"📊 Confidence: "
+                            f"{confidence * 100:.2f}%"
+                        )
 
-                            📊 <b>Confidence:</b>
-                            {confidence * 100:.2f}%
-
-                        </div>
-                        """,
-
-                        unsafe_allow_html=True
-                    )
-
-
-            # GOOD
 
             else:
 
@@ -1700,7 +1982,7 @@ else:
 
 
         # ====================================================
-        # INITIAL MESSAGE
+        # NO RESULT
         # ====================================================
 
         else:
