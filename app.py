@@ -1,259 +1,194 @@
 import os
-import shutil
-import subprocess
 import tempfile
+import subprocess
+import shutil
 
+import streamlit as st
 import cv2
 import numpy as np
-import streamlit as st
 import torch
 from PIL import Image
 from ultralytics import YOLO
 
 
-# ============================================================
-# PAGE CONFIG
-# ============================================================
+# =========================================================
+# PAGE SETTINGS
+# =========================================================
 
 st.set_page_config(
-    page_title="YarnX – The Future of Yarn Inspection",
+    page_title="YarnX",
     page_icon="🧶",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="wide"
 )
 
 
-# ============================================================
-# MODEL PATH
-# ============================================================
+# =========================================================
+# MODEL
+# =========================================================
 
 MODEL_PATH = "best (6).pt"
 
 
-# ============================================================
-# PYTORCH COMPATIBILITY
-# ============================================================
-
+# PyTorch 2.6+ compatibility for trusted local model
 _original_torch_load = torch.load
 
-
 def patched_torch_load(*args, **kwargs):
-
-    if "weights_only" not in kwargs:
-        kwargs["weights_only"] = False
-
+    kwargs["weights_only"] = False
     return _original_torch_load(*args, **kwargs)
-
 
 torch.load = patched_torch_load
 
 
-# ============================================================
-# LOAD MODEL
-# ============================================================
-
 @st.cache_resource
-def load_model():
-
-    if not os.path.exists(MODEL_PATH):
-
-        st.error(
-            f"❌ Model file not found: {MODEL_PATH}"
-        )
-
-        st.stop()
-
+def get_model():
     return YOLO(MODEL_PATH)
 
 
-model = load_model()
+model = get_model()
 
 
-# ============================================================
-# SESSION STATE
-# ============================================================
+# =========================================================
+# SESSION
+# =========================================================
 
 if "page" not in st.session_state:
-    st.session_state.page = "home"
+    st.session_state.page = 1
+
+if "image_result" not in st.session_state:
+    st.session_state.image_result = None
+
+if "video_result" not in st.session_state:
+    st.session_state.video_result = None
 
 
-# ============================================================
+# =========================================================
 # CSS
-# ============================================================
+# =========================================================
 
-st.markdown(
-    """
-    <style>
+st.markdown("""
+<style>
 
-    /* Remove unnecessary top space */
+#MainMenu {
+    visibility: hidden;
+}
 
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 0.5rem;
-    }
+footer {
+    visibility: hidden;
+}
 
+header {
+    visibility: hidden;
+}
 
-    /* Main title */
-
-    .main-title {
-        border: 2px solid #222;
-        text-align: center;
-        font-size: 28px;
-        font-weight: 700;
-        padding: 10px;
-        margin-bottom: 10px;
-    }
+.block-container {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
 
 
-    /* First page */
+/* =========================
+   COMMON TITLE
+   ========================= */
 
-    .home-left {
-        border: 2px solid #222;
-        height: 560px;
-        padding: 25px;
-        text-align: center;
-    }
-
-
-    .home-right {
-        border: 2px solid #222;
-        height: 560px;
-        padding: 20px;
-    }
+.title {
+    border: 2px solid #222;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    padding: 12px;
+    margin-bottom: 10px;
+}
 
 
-    .description {
-        font-size: 15px;
-        line-height: 1.45;
-        text-align: justify;
-    }
+/* =========================
+   FIRST PAGE
+   ========================= */
+
+.home-box {
+    border: 2px solid #222;
+    height: 520px;
+    padding: 20px;
+}
+
+.description {
+    font-size: 15px;
+    line-height: 1.45;
+    text-align: justify;
+}
+
+.team-title {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.team-text {
+    font-size: 11px;
+    line-height: 1.25;
+}
 
 
-    .team-area {
-        border-top: 2px solid #222;
-        margin-top: 12px;
-        padding-top: 8px;
-    }
+/* =========================
+   SECOND PAGE
+   ========================= */
+
+.panel-title {
+    font-size: 21px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.preview-label {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.preview {
+    height: 250px;
+    border: 2px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
 
 
-    .team-heading {
-        font-weight: bold;
-        font-size: 14px;
-        margin-bottom: 5px;
-    }
+/* =========================
+   QUALITY
+   ========================= */
+
+.good {
+    border: 2px solid green;
+    text-align: center;
+    font-size: 23px;
+    font-weight: bold;
+    padding: 7px;
+    margin-top: 8px;
+}
+
+.bad {
+    border: 2px solid red;
+    text-align: center;
+    font-size: 23px;
+    font-weight: bold;
+    padding: 7px;
+    margin-top: 8px;
+}
+
+.defect {
+    border: 1px solid #777;
+    padding: 6px;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 
-    .team-text {
-        font-size: 12px;
-        line-height: 1.35;
-    }
-
-
-    /* Second page */
-
-    .input-panel,
-    .result-panel {
-        border: 2px solid #222;
-        min-height: 650px;
-        padding: 15px;
-    }
-
-
-    .preview-title {
-        text-align: center;
-        font-weight: bold;
-        font-size: 16px;
-        margin-bottom: 5px;
-    }
-
-
-    /* Fixed preview */
-
-    .preview-container {
-        height: 300px;
-        width: 100%;
-        border: 2px solid #777;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-        background: #fafafa;
-    }
-
-
-    .preview-container img {
-        max-width: 100%;
-        max-height: 290px;
-        object-fit: contain;
-    }
-
-
-    .result-image {
-        max-height: 360px !important;
-        width: auto !important;
-        object-fit: contain;
-    }
-
-
-    /* Quality */
-
-    .good-quality {
-        border: 2px solid green;
-        padding: 8px;
-        text-align: center;
-        font-size: 22px;
-        font-weight: bold;
-        margin-top: 8px;
-    }
-
-
-    .bad-quality {
-        border: 2px solid red;
-        padding: 8px;
-        text-align: center;
-        font-size: 22px;
-        font-weight: bold;
-        margin-top: 8px;
-    }
-
-
-    .defect-card {
-        border: 1px solid #777;
-        padding: 7px;
-        margin-top: 5px;
-        font-size: 14px;
-    }
-
-
-    /* Buttons */
-
-    div.stButton > button {
-        font-weight: bold;
-    }
-
-
-    /* File uploader */
-
-    [data-testid="stFileUploader"] {
-        margin-bottom: 5px;
-    }
-
-
-    /* Radio */
-
-    div[role="radiogroup"] {
-        gap: 10px;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
-# HELPER - GET DEFECTS
-# ============================================================
+# =========================================================
+# FUNCTION: GET DEFECTS
+# =========================================================
 
 def get_defects(result):
 
@@ -263,54 +198,40 @@ def get_defects(result):
 
         for box in result.boxes:
 
-            class_id = int(
-                box.cls[0].item()
-            )
+            class_id = int(box.cls[0])
+            confidence = float(box.conf[0])
 
-            confidence = float(
-                box.conf[0].item()
-            )
+            name = model.names[class_id]
 
-            defect_name = model.names[class_id]
-
-            defects.append(
-                {
-                    "name": defect_name,
-                    "confidence": confidence
-                }
-            )
+            defects.append({
+                "name": name,
+                "confidence": confidence
+            })
 
     return defects
 
 
-# ============================================================
-# HELPER - VIDEO CONVERSION
-# ============================================================
+# =========================================================
+# FUNCTION: CONVERT VIDEO
+# =========================================================
 
-def convert_video_to_browser_format(input_path):
-
-    """
-    Converts YOLO generated video to H.264/AAC MP4
-    so that Streamlit/browser can play it.
-    """
-
-    output_path = tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=".mp4"
-    ).name
+def make_browser_video(input_video):
 
     ffmpeg = shutil.which("ffmpeg")
 
     if ffmpeg is None:
+        return input_video
 
-        return input_path
-
+    output_video = tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".mp4"
+    ).name
 
     command = [
         ffmpeg,
         "-y",
         "-i",
-        input_path,
+        input_video,
         "-c:v",
         "libx264",
         "-preset",
@@ -320,9 +241,8 @@ def convert_video_to_browser_format(input_path):
         "-movflags",
         "+faststart",
         "-an",
-        output_path
+        output_video
     ]
-
 
     try:
 
@@ -333,28 +253,23 @@ def convert_video_to_browser_format(input_path):
             check=True
         )
 
-        return output_path
+        return output_video
 
     except Exception:
 
-        return input_path
+        return input_video
 
 
-# ============================================================
-# PAGE 1 - HOME
-# ============================================================
+# =========================================================
+# PAGE 1
+# =========================================================
 
-if st.session_state.page == "home":
+if st.session_state.page == 1:
 
     st.markdown(
-        """
-        <div class="main-title">
-            🧶 YarnX – The Future of Yarn Inspection
-        </div>
-        """,
+        '<div class="title">🧶 YarnX – The Future of Yarn Inspection</div>',
         unsafe_allow_html=True
     )
-
 
     left, right = st.columns(
         [35, 65],
@@ -362,21 +277,21 @@ if st.session_state.page == "home":
     )
 
 
-    # ========================================================
-    # LEFT - AICW
-    # ========================================================
+    # -----------------------------------------------------
+    # LEFT
+    # -----------------------------------------------------
 
     with left:
 
         st.markdown(
             """
-            <div class="home-left">
+            <div class="home-box">
 
-                <h2>
+                <h2 style="text-align:center;">
                     AI Career for Women (AICW)
                 </h2>
 
-                <h3>
+                <h3 style="text-align:center;">
                     Capstone Project
                 </h3>
 
@@ -387,66 +302,52 @@ if st.session_state.page == "home":
             unsafe_allow_html=True
         )
 
-
         st.write("")
-
 
         if st.button(
             "PREDICT",
             use_container_width=True
         ):
 
-            st.session_state.page = "inspection"
+            st.session_state.page = 2
 
             st.rerun()
 
 
-    # ========================================================
-    # RIGHT - DESCRIPTION + DETAILS
-    # ========================================================
+    # -----------------------------------------------------
+    # RIGHT
+    # -----------------------------------------------------
 
     with right:
 
         st.markdown(
             """
-            <div class="home-right">
+            <div class="home-box">
 
-                <h2>
-                    Project Description
-                </h2>
+                <h2>Project Description</h2>
 
                 <div class="description">
 
-                    YarnX is an AI-powered yarn quality
-                    inspection system designed to
-                    automatically detect and identify
-                    yarn defects using Computer Vision
-                    and Deep Learning.
+                YarnX is an AI-powered yarn quality
+                inspection system designed to automatically
+                detect and identify yarn defects using
+                Computer Vision and Deep Learning.
 
-                    <br><br>
+                <br><br>
 
-                    The system accepts yarn images,
-                    camera input, and videos for inspection.
-                    It uses a trained YOLO model to detect
-                    defects, display bounding boxes around
-                    defective regions, identify the defect
-                    type, and provide a quality result as
-                    GOOD or BAD.
+                The system accepts yarn images, camera
+                input, and videos for inspection. A trained
+                YOLO model analyzes the yarn and identifies
+                defective regions by drawing bounding boxes
+                around detected defects.
 
-                    <br><br>
+                <br><br>
 
-                    This system helps reduce manual
-                    inspection effort, improve detection
-                    accuracy, and support faster yarn
-                    quality assessment.
-
-                </div>
-
-                <div class="team-area">
-
-                    <div class="team-heading">
-                        TEAM MEMBERS
-                    </div>
+                The system displays the detected defect,
+                confidence score, and final quality result
+                as GOOD or BAD. This helps reduce manual
+                inspection effort and supports faster and
+                more accurate yarn quality assessment.
 
                 </div>
 
@@ -455,40 +356,47 @@ if st.session_state.page == "home":
             unsafe_allow_html=True
         )
 
-
-        # Team details
+        st.write("")
 
         c1, c2, c3 = st.columns(
             [1.25, 1.1, 0.85],
             gap="small"
         )
 
-
         with c1:
+
+            st.markdown(
+                '<div class="team-title">TEAM MEMBERS</div>',
+                unsafe_allow_html=True
+            )
 
             st.markdown(
                 """
                 <div class="team-text">
 
-                <b>1. Gutti.Pavani<br>
-                Devi Priya</b><br><br>
+                1. Gutti.Pavani<br>
+                &nbsp;&nbsp;&nbsp;Devi Priya<br><br>
 
-                <b>2. Somasani.Sasi<br>
-                Priya</b><br><br>
+                2. Somasani.Sasi<br>
+                &nbsp;&nbsp;&nbsp;Priya<br><br>
 
-                <b>3. Galidevara.Rama<br>
-                Devi</b><br><br>
+                3. Galidevara.Rama<br>
+                &nbsp;&nbsp;&nbsp;Devi<br><br>
 
-                <b>4. Rambala.Harshitha<br>
-                Sai Lakshmi</b>
+                4. Rambala.Harshitha<br>
+                &nbsp;&nbsp;&nbsp;Sai Lakshmi
 
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
-
         with c2:
+
+            st.markdown(
+                '<div class="team-title">GMAIL</div>',
+                unsafe_allow_html=True
+            )
 
             st.markdown(
                 """
@@ -511,18 +419,24 @@ if st.session_state.page == "home":
                 unsafe_allow_html=True
             )
 
-
         with c3:
+
+            st.markdown(
+                '<div class="team-title">GUIDE NAME</div>',
+                unsafe_allow_html=True
+            )
 
             st.markdown(
                 """
                 <div class="team-text">
 
-                <b>GUIDE NAME</b><br><br>
+                Md. Abdul Aziz
 
-                Md. Abdul Aziz<br><br>
+                <br><br>
 
-                <b>DESIGNATION</b><br><br>
+                <b>Designation</b>
+
+                <br><br>
 
                 Co Lead &<br>
                 Trainer AICW
@@ -533,27 +447,23 @@ if st.session_state.page == "home":
             )
 
 
-# ============================================================
-# PAGE 2 - INSPECTION
-# ============================================================
+# =========================================================
+# PAGE 2
+# =========================================================
 
-elif st.session_state.page == "inspection":
+elif st.session_state.page == 2:
 
     st.markdown(
-        """
-        <div class="main-title">
-            🧶 YarnX – The Future of Yarn Inspection
-        </div>
-        """,
+        '<div class="title">🧶 YarnX – The Future of Yarn Inspection</div>',
         unsafe_allow_html=True
     )
 
+    if st.button("⬅ Back"):
 
-    # Back button
+        st.session_state.page = 1
 
-    if st.button("⬅ Back to Home"):
-
-        st.session_state.page = "home"
+        st.session_state.image_result = None
+        st.session_state.video_result = None
 
         st.rerun()
 
@@ -564,28 +474,20 @@ elif st.session_state.page == "inspection":
     )
 
 
-    # ========================================================
-    # LEFT - INPUT
-    # ========================================================
+    # =====================================================
+    # INPUT
+    # =====================================================
 
     with left:
 
         st.markdown(
-            """
-            <div class="input-panel">
-
-            <h2>📥 INPUT</h2>
-
-            </div>
-            """,
+            '<div class="panel-title">📥 INPUT</div>',
             unsafe_allow_html=True
         )
 
-
         st.markdown(
-            "### Select Input Type:"
+            "Select Input Type:"
         )
-
 
         input_type = st.radio(
             "",
@@ -598,188 +500,158 @@ elif st.session_state.page == "inspection":
         )
 
 
-        # ====================================================
+        # =================================================
         # IMAGE
-        # ====================================================
+        # =================================================
 
         if input_type == "🖼️ Image":
 
-            uploaded_file = st.file_uploader(
-                "Upload Yarn Image",
+            file = st.file_uploader(
+                "Upload Image",
                 type=[
                     "jpg",
                     "jpeg",
                     "png",
                     "webp"
                 ],
-                key="image_upload"
+                key="image"
             )
 
-
-            if uploaded_file is not None:
+            if file:
 
                 image = Image.open(
-                    uploaded_file
+                    file
                 ).convert("RGB")
 
-
                 st.markdown(
-                    '<div class="preview-title">INPUT PREVIEW</div>',
+                    '<div class="preview-label">INPUT PREVIEW</div>',
                     unsafe_allow_html=True
                 )
 
-
                 st.image(
                     image,
-                    use_container_width=True
+                    width=400
                 )
 
-
-                analyze = st.button(
+                if st.button(
                     "🔍 Analyze Image",
                     use_container_width=True
-                )
-
-
-                if analyze:
+                ):
 
                     with st.spinner(
-                        "Analyzing image..."
+                        "Analyzing..."
                     ):
 
                         results = model.predict(
-                            source=np.array(image),
+                            np.array(image),
                             conf=0.25,
                             verbose=False
                         )
 
-
                     result = results[0]
 
-                    output_image = result.plot()
+                    output = result.plot()
 
                     defects = get_defects(
                         result
                     )
 
-
-                    # Store result
                     st.session_state.image_result = (
-                        output_image,
+                        output,
                         defects
                     )
 
+                    st.session_state.video_result = None
 
-        # ====================================================
+
+        # =================================================
         # CAMERA
-        # ====================================================
+        # =================================================
 
         elif input_type == "📷 Camera":
 
-            camera_image = st.camera_input(
-                "Capture Yarn Image"
+            camera = st.camera_input(
+                "Capture Yarn"
             )
 
-
-            if camera_image is not None:
+            if camera:
 
                 image = Image.open(
-                    camera_image
+                    camera
                 ).convert("RGB")
-
-
-                st.markdown(
-                    '<div class="preview-title">CAMERA PREVIEW</div>',
-                    unsafe_allow_html=True
-                )
-
 
                 st.image(
                     image,
-                    use_container_width=True
+                    width=400
                 )
 
-
-                analyze = st.button(
-                    "🔍 Analyze Camera Image",
+                if st.button(
+                    "🔍 Analyze Camera",
                     use_container_width=True
-                )
-
-
-                if analyze:
+                ):
 
                     with st.spinner(
-                        "Analyzing camera image..."
+                        "Analyzing..."
                     ):
 
                         results = model.predict(
-                            source=np.array(image),
+                            np.array(image),
                             conf=0.25,
                             verbose=False
                         )
 
-
                     result = results[0]
 
-                    output_image = result.plot()
+                    output = result.plot()
 
                     defects = get_defects(
                         result
                     )
 
-
                     st.session_state.image_result = (
-                        output_image,
+                        output,
                         defects
                     )
 
+                    st.session_state.video_result = None
 
-        # ====================================================
+
+        # =================================================
         # VIDEO
-        # ====================================================
+        # =================================================
 
         elif input_type == "🎥 Video":
 
-            uploaded_video = st.file_uploader(
-                "Upload Yarn Video",
+            video = st.file_uploader(
+                "Upload Video",
                 type=[
                     "mp4",
                     "avi",
                     "mov",
                     "mkv"
                 ],
-                key="video_upload"
+                key="video"
             )
 
-
-            if uploaded_video is not None:
+            if video:
 
                 st.markdown(
-                    '<div class="preview-title">INPUT VIDEO</div>',
+                    '<div class="preview-label">INPUT VIDEO</div>',
                     unsafe_allow_html=True
                 )
 
-
                 st.video(
-                    uploaded_video
+                    video
                 )
 
-
-                analyze = st.button(
+                if st.button(
                     "🔍 Analyze Video",
                     use_container_width=True
-                )
-
-
-                if analyze:
+                ):
 
                     with st.spinner(
-                        "Analyzing video frames..."
+                        "Analyzing video..."
                     ):
-
-                        # --------------------------------
-                        # INPUT TEMP FILE
-                        # --------------------------------
 
                         input_file = tempfile.NamedTemporaryFile(
                             delete=False,
@@ -787,15 +659,11 @@ elif st.session_state.page == "inspection":
                         )
 
                         input_file.write(
-                            uploaded_video.getvalue()
+                            video.getvalue()
                         )
 
                         input_file.close()
 
-
-                        # --------------------------------
-                        # VIDEO CAPTURE
-                        # --------------------------------
 
                         cap = cv2.VideoCapture(
                             input_file.name
@@ -818,36 +686,26 @@ elif st.session_state.page == "inspection":
                             cv2.CAP_PROP_FPS
                         )
 
-
                         if fps <= 0:
                             fps = 25
 
 
-                        # --------------------------------
-                        # RAW OUTPUT
-                        # --------------------------------
-
-                        raw_output = tempfile.NamedTemporaryFile(
+                        raw_file = tempfile.NamedTemporaryFile(
                             delete=False,
                             suffix=".mp4"
                         )
 
-                        raw_output_path = (
-                            raw_output.name
+                        raw_file.close()
+
+                        raw_output = raw_file.name
+
+
+                        fourcc = cv2.VideoWriter_fourcc(
+                            *"mp4v"
                         )
-
-                        raw_output.close()
-
-
-                        fourcc = (
-                            cv2.VideoWriter_fourcc(
-                                *"mp4v"
-                            )
-                        )
-
 
                         writer = cv2.VideoWriter(
-                            raw_output_path,
+                            raw_output,
                             fourcc,
                             fps,
                             (width, height)
@@ -857,170 +715,125 @@ elif st.session_state.page == "inspection":
                         all_defects = {}
 
 
-                        # --------------------------------
-                        # PROCESS EVERY FRAME
-                        # --------------------------------
-
                         while True:
 
                             ret, frame = cap.read()
-
 
                             if not ret:
                                 break
 
 
                             results = model.predict(
-                                source=frame,
+                                frame,
                                 conf=0.25,
                                 verbose=False
                             )
 
-
                             result = results[0]
 
 
-                            # YOLO bounding boxes
-                            processed_frame = (
-                                result.plot()
-                            )
+                            # Draw bounding boxes
+                            processed = result.plot()
 
 
                             writer.write(
-                                processed_frame
+                                processed
                             )
 
 
-                            # Collect defects
-                            if (
-                                result.boxes
-                                is not None
-                            ):
+                            if result.boxes is not None:
 
                                 for box in result.boxes:
 
                                     class_id = int(
-                                        box.cls[0].item()
+                                        box.cls[0]
                                     )
 
                                     confidence = float(
-                                        box.conf[0].item()
+                                        box.conf[0]
                                     )
 
-                                    defect_name = (
-                                        model.names[
-                                            class_id
-                                        ]
-                                    )
+                                    name = model.names[
+                                        class_id
+                                    ]
 
 
                                     if (
-                                        defect_name
-                                        not in all_defects
+                                        name not in all_defects
+                                        or
+                                        confidence >
+                                        all_defects[name]
                                     ):
 
                                         all_defects[
-                                            defect_name
-                                        ] = confidence
-
-                                    elif confidence > all_defects[
-                                        defect_name
-                                    ]:
-
-                                        all_defects[
-                                            defect_name
+                                            name
                                         ] = confidence
 
 
                         cap.release()
-
                         writer.release()
 
 
-                        # --------------------------------
-                        # CONVERT TO H264
-                        # --------------------------------
-
-                        browser_video = (
-                            convert_video_to_browser_format(
-                                raw_output_path
+                        # Convert to browser-playable MP4
+                        final_video = (
+                            make_browser_video(
+                                raw_output
                             )
                         )
 
 
                         st.session_state.video_result = (
-                            browser_video,
+                            final_video,
                             all_defects
                         )
 
-
-                        # Remove input
-                        try:
-                            os.remove(
-                                input_file.name
-                            )
-                        except:
-                            pass
+                        st.session_state.image_result = None
 
 
-    # ========================================================
-    # RIGHT - RESULT
-    # ========================================================
+    # =====================================================
+    # RESULT
+    # =====================================================
 
     with right:
 
         st.markdown(
-            """
-            <div class="result-panel">
-
-            <h2>🤖 INSPECTION RESULT</h2>
-
-            </div>
-            """,
+            '<div class="panel-title">🤖 INSPECTION RESULT</div>',
             unsafe_allow_html=True
         )
 
 
-        # ====================================================
+        # -------------------------------------------------
         # IMAGE RESULT
-        # ====================================================
+        # -------------------------------------------------
 
-        if "image_result" in st.session_state:
+        if st.session_state.image_result:
 
-            output_image, defects = (
+            output, defects = (
                 st.session_state.image_result
             )
 
-
             st.image(
-                output_image,
-                caption="ANALYZED OUTPUT",
-                width=650
+                output,
+                width=600
             )
 
 
-            if len(defects) > 0:
+            if defects:
 
                 st.markdown(
-                    """
-                    <div class="bad-quality">
-                        ❌ BAD QUALITY
-                    </div>
-                    """,
+                    '<div class="bad">❌ BAD QUALITY</div>',
                     unsafe_allow_html=True
                 )
-
 
                 st.markdown(
                     "### Detected Defects"
                 )
 
-
                 for defect in defects:
 
                     st.markdown(
                         f"""
-                        <div class="defect-card">
+                        <div class="defect">
 
                         🔴 <b>Defect:</b>
                         {defect["name"]}
@@ -1035,45 +848,30 @@ elif st.session_state.page == "inspection":
                         unsafe_allow_html=True
                     )
 
-
             else:
 
                 st.markdown(
-                    """
-                    <div class="good-quality">
-                        ✅ GOOD QUALITY
-                    </div>
-                    """,
+                    '<div class="good">✅ GOOD QUALITY</div>',
                     unsafe_allow_html=True
                 )
 
 
-        # ====================================================
+        # -------------------------------------------------
         # VIDEO RESULT
-        # ====================================================
+        # -------------------------------------------------
 
-        elif "video_result" in st.session_state:
+        elif st.session_state.video_result:
 
-            video_path, all_defects = (
+            video_path, defects = (
                 st.session_state.video_result
             )
 
-
-            st.markdown(
-                '<div class="preview-title">ANALYZED VIDEO</div>',
-                unsafe_allow_html=True
-            )
-
-
-            # Browser compatible video
             with open(
                 video_path,
                 "rb"
-            ) as video_file:
+            ) as f:
 
-                video_bytes = (
-                    video_file.read()
-                )
+                video_bytes = f.read()
 
 
             st.video(
@@ -1082,30 +880,22 @@ elif st.session_state.page == "inspection":
             )
 
 
-            if len(all_defects) > 0:
+            if defects:
 
                 st.markdown(
-                    """
-                    <div class="bad-quality">
-                        ❌ BAD QUALITY
-                    </div>
-                    """,
+                    '<div class="bad">❌ BAD QUALITY</div>',
                     unsafe_allow_html=True
                 )
-
 
                 st.markdown(
                     "### Detected Defects"
                 )
 
-
-                for name, confidence in (
-                    all_defects.items()
-                ):
+                for name, confidence in defects.items():
 
                     st.markdown(
                         f"""
-                        <div class="defect-card">
+                        <div class="defect">
 
                         🔴 <b>Defect:</b>
                         {name}
@@ -1120,25 +910,30 @@ elif st.session_state.page == "inspection":
                         unsafe_allow_html=True
                     )
 
-
             else:
 
                 st.markdown(
-                    """
-                    <div class="good-quality">
-                        ✅ GOOD QUALITY
-                    </div>
-                    """,
+                    '<div class="good">✅ GOOD QUALITY</div>',
                     unsafe_allow_html=True
                 )
 
 
-        # ====================================================
-        # NO RESULT
-        # ====================================================
+        # -------------------------------------------------
+        # EMPTY RESULT
+        # -------------------------------------------------
 
         else:
 
-            st.info(
-                "Upload an image/video and click Analyze to see the inspection result."
+            st.markdown(
+                """
+                <div class="preview"
+                     style="height:350px;">
+
+                    <b>
+                    ANALYZED IMAGE / VIDEO
+                    </b>
+
+                </div>
+                """,
+                unsafe_allow_html=True
             )
