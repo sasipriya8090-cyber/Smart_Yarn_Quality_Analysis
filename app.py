@@ -1,17 +1,18 @@
 import os
 import tempfile
+import subprocess
 
+import streamlit as st
 import cv2
 import numpy as np
-import streamlit as st
 import torch
 from PIL import Image
 from ultralytics import YOLO
 
 
-# ==========================================================
+# =========================================================
 # PAGE CONFIG
-# ==========================================================
+# =========================================================
 
 st.set_page_config(
     page_title="YarnX – The Future of Yarn Inspection",
@@ -20,16 +21,16 @@ st.set_page_config(
 )
 
 
-# ==========================================================
+# =========================================================
 # MODEL
-# ==========================================================
+# =========================================================
 
 MODEL_PATH = "best (6).pt"
 
 
-# ==========================================================
-# PYTORCH COMPATIBILITY
-# ==========================================================
+# =========================================================
+# PYTORCH FIX
+# =========================================================
 
 _original_torch_load = torch.load
 
@@ -51,7 +52,7 @@ def load_model():
     if not os.path.exists(MODEL_PATH):
 
         st.error(
-            f"Model file not found: {MODEL_PATH}"
+            f"❌ {MODEL_PATH} not found."
         )
 
         st.stop()
@@ -62,9 +63,9 @@ def load_model():
 model = load_model()
 
 
-# ==========================================================
+# =========================================================
 # SESSION STATE
-# ==========================================================
+# =========================================================
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
@@ -82,60 +83,41 @@ if "video_defects" not in st.session_state:
     st.session_state.video_defects = {}
 
 
-# ==========================================================
+# =========================================================
 # CSS
-# ==========================================================
+# =========================================================
 
-st.markdown(
-    """
+st.markdown("""
 <style>
 
 .block-container {
-    padding-top: 1rem;
-    padding-bottom: 0.5rem;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 
-/* Main title */
+/* MAIN TITLE */
 
 .main-title {
     border: 2px solid #222;
-    padding: 12px;
+    padding: 10px;
     text-align: center;
     font-size: 28px;
     font-weight: bold;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 
-/* Home boxes */
+/* HOME */
 
 .home-box {
     border: 2px solid #222;
-    padding: 20px;
     height: 475px;
+    padding: 20px;
 }
 
 
-/* Description */
-
-.description-text {
-    font-size: 15px;
-    line-height: 1.5;
-    text-align: justify;
-}
-
-
-/* Second page */
-
-.result-box {
-    border: 2px solid #222;
-    min-height: 430px;
-    padding: 15px;
-}
-
-
-/* Quality */
+/* QUALITY */
 
 .good-quality {
     border: 2px solid green;
@@ -155,21 +137,22 @@ st.markdown(
     margin-top: 8px;
 }
 
-.defect-item {
+
+/* DEFECT */
+
+.defect-box {
     border: 1px solid #777;
     padding: 7px;
     margin-top: 5px;
 }
 
 </style>
-""",
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 
-# ==========================================================
+# =========================================================
 # GET DEFECTS
-# ==========================================================
+# =========================================================
 
 def get_defects(result):
 
@@ -179,7 +162,9 @@ def get_defects(result):
 
         for box in result.boxes:
 
-            class_id = int(box.cls[0].item())
+            class_id = int(
+                box.cls[0].item()
+            )
 
             confidence = float(
                 box.conf[0].item()
@@ -187,27 +172,51 @@ def get_defects(result):
 
             defect_name = model.names[class_id]
 
-            defects.append(
-                {
-                    "name": defect_name,
-                    "confidence": confidence
-                }
-            )
+            defects.append({
+                "name": defect_name,
+                "confidence": confidence
+            })
 
     return defects
 
 
-# ==========================================================
-# VIDEO CONVERSION
-# ==========================================================
+# =========================================================
+# RESIZE IMAGE FOR DISPLAY
+# =========================================================
 
-def convert_video_for_browser(input_path):
+def resize_for_display(image, max_width=500, max_height=300):
+
+    if isinstance(image, np.ndarray):
+
+        image = Image.fromarray(
+            cv2.cvtColor(
+                image,
+                cv2.COLOR_BGR2RGB
+            )
+        )
+
+
+    image = image.copy()
+
+    image.thumbnail(
+        (max_width, max_height),
+        Image.Resampling.LANCZOS
+    )
+
+    return image
+
+
+# =========================================================
+# VIDEO BROWSER CONVERSION
+# =========================================================
+
+def convert_video(input_path):
 
     try:
 
         import imageio_ffmpeg
 
-        ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
 
     except Exception:
 
@@ -221,7 +230,7 @@ def convert_video_for_browser(input_path):
 
 
     command = [
-        ffmpeg_path,
+        ffmpeg,
         "-y",
         "-i",
         input_path,
@@ -235,8 +244,6 @@ def convert_video_for_browser(input_path):
         output_path
     ]
 
-
-    import subprocess
 
     try:
 
@@ -254,9 +261,11 @@ def convert_video_for_browser(input_path):
         return input_path
 
 
-# ==========================================================
+# =========================================================
+# =========================================================
 # PAGE 1
-# ==========================================================
+# =========================================================
+# =========================================================
 
 if st.session_state.page == "home":
 
@@ -272,9 +281,9 @@ if st.session_state.page == "home":
     )
 
 
-    # ======================================================
-    # LEFT SIDE
-    # ======================================================
+    # =====================================================
+    # LEFT
+    # =====================================================
 
     with left:
 
@@ -291,13 +300,8 @@ if st.session_state.page == "home":
             )
 
             st.write("")
-
             st.write("")
-
             st.write("")
-
-            st.write("")
-
             st.write("")
 
 
@@ -313,32 +317,34 @@ if st.session_state.page == "home":
             st.rerun()
 
 
-    # ======================================================
-    # RIGHT SIDE
-    # ======================================================
+    # =====================================================
+    # RIGHT
+    # =====================================================
 
     with right:
 
         with st.container(border=True):
 
-            st.subheader("Project Description")
+            st.subheader(
+                "Project Description"
+            )
 
             st.write(
                 """
-                YarnX is an AI-powered yarn quality inspection
-                system designed to automatically detect and
-                identify yarn defects using Computer Vision
-                and Deep Learning.
+                YarnX is an AI-powered yarn quality
+                inspection system designed to automatically
+                detect and identify yarn defects using
+                Computer Vision and Deep Learning.
                 """
             )
 
             st.write(
                 """
-                The system accepts yarn images, camera input,
-                and videos for inspection. A trained YOLO model
-                analyzes the yarn and identifies defective
-                regions by drawing bounding boxes around
-                detected defects.
+                The system accepts yarn images, camera
+                input, and videos for inspection. A trained
+                YOLO model analyzes the yarn and identifies
+                defective regions by drawing bounding boxes
+                around detected defects.
                 """
             )
 
@@ -353,9 +359,9 @@ if st.session_state.page == "home":
             )
 
 
-    # ======================================================
+    # =====================================================
     # TEAM DETAILS
-    # ======================================================
+    # =====================================================
 
     st.write("")
 
@@ -369,21 +375,10 @@ if st.session_state.page == "home":
 
         st.markdown("**TEAM MEMBERS**")
 
-        st.write(
-            "1. Gutti.Pavani Devi Priya"
-        )
-
-        st.write(
-            "2. Somasani.Sasi Priya"
-        )
-
-        st.write(
-            "3. Galidevara.Rama Devi"
-        )
-
-        st.write(
-            "4. Rambala.Harshitha Sai Lakshmi"
-        )
+        st.write("1. Gutti.Pavani Devi Priya")
+        st.write("2. Somasani.Sasi Priya")
+        st.write("3. Galidevara.Rama Devi")
+        st.write("4. Rambala.Harshitha Sai Lakshmi")
 
 
     with mail_col:
@@ -422,9 +417,11 @@ if st.session_state.page == "home":
         )
 
 
-# ==========================================================
+# =========================================================
+# =========================================================
 # PAGE 2
-# ==========================================================
+# =========================================================
+# =========================================================
 
 elif st.session_state.page == "inspection":
 
@@ -433,6 +430,10 @@ elif st.session_state.page == "inspection":
         unsafe_allow_html=True
     )
 
+
+    # =====================================================
+    # BACK
+    # =====================================================
 
     if st.button("⬅ Back"):
 
@@ -452,15 +453,20 @@ elif st.session_state.page == "inspection":
     )
 
 
-    # ======================================================
-    # INPUT
-    # ======================================================
+    # =====================================================
+    # LEFT - INPUT
+    # =====================================================
 
     with left:
 
-        st.subheader("📥 INPUT")
+        st.subheader(
+            "📥 INPUT"
+        )
 
-        st.write("Select Input Type:")
+        st.write(
+            "Select Input Type:"
+        )
+
 
         input_type = st.radio(
             "",
@@ -473,9 +479,9 @@ elif st.session_state.page == "inspection":
         )
 
 
-        # ==================================================
-        # IMAGE INPUT
-        # ==================================================
+        # =================================================
+        # IMAGE
+        # =================================================
 
         if input_type == "🖼️ Image":
 
@@ -491,18 +497,29 @@ elif st.session_state.page == "inspection":
             )
 
 
-            if uploaded_image is not None:
+            if uploaded_image:
 
                 image = Image.open(
                     uploaded_image
                 ).convert("RGB")
 
 
-                st.write("**INPUT PREVIEW**")
+                st.write(
+                    "**INPUT PREVIEW**"
+                )
+
+
+                # SMALL FIXED DISPLAY
+                preview = resize_for_display(
+                    image,
+                    max_width=400,
+                    max_height=230
+                )
+
 
                 st.image(
-                    image,
-                    width=350
+                    preview,
+                    width=400
                 )
 
 
@@ -512,7 +529,7 @@ elif st.session_state.page == "inspection":
                 ):
 
                     with st.spinner(
-                        "Analyzing image..."
+                        "Analyzing yarn..."
                     ):
 
                         results = model.predict(
@@ -524,27 +541,35 @@ elif st.session_state.page == "inspection":
 
                     result = results[0]
 
-                    output_image = result.plot()
+
+                    # =================================================
+                    # CLEAR AND THICK YOLO BOXES
+                    # =================================================
+
+                    output = result.plot(
+                        conf=True,
+                        labels=True,
+                        boxes=True,
+                        line_width=4,
+                        font_size=16
+                    )
+
 
                     defects = get_defects(
                         result
                     )
 
 
-                    st.session_state.image_output = (
-                        output_image
-                    )
-
-                    st.session_state.image_defects = (
-                        defects
-                    )
+                    st.session_state.image_output = output
+                    st.session_state.image_defects = defects
 
                     st.session_state.video_output = None
+                    st.session_state.video_defects = {}
 
 
-        # ==================================================
-        # CAMERA INPUT
-        # ==================================================
+        # =================================================
+        # CAMERA
+        # =================================================
 
         elif input_type == "📷 Camera":
 
@@ -553,18 +578,28 @@ elif st.session_state.page == "inspection":
             )
 
 
-            if camera_image is not None:
+            if camera_image:
 
                 image = Image.open(
                     camera_image
                 ).convert("RGB")
 
 
-                st.write("**CAMERA PREVIEW**")
+                st.write(
+                    "**CAMERA PREVIEW**"
+                )
+
+
+                preview = resize_for_display(
+                    image,
+                    max_width=400,
+                    max_height=230
+                )
+
 
                 st.image(
-                    image,
-                    width=350
+                    preview,
+                    width=400
                 )
 
 
@@ -574,7 +609,7 @@ elif st.session_state.page == "inspection":
                 ):
 
                     with st.spinner(
-                        "Analyzing camera image..."
+                        "Analyzing yarn..."
                     ):
 
                         results = model.predict(
@@ -586,27 +621,31 @@ elif st.session_state.page == "inspection":
 
                     result = results[0]
 
-                    output_image = result.plot()
+
+                    output = result.plot(
+                        conf=True,
+                        labels=True,
+                        boxes=True,
+                        line_width=4,
+                        font_size=16
+                    )
+
 
                     defects = get_defects(
                         result
                     )
 
 
-                    st.session_state.image_output = (
-                        output_image
-                    )
-
-                    st.session_state.image_defects = (
-                        defects
-                    )
+                    st.session_state.image_output = output
+                    st.session_state.image_defects = defects
 
                     st.session_state.video_output = None
+                    st.session_state.video_defects = {}
 
 
-        # ==================================================
-        # VIDEO INPUT
-        # ==================================================
+        # =================================================
+        # VIDEO
+        # =================================================
 
         elif input_type == "🎥 Video":
 
@@ -622,12 +661,17 @@ elif st.session_state.page == "inspection":
             )
 
 
-            if uploaded_video is not None:
+            if uploaded_video:
 
-                st.write("**INPUT VIDEO**")
+                st.write(
+                    "**INPUT VIDEO**"
+                )
 
+
+                # SMALL VIDEO
                 st.video(
-                    uploaded_video
+                    uploaded_video,
+                    format="video/mp4"
                 )
 
 
@@ -637,27 +681,31 @@ elif st.session_state.page == "inspection":
                 ):
 
                     with st.spinner(
-                        "Analyzing video..."
+                        "Analyzing video frames..."
                     ):
 
-                        # Save uploaded video
+                        # ---------------------------------
+                        # SAVE INPUT
+                        # ---------------------------------
 
-                        input_temp = tempfile.NamedTemporaryFile(
+                        input_file = tempfile.NamedTemporaryFile(
                             delete=False,
                             suffix=".mp4"
                         )
 
-                        input_temp.write(
+                        input_file.write(
                             uploaded_video.getvalue()
                         )
 
-                        input_temp.close()
+                        input_file.close()
 
 
-                        # Open video
+                        # ---------------------------------
+                        # OPEN VIDEO
+                        # ---------------------------------
 
                         cap = cv2.VideoCapture(
-                            input_temp.name
+                            input_file.name
                         )
 
 
@@ -679,22 +727,21 @@ elif st.session_state.page == "inspection":
 
 
                         if fps <= 0:
-
                             fps = 25
 
 
-                        # Temporary output
+                        # ---------------------------------
+                        # OUTPUT
+                        # ---------------------------------
 
-                        output_temp = tempfile.NamedTemporaryFile(
+                        output_file = tempfile.NamedTemporaryFile(
                             delete=False,
                             suffix=".mp4"
                         )
 
-                        output_temp.close()
+                        output_file.close()
 
-                        raw_output = (
-                            output_temp.name
-                        )
+                        raw_output = output_file.name
 
 
                         fourcc = (
@@ -715,7 +762,9 @@ elif st.session_state.page == "inspection":
                         all_defects = {}
 
 
-                        # Process frames
+                        # ---------------------------------
+                        # PROCESS EVERY FRAME
+                        # ---------------------------------
 
                         while True:
 
@@ -723,7 +772,6 @@ elif st.session_state.page == "inspection":
 
 
                             if not ret:
-
                                 break
 
 
@@ -737,9 +785,16 @@ elif st.session_state.page == "inspection":
                             result = results[0]
 
 
-                            # Draw boxes
-                            processed_frame = (
-                                result.plot()
+                            # =====================================
+                            # CLEAR THICK BOXES + LABELS
+                            # =====================================
+
+                            processed_frame = result.plot(
+                                conf=True,
+                                labels=True,
+                                boxes=True,
+                                line_width=4,
+                                font_size=16
                             )
 
 
@@ -747,6 +802,10 @@ elif st.session_state.page == "inspection":
                                 processed_frame
                             )
 
+
+                            # ---------------------------------
+                            # COLLECT DEFECTS
+                            # ---------------------------------
 
                             if result.boxes is not None:
 
@@ -760,46 +819,40 @@ elif st.session_state.page == "inspection":
                                         box.conf[0]
                                     )
 
-                                    defect_name = (
-                                        model.names[
-                                            class_id
-                                        ]
-                                    )
+                                    name = model.names[
+                                        class_id
+                                    ]
 
 
                                     if (
-                                        defect_name
-                                        not in all_defects
+                                        name not in all_defects
                                     ):
 
                                         all_defects[
-                                            defect_name
+                                            name
                                         ] = confidence
 
                                     elif (
                                         confidence
                                         >
-                                        all_defects[
-                                            defect_name
-                                        ]
+                                        all_defects[name]
                                     ):
 
                                         all_defects[
-                                            defect_name
+                                            name
                                         ] = confidence
 
 
                         cap.release()
-
                         writer.release()
 
 
-                        # Convert for browser playback
+                        # ---------------------------------
+                        # CONVERT VIDEO
+                        # ---------------------------------
 
-                        final_video = (
-                            convert_video_for_browser(
-                                raw_output
-                            )
+                        final_video = convert_video(
+                            raw_output
                         )
 
 
@@ -812,11 +865,12 @@ elif st.session_state.page == "inspection":
                         )
 
                         st.session_state.image_output = None
+                        st.session_state.image_defects = []
 
 
-    # ======================================================
-    # INSPECTION RESULT
-    # ======================================================
+    # =====================================================
+    # RIGHT - RESULT
+    # =====================================================
 
     with right:
 
@@ -825,14 +879,30 @@ elif st.session_state.page == "inspection":
         )
 
 
-        # ==================================================
+        # =================================================
         # IMAGE RESULT
-        # ==================================================
+        # =================================================
 
         if st.session_state.image_output is not None:
 
-            st.image(
+            st.write(
+                "**ANALYZED IMAGE**"
+            )
+
+
+            # ---------------------------------------------
+            # SMALL OUTPUT
+            # ---------------------------------------------
+
+            result_image = resize_for_display(
                 st.session_state.image_output,
+                max_width=550,
+                max_height=320
+            )
+
+
+            st.image(
+                result_image,
                 width=550
             )
 
@@ -841,6 +911,10 @@ elif st.session_state.page == "inspection":
                 st.session_state.image_defects
             )
 
+
+            # ---------------------------------------------
+            # BAD
+            # ---------------------------------------------
 
             if len(defects) > 0:
 
@@ -861,16 +935,26 @@ elif st.session_state.page == "inspection":
 
                 for defect in defects:
 
-                    st.write(
-                        f"🔴 **Defect:** "
-                        f"{defect['name']}"
+                    st.markdown(
+                        f"""
+                        <div class="defect-box">
+
+                        🔴 <b>{defect["name"]}</b>
+
+                        &nbsp;&nbsp;&nbsp;
+
+                        Confidence:
+                        {defect["confidence"] * 100:.2f}%
+
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
 
-                    st.write(
-                        f"📊 **Confidence:** "
-                        f"{defect['confidence'] * 100:.2f}%"
-                    )
 
+            # ---------------------------------------------
+            # GOOD
+            # ---------------------------------------------
 
             else:
 
@@ -884,9 +968,9 @@ elif st.session_state.page == "inspection":
                 )
 
 
-        # ==================================================
+        # =================================================
         # VIDEO RESULT
-        # ==================================================
+        # =================================================
 
         elif st.session_state.video_output is not None:
 
@@ -898,12 +982,14 @@ elif st.session_state.page == "inspection":
             with open(
                 st.session_state.video_output,
                 "rb"
-            ) as video_file:
+            ) as f:
 
-                video_bytes = (
-                    video_file.read()
-                )
+                video_bytes = f.read()
 
+
+            # ---------------------------------------------
+            # VIDEO DISPLAY
+            # ---------------------------------------------
 
             st.video(
                 video_bytes,
@@ -915,6 +1001,10 @@ elif st.session_state.page == "inspection":
                 st.session_state.video_defects
             )
 
+
+            # ---------------------------------------------
+            # BAD
+            # ---------------------------------------------
 
             if len(defects) > 0:
 
@@ -935,15 +1025,26 @@ elif st.session_state.page == "inspection":
 
                 for name, confidence in defects.items():
 
-                    st.write(
-                        f"🔴 **Defect:** {name}"
+                    st.markdown(
+                        f"""
+                        <div class="defect-box">
+
+                        🔴 <b>{name}</b>
+
+                        &nbsp;&nbsp;&nbsp;
+
+                        Confidence:
+                        {confidence * 100:.2f}%
+
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
 
-                    st.write(
-                        f"📊 **Confidence:** "
-                        f"{confidence * 100:.2f}%"
-                    )
 
+            # ---------------------------------------------
+            # GOOD
+            # ---------------------------------------------
 
             else:
 
@@ -957,25 +1058,12 @@ elif st.session_state.page == "inspection":
                 )
 
 
-        # ==================================================
-        # EMPTY RESULT
-        # ==================================================
+        # =================================================
+        # BEFORE ANALYSIS
+        # =================================================
 
         else:
 
-            with st.container(border=True):
-
-                st.markdown(
-                    """
-                    <div style="
-                    height:350px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    font-size:18px;
-                    ">
-                    ANALYZED IMAGE / VIDEO
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            st.info(
+                "Upload an image or video and click Analyze."
+            )
