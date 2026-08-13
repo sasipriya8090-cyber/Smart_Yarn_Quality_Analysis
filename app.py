@@ -75,7 +75,7 @@ if "video_defects" not in st.session_state:
 
 
 # ============================================================
-# HELPER FOR HTML
+# HTML HELPER
 # ============================================================
 
 def render_html(html):
@@ -89,251 +89,217 @@ def render_html(html):
 # CSS
 # ============================================================
 
-st.markdown("""
-<style>
+st.markdown(
+    """
+    <style>
 
-/* ============================================================
-   MAIN PAGE
-   ============================================================ */
+    /* ========================================================
+       MAIN PAGE
+       ======================================================== */
 
-.block-container {
-    padding-top: 1.2rem;
-    padding-bottom: 1.5rem;
-}
+    .block-container {
+        padding-top: 2.2rem !important;
+        padding-bottom: 1.5rem !important;
+    }
 
 
-/* ============================================================
-   YARNX TITLE - COMPLETE RECTANGLE
-   ============================================================ */
+    /* ========================================================
+       YARNX TITLE
+       COMPLETE RECTANGLE
+       ======================================================== */
 
-.main-title {
-    width: 100%;
-    height: 72px;
+    .main-title {
 
-    box-sizing: border-box;
+        width: 100%;
 
-    border: 2px solid #6a1b9a;
-    border-radius: 14px;
+        min-height: 78px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+        box-sizing: border-box;
 
-    padding: 0 20px;
+        border: 2px solid #6a1b9a;
 
-    margin-top: 4px;
-    margin-bottom: 20px;
+        border-radius: 14px;
 
-    overflow: hidden;
+        display: flex;
 
-    text-align: center;
+        align-items: center;
 
-    font-size: 28px;
-    font-weight: 800;
+        justify-content: center;
 
-    color: #4a148c;
+        padding: 10px 20px;
 
-    background: linear-gradient(
-        90deg,
-        #f3e5f5 0%,
-        #e3f2fd 50%,
-        #fce4ec 100%
-    );
+        margin-top: 0;
 
-    box-shadow:
-        0 2px 8px rgba(90, 50, 130, 0.08);
-}
+        margin-bottom: 22px;
 
+        overflow: hidden;
 
-/* ============================================================
-   BUTTONS
-   ============================================================ */
+        text-align: center;
 
-.stButton > button {
+        font-size: 28px;
 
-    width: 100%;
+        font-weight: 800;
 
-    min-height: 48px;
+        line-height: 1.2;
 
-    border: none !important;
+        color: #4a148c;
 
-    border-radius: 13px !important;
+        background: linear-gradient(
+            90deg,
+            #f3e5f5 0%,
+            #e3f2fd 50%,
+            #fce4ec 100%
+        );
 
-    font-size: 16px !important;
+        box-shadow:
+            0 2px 8px rgba(90, 50, 130, 0.08);
+    }
 
-    font-weight: 800 !important;
 
-    color: white !important;
+    /* ========================================================
+       BUTTONS
+       ======================================================== */
 
-    background: linear-gradient(
-        135deg,
-        #6a1b9a 0%,
-        #3949ab 50%,
-        #1976d2 100%
-    ) !important;
+    .stButton > button {
 
-    box-shadow:
-        0 5px 14px rgba(70, 55, 150, 0.25) !important;
+        width: 100%;
 
-    transition: all 0.2s ease-in-out !important;
-}
+        min-height: 48px;
 
+        border: none !important;
 
-.stButton > button:hover {
+        border-radius: 13px !important;
 
-    color: white !important;
+        font-size: 16px !important;
 
-    background: linear-gradient(
-        135deg,
-        #7b1fa2 0%,
-        #3f51b5 50%,
-        #1e88e5 100%
-    ) !important;
+        font-weight: 800 !important;
 
-    transform: translateY(-2px);
+        color: white !important;
 
-    box-shadow:
-        0 8px 18px rgba(70, 55, 150, 0.30) !important;
-}
+        background: linear-gradient(
+            135deg,
+            #6a1b9a 0%,
+            #3949ab 50%,
+            #1976d2 100%
+        ) !important;
 
+        box-shadow:
+            0 5px 14px rgba(70, 55, 150, 0.25) !important;
 
-.stButton > button:focus,
-.stButton > button:active {
+        transition: all 0.2s ease-in-out !important;
+    }
 
-    color: white !important;
 
-    border: none !important;
+    .stButton > button:hover {
 
-    outline: none !important;
+        color: white !important;
 
-    box-shadow:
-        0 5px 14px rgba(70, 55, 150, 0.25) !important;
-}
+        background: linear-gradient(
+            135deg,
+            #7b1fa2 0%,
+            #3f51b5 50%,
+            #1e88e5 100%
+        ) !important;
 
+        transform: translateY(-2px);
 
-/* ============================================================
-   TEAM TEXT
-   ============================================================ */
+        box-shadow:
+            0 8px 18px rgba(70, 55, 150, 0.30) !important;
+    }
 
-.team-text {
-    font-size: 15px;
-    color: #24324a;
-    margin: 8px 0;
-    line-height: 1.5;
-}
 
+    .stButton > button:focus,
+    .stButton > button:active {
 
-/* ============================================================
-   EMAIL
-   ============================================================ */
+        color: white !important;
 
-.email-text {
-    font-size: 14px;
-    color: #315bb5;
-    margin: 10px 0;
-    word-break: break-word;
-    line-height: 1.5;
-}
+        border: none !important;
 
+        outline: none !important;
 
-/* ============================================================
-   GUIDE
-   ============================================================ */
+        box-shadow:
+            0 5px 14px rgba(70, 55, 150, 0.25) !important;
+    }
 
-.guide-label {
-    font-size: 13px;
-    font-weight: 800;
-    color: #5b5f73;
-    margin-top: 14px;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-}
 
+    /* ========================================================
+       QUALITY
+       ======================================================== */
 
-.guide-value {
-    font-size: 15px;
-    color: #24324a;
-    margin-bottom: 12px;
-    line-height: 1.5;
-}
+    .good-quality {
 
+        border: 2px solid #2e7d32;
 
-/* ============================================================
-   QUALITY
-   ============================================================ */
+        border-radius: 12px;
 
-.good-quality {
+        padding: 9px;
 
-    border: 2px solid #2e7d32;
+        text-align: center;
 
-    border-radius: 12px;
+        font-size: 21px;
 
-    padding: 9px;
+        font-weight: bold;
 
-    text-align: center;
+        color: #1b5e20;
 
-    font-size: 21px;
+        background: #e8f5e9;
 
-    font-weight: bold;
+        margin-top: 10px;
+    }
 
-    color: #1b5e20;
 
-    background: #e8f5e9;
+    .bad-quality {
 
-    margin-top: 10px;
-}
+        border: 2px solid #c62828;
 
+        border-radius: 12px;
 
-.bad-quality {
+        padding: 9px;
 
-    border: 2px solid #c62828;
+        text-align: center;
 
-    border-radius: 12px;
+        font-size: 21px;
 
-    padding: 9px;
+        font-weight: bold;
 
-    text-align: center;
+        color: #b71c1c;
 
-    font-size: 21px;
+        background: #ffebee;
 
-    font-weight: bold;
+        margin-top: 10px;
+    }
 
-    color: #b71c1c;
 
-    background: #ffebee;
+    /* ========================================================
+       DEFECT CARD
+       ======================================================== */
 
-    margin-top: 10px;
-}
+    .defect-card {
 
+        border: 1px solid #ef9a9a;
 
-/* ============================================================
-   DEFECT CARD
-   ============================================================ */
+        border-radius: 9px;
 
-.defect-card {
+        padding: 8px 10px;
 
-    border: 1px solid #ef9a9a;
+        margin-top: 6px;
 
-    border-radius: 9px;
+        background: #fff8f8;
+    }
 
-    padding: 8px 10px;
 
-    margin-top: 6px;
+    /* ========================================================
+       RADIO
+       ======================================================== */
 
-    background: #fff8f8;
-}
+    div[data-testid="stRadio"] label {
+        font-weight: 600;
+    }
 
-
-/* ============================================================
-   RADIO
-   ============================================================ */
-
-div[data-testid="stRadio"] label {
-    font-weight: 600;
-}
-
-</style>
-""", unsafe_allow_html=True)
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -378,33 +344,37 @@ def show_fixed_image(
         buffer.getvalue()
     ).decode("utf-8")
 
-    render_html(f"""
-    <div style="
-        width:{width}px;
-        height:{height}px;
-        margin:8px auto 12px auto;
-        border:2px solid {border_color};
-        border-radius:12px;
-        background:{background};
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        overflow:hidden;
-        box-sizing:border-box;
-    ">
-        <img
-            src="data:image/png;base64,{encoded}"
-            style="
-                max-width:{width - 12}px;
-                max-height:{height - 12}px;
-                width:auto;
-                height:auto;
-                object-fit:contain;
-                display:block;
-            "
-        >
-    </div>
-    """)
+    render_html(
+        f"""
+        <div style="
+            width:{width}px;
+            height:{height}px;
+            margin:8px auto 12px auto;
+            border:2px solid {border_color};
+            border-radius:12px;
+            background:{background};
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            box-sizing:border-box;
+        ">
+
+            <img
+                src="data:image/png;base64,{encoded}"
+                style="
+                    max-width:{width - 12}px;
+                    max-height:{height - 12}px;
+                    width:auto;
+                    height:auto;
+                    object-fit:contain;
+                    display:block;
+                "
+            >
+
+        </div>
+        """
+    )
 
     st.write("")
 
@@ -423,47 +393,49 @@ def show_fixed_video(
 
     try:
 
-        with open(
-            video_path,
-            "rb"
-        ) as f:
-
+        with open(video_path, "rb") as f:
             video_bytes = f.read()
 
         encoded = base64.b64encode(
             video_bytes
         ).decode("utf-8")
 
-        render_html(f"""
-        <div style="
-            width:{width}px;
-            height:{height}px;
-            margin:8px auto 12px auto;
-            border:2px solid {border_color};
-            border-radius:12px;
-            background:{background};
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            overflow:hidden;
-        ">
-            <video
-                controls
-                style="
-                    width:{width - 4}px;
-                    max-width:{width - 4}px;
-                    max-height:{height - 4}px;
-                    height:auto;
-                    object-fit:contain;
-                "
-            >
-                <source
-                    src="data:video/mp4;base64,{encoded}"
-                    type="video/mp4"
+        render_html(
+            f"""
+            <div style="
+                width:{width}px;
+                height:{height}px;
+                margin:8px auto 12px auto;
+                border:2px solid {border_color};
+                border-radius:12px;
+                background:{background};
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                overflow:hidden;
+            ">
+
+                <video
+                    controls
+                    style="
+                        width:{width - 4}px;
+                        max-width:{width - 4}px;
+                        max-height:{height - 4}px;
+                        height:auto;
+                        object-fit:contain;
+                    "
                 >
-            </video>
-        </div>
-        """)
+
+                    <source
+                        src="data:video/mp4;base64,{encoded}"
+                        type="video/mp4"
+                    >
+
+                </video>
+
+            </div>
+            """
+        )
 
         st.write("")
 
@@ -478,10 +450,7 @@ def show_fixed_video(
 # DRAW YOLO BOXES
 # ============================================================
 
-def draw_yolo_boxes(
-    frame,
-    result
-):
+def draw_yolo_boxes(frame, result):
 
     output = frame.copy()
 
@@ -491,7 +460,6 @@ def draw_yolo_boxes(
         result.boxes is None
         or len(result.boxes) == 0
     ):
-
         return output, defects
 
 
@@ -520,19 +488,24 @@ def draw_yolo_boxes(
 
         defect_name = model.names[class_id]
 
-        defects.append({
-            "name": defect_name,
-            "confidence": confidence,
-            "box": (
-                x1,
-                y1,
-                x2,
-                y2
-            )
-        })
+
+        defects.append(
+            {
+                "name": defect_name,
+                "confidence": confidence,
+                "box": (
+                    x1,
+                    y1,
+                    x2,
+                    y2
+                )
+            }
+        )
 
 
-        # RED BOX
+        # ----------------------------------------------------
+        # RED BOUNDING BOX
+        # ----------------------------------------------------
 
         cv2.rectangle(
             output,
@@ -543,7 +516,9 @@ def draw_yolo_boxes(
         )
 
 
+        # ----------------------------------------------------
         # LABEL
+        # ----------------------------------------------------
 
         label = (
             f"{defect_name} "
@@ -555,6 +530,7 @@ def draw_yolo_boxes(
         font_scale = 0.75
 
         thickness = 2
+
 
         text_size, baseline = cv2.getTextSize(
             label,
@@ -619,9 +595,7 @@ def draw_yolo_boxes(
 # VIDEO CONVERSION
 # ============================================================
 
-def convert_video_for_browser(
-    input_path
-):
+def convert_video_for_browser(input_path):
 
     try:
 
@@ -644,19 +618,28 @@ def convert_video_for_browser(
 
 
     command = [
+
         ffmpeg,
+
         "-y",
+
         "-i",
         input_path,
+
         "-c:v",
         "libx264",
+
         "-preset",
         "fast",
+
         "-pix_fmt",
         "yuv420p",
+
         "-movflags",
         "+faststart",
+
         "-an",
+
         output_path
     ]
 
@@ -683,19 +666,22 @@ def convert_video_for_browser(
 
 if st.session_state.page == "home":
 
-    # ========================================================
-    # TITLE BOX
-    # ========================================================
-
-    render_html("""
-    <div class="main-title">
-        🧶 YarnX – The Future of Yarn Inspection
-    </div>
-    """)
-
 
     # ========================================================
-    # TOP PROJECT SECTION
+    # COMPLETE TITLE BOX
+    # ========================================================
+
+    render_html(
+        """
+        <div class="main-title">
+            🧶 YarnX – The Future of Yarn Inspection
+        </div>
+        """
+    )
+
+
+    # ========================================================
+    # TOP SECTION
     # ========================================================
 
     left, right = st.columns(
@@ -721,7 +707,6 @@ if st.session_state.page == "home":
             )
 
             st.write("")
-
             st.write("")
 
             st.markdown(
@@ -732,7 +717,9 @@ if st.session_state.page == "home":
         st.write("")
 
 
+        # ====================================================
         # PREDICT BUTTON
+        # ====================================================
 
         if st.button(
             "🔍 PREDICT",
@@ -766,30 +753,36 @@ if st.session_state.page == "home":
             )
 
 
-            st.write("""
-            YarnX is an AI-powered yarn quality inspection
-            system designed to automatically detect and
-            identify yarn defects using Computer Vision
-            and Deep Learning.
-            """)
+            st.write(
+                """
+                YarnX is an AI-powered yarn quality inspection
+                system designed to automatically detect and
+                identify yarn defects using Computer Vision
+                and Deep Learning.
+                """
+            )
 
 
-            st.write("""
-            The system accepts yarn images, camera input,
-            and videos for inspection. A trained YOLO model
-            analyzes the yarn and identifies defective
-            regions by drawing bounding boxes around
-            detected defects.
-            """)
+            st.write(
+                """
+                The system accepts yarn images, camera input,
+                and videos for inspection. A trained YOLO model
+                analyzes the yarn and identifies defective
+                regions by drawing bounding boxes around
+                detected defects.
+                """
+            )
 
 
-            st.write("""
-            The system displays the detected defect,
-            confidence score, and final quality result as
-            GOOD or BAD. This helps reduce manual inspection
-            effort and supports faster and more accurate
-            yarn quality assessment.
-            """)
+            st.write(
+                """
+                The system displays the detected defect,
+                confidence score, and final quality result as
+                GOOD or BAD. This helps reduce manual
+                inspection effort and supports faster and
+                more accurate yarn quality assessment.
+                """
+            )
 
 
     # ========================================================
@@ -907,31 +900,34 @@ if st.session_state.page == "home":
 
 else:
 
+
     # ========================================================
     # TITLE BOX
     # ========================================================
 
-    render_html("""
-    <div class="main-title">
-        🧶 YarnX – The Future of Yarn Inspection
-    </div>
-    """)
+    render_html(
+        """
+        <div class="main-title">
+            🧶 YarnX – The Future of Yarn Inspection
+        </div>
+        """
+    )
 
 
     # ========================================================
     # BACK BUTTON
     # ========================================================
 
-    if st.button(
-        "⬅ Back"
-    ):
+    if st.button("⬅ Back"):
 
         st.session_state.page = "home"
 
         st.session_state.image_output = None
+
         st.session_state.image_defects = []
 
         st.session_state.video_output = None
+
         st.session_state.video_defects = {}
 
         st.rerun()
@@ -1055,7 +1051,6 @@ else:
 
                     st.session_state.video_defects = {}
 
-
                     st.rerun()
 
 
@@ -1129,7 +1124,6 @@ else:
 
                     st.session_state.video_defects = {}
 
-
                     st.rerun()
 
 
@@ -1155,7 +1149,9 @@ else:
 
             if uploaded_video:
 
+                # ------------------------------------------------
                 # INPUT VIDEO PREVIEW
+                # ------------------------------------------------
 
                 preview_file = (
                     tempfile.NamedTemporaryFile(
@@ -1188,7 +1184,9 @@ else:
                 )
 
 
+                # ------------------------------------------------
                 # ANALYZE VIDEO
+                # ------------------------------------------------
 
                 if st.button(
                     "🔍 Analyze Video",
@@ -1199,7 +1197,9 @@ else:
                         "Analyzing video... Please wait."
                     ):
 
+                        # ----------------------------------------
                         # SAVE INPUT VIDEO
+                        # ----------------------------------------
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1221,7 +1221,9 @@ else:
                         )
 
 
+                        # ----------------------------------------
                         # OPEN VIDEO
+                        # ----------------------------------------
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1257,10 +1259,13 @@ else:
 
 
                         if fps <= 0:
+
                             fps = 25
 
 
+                        # ----------------------------------------
                         # OUTPUT VIDEO
+                        # ----------------------------------------
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1309,7 +1314,9 @@ else:
                         last_boxes = []
 
 
+                        # ----------------------------------------
                         # PROCESS VIDEO
+                        # ----------------------------------------
 
                         while True:
 
@@ -1371,21 +1378,22 @@ else:
                                     )
 
 
-                                    current_boxes.append({
+                                    current_boxes.append(
+                                        {
+                                            "box": (
+                                                x1,
+                                                y1,
+                                                x2,
+                                                y2
+                                            ),
 
-                                        "box": (
-                                            x1,
-                                            y1,
-                                            x2,
-                                            y2
-                                        ),
+                                            "name":
+                                                defect_name,
 
-                                        "name":
-                                            defect_name,
-
-                                        "confidence":
-                                            confidence
-                                    })
+                                            "confidence":
+                                                confidence
+                                        }
+                                    )
 
 
                                     if (
@@ -1396,6 +1404,7 @@ else:
                                         all_defects[
                                             defect_name
                                         ] = confidence
+
 
                                     elif (
                                         confidence
@@ -1434,6 +1443,10 @@ else:
                                 frame.copy()
                             )
 
+
+                            # ------------------------------------
+                            # DRAW DETECTIONS
+                            # ------------------------------------
 
                             for detection in boxes_to_draw:
 
@@ -1558,14 +1571,18 @@ else:
                             )
 
 
+                        # ----------------------------------------
                         # RELEASE
+                        # ----------------------------------------
 
                         cap.release()
 
                         writer.release()
 
 
+                        # ----------------------------------------
                         # CONVERT VIDEO
+                        # ----------------------------------------
 
                         final_video = (
                             convert_video_for_browser(
@@ -1578,11 +1595,9 @@ else:
                             final_video
                         )
 
-
                         st.session_state.video_defects = (
                             all_defects
                         )
-
 
                         st.session_state.image_output = None
 
@@ -1592,7 +1607,6 @@ else:
                         st.success(
                             "✅ Video analysis completed."
                         )
-
 
                         st.rerun()
 
@@ -1640,11 +1654,13 @@ else:
 
             if len(defects) > 0:
 
-                render_html("""
-                <div class="bad-quality">
-                    ❌ BAD QUALITY
-                </div>
-                """)
+                render_html(
+                    """
+                    <div class="bad-quality">
+                        ❌ BAD QUALITY
+                    </div>
+                    """
+                )
 
 
                 st.write(
@@ -1654,26 +1670,32 @@ else:
 
                 for defect in defects:
 
-                    render_html(f"""
-                    <div class="defect-card">
-                        🔴 <b>Defect:</b>
-                        {defect["name"]}
+                    render_html(
+                        f"""
+                        <div class="defect-card">
 
-                        &nbsp;&nbsp;
+                            🔴 <b>Defect:</b>
+                            {defect["name"]}
 
-                        📊 <b>Confidence:</b>
-                        {defect["confidence"] * 100:.2f}%
-                    </div>
-                    """)
+                            &nbsp;&nbsp;
+
+                            📊 <b>Confidence:</b>
+                            {defect["confidence"] * 100:.2f}%
+
+                        </div>
+                        """
+                    )
 
 
             else:
 
-                render_html("""
-                <div class="good-quality">
-                    ✅ GOOD QUALITY
-                </div>
-                """)
+                render_html(
+                    """
+                    <div class="good-quality">
+                        ✅ GOOD QUALITY
+                    </div>
+                    """
+                )
 
 
         # ====================================================
@@ -1708,11 +1730,13 @@ else:
 
             if len(defects) > 0:
 
-                render_html("""
-                <div class="bad-quality">
-                    ❌ BAD QUALITY
-                </div>
-                """)
+                render_html(
+                    """
+                    <div class="bad-quality">
+                        ❌ BAD QUALITY
+                    </div>
+                    """
+                )
 
 
                 st.write(
@@ -1724,26 +1748,32 @@ else:
                     defects.items()
                 ):
 
-                    render_html(f"""
-                    <div class="defect-card">
-                        🔴 <b>Defect:</b>
-                        {name}
+                    render_html(
+                        f"""
+                        <div class="defect-card">
 
-                        &nbsp;&nbsp;
+                            🔴 <b>Defect:</b>
+                            {name}
 
-                        📊 <b>Confidence:</b>
-                        {confidence * 100:.2f}%
-                    </div>
-                    """)
+                            &nbsp;&nbsp;
+
+                            📊 <b>Confidence:</b>
+                            {confidence * 100:.2f}%
+
+                        </div>
+                        """
+                    )
 
 
             else:
 
-                render_html("""
-                <div class="good-quality">
-                    ✅ GOOD QUALITY
-                </div>
-                """)
+                render_html(
+                    """
+                    <div class="good-quality">
+                        ✅ GOOD QUALITY
+                    </div>
+                    """
+                )
 
 
         # ====================================================
