@@ -121,9 +121,11 @@ st.markdown("""
 
     padding: 0 20px;
 
-    /* FIX: heading slightly lower without increasing page length */
-    margin-top: 16px;
+    margin-top: 0;
     margin-bottom: 20px;
+
+    /* MOVE HEADING DOWN WITHOUT INCREASING PAGE HEIGHT */
+    transform: translateY(18px);
 
     overflow: hidden;
 
@@ -349,8 +351,8 @@ def show_fixed_image(
     background="#f5faff"
 ):
 
-    # Uploaded/analyzed images are already RGB.
-    # Do NOT convert RGB -> BGR -> RGB.
+    # Uploaded and analyzed images are RGB.
+    # No BGR -> RGB conversion here.
 
     if isinstance(image, np.ndarray):
 
@@ -490,7 +492,7 @@ def draw_yolo_boxes(
     result
 ):
 
-    # Image is RGB here
+    # Image input is RGB.
     output = frame.copy()
 
     defects = []
@@ -1201,6 +1203,8 @@ else:
                         "Analyzing video... Please wait."
                     ):
 
+                        # SAVE INPUT VIDEO
+
                         input_temp = (
                             tempfile.NamedTemporaryFile(
                                 delete=False,
@@ -1220,6 +1224,8 @@ else:
                             input_temp.name
                         )
 
+
+                        # OPEN VIDEO
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -1257,6 +1263,8 @@ else:
                         if fps <= 0:
                             fps = 25
 
+
+                        # OUTPUT VIDEO
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -1304,6 +1312,8 @@ else:
 
                         last_boxes = []
 
+
+                        # PROCESS VIDEO
 
                         while True:
 
@@ -1552,10 +1562,14 @@ else:
                             )
 
 
+                        # RELEASE
+
                         cap.release()
 
                         writer.release()
 
+
+                        # CONVERT VIDEO
 
                         final_video = (
                             convert_video_for_browser(
@@ -1642,6 +1656,8 @@ else:
                 )
 
 
+                # CLEAN DEFECT OUTPUT
+
                 for defect in defects:
 
                     render_html(f"""
@@ -1706,6 +1722,8 @@ else:
                     "### Detected Defects"
                 )
 
+
+                # CLEAN DEFECT OUTPUT
 
                 for name, confidence in (
                     defects.items()
