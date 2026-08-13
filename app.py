@@ -2,17 +2,17 @@ import os
 import tempfile
 import subprocess
 
-import streamlit as st
 import cv2
 import numpy as np
+import streamlit as st
 import torch
 from PIL import Image
 from ultralytics import YOLO
 
 
-# =========================================================
+# ============================================================
 # PAGE CONFIG
-# =========================================================
+# ============================================================
 
 st.set_page_config(
     page_title="YarnX – The Future of Yarn Inspection",
@@ -21,16 +21,16 @@ st.set_page_config(
 )
 
 
-# =========================================================
+# ============================================================
 # MODEL
-# =========================================================
+# ============================================================
 
 MODEL_PATH = "best (6).pt"
 
 
-# =========================================================
-# PYTORCH FIX
-# =========================================================
+# ============================================================
+# PYTORCH COMPATIBILITY
+# ============================================================
 
 _original_torch_load = torch.load
 
@@ -52,7 +52,7 @@ def load_model():
     if not os.path.exists(MODEL_PATH):
 
         st.error(
-            f"❌ {MODEL_PATH} not found."
+            f"❌ Model file not found: {MODEL_PATH}"
         )
 
         st.stop()
@@ -63,9 +63,9 @@ def load_model():
 model = load_model()
 
 
-# =========================================================
+# ============================================================
 # SESSION STATE
-# =========================================================
+# ============================================================
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
@@ -83,140 +83,253 @@ if "video_defects" not in st.session_state:
     st.session_state.video_defects = {}
 
 
-# =========================================================
+# ============================================================
 # CSS
-# =========================================================
+# ============================================================
 
-st.markdown("""
-<style>
+st.markdown(
+    """
+    <style>
 
-.block-container {
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 1rem;
+    }
 
+    .main-title {
+        border: 2px solid #222;
+        padding: 10px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
 
-/* MAIN TITLE */
+    .home-box {
+        border: 2px solid #222;
+        height: 475px;
+        padding: 20px;
+    }
 
-.main-title {
-    border: 2px solid #222;
-    padding: 10px;
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
+    .good-quality {
+        border: 2px solid green;
+        padding: 8px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 8px;
+    }
 
+    .bad-quality {
+        border: 2px solid red;
+        padding: 8px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 8px;
+    }
 
-/* HOME */
+    .defect-box {
+        border: 1px solid #777;
+        padding: 7px;
+        margin-top: 5px;
+    }
 
-.home-box {
-    border: 2px solid #222;
-    height: 475px;
-    padding: 20px;
-}
-
-
-/* QUALITY */
-
-.good-quality {
-    border: 2px solid green;
-    padding: 8px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    margin-top: 8px;
-}
-
-.bad-quality {
-    border: 2px solid red;
-    padding: 8px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    margin-top: 8px;
-}
-
-
-/* DEFECT */
-
-.defect-box {
-    border: 1px solid #777;
-    padding: 7px;
-    margin-top: 5px;
-}
-
-</style>
-""", unsafe_allow_html=True)
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
-# =========================================================
-# GET DEFECTS
-# =========================================================
+# ============================================================
+# DRAW CLEAR YOLO BOXES
+# ============================================================
 
-def get_defects(result):
+def draw_yolo_boxes(frame, result):
+
+    output = frame.copy()
 
     defects = []
 
-    if result.boxes is not None:
+    if result.boxes is None:
+        return output, defects
 
-        for box in result.boxes:
 
-            class_id = int(
-                box.cls[0].item()
-            )
+    for box in result.boxes:
 
-            confidence = float(
-                box.conf[0].item()
-            )
+        # -----------------------------------------------
+        # BOX COORDINATES
+        # -----------------------------------------------
 
-            defect_name = model.names[class_id]
+        x1, y1, x2, y2 = (
+            box.xyxy[0]
+            .cpu()
+            .numpy()
+            .astype(int)
+        )
 
-            defects.append({
+        confidence = float(
+            box.conf[0].cpu().item()
+        )
+
+        class_id = int(
+            box.cls[0].cpu().item()
+        )
+
+        defect_name = model.names[class_id]
+
+
+        # -----------------------------------------------
+        # STORE DEFECT
+        # -----------------------------------------------
+
+        defects.append(
+            {
                 "name": defect_name,
                 "confidence": confidence
-            })
+            }
+        )
 
-    return defects
+
+        # -----------------------------------------------
+        # CLEAR THICK RECTANGLE
+        # -----------------------------------------------
+
+        cv2.rectangle(
+            output,
+            (x1, y1),
+            (x2, y2),
+            (0, 0, 255),
+            5
+        )
 
 
-# =========================================================
-# RESIZE IMAGE FOR DISPLAY
-# =========================================================
+        # -----------------------------------------------
+        # LABEL
+        # -----------------------------------------------
 
-def resize_for_display(image, max_width=500, max_height=300):
+        label = (
+            f"{defect_name} "
+            f"{confidence * 100:.1f}%"
+        )
+
+
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        font_scale = 0.8
+
+        thickness = 2
+
+
+        (text_width, text_height), baseline = (
+            cv2.getTextSize(
+                label,
+                font,
+                font_scale,
+                thickness
+            )
+        )
+
+
+        # Label position
+        label_y = max(
+            y1 - 10,
+            text_height + 10
+        )
+
+
+        # -----------------------------------------------
+        # LABEL BACKGROUND
+        # -----------------------------------------------
+
+        cv2.rectangle(
+            output,
+            (
+                x1,
+                label_y - text_height - 10
+            ),
+            (
+                x1 + text_width + 10,
+                label_y + baseline - 5
+            ),
+            (0, 0, 255),
+            -1
+        )
+
+
+        # -----------------------------------------------
+        # LABEL TEXT
+        # -----------------------------------------------
+
+        cv2.putText(
+            output,
+            label,
+            (
+                x1 + 5,
+                label_y - 5
+            ),
+            font,
+            font_scale,
+            (255, 255, 255),
+            thickness,
+            cv2.LINE_AA
+        )
+
+
+    return output, defects
+
+
+# ============================================================
+# RESIZE IMAGE ONLY FOR DISPLAY
+# ============================================================
+
+def resize_for_display(
+    image,
+    max_width=500,
+    max_height=300
+):
 
     if isinstance(image, np.ndarray):
 
+        image = cv2.cvtColor(
+            image,
+            cv2.COLOR_BGR2RGB
+        )
+
         image = Image.fromarray(
-            cv2.cvtColor(
-                image,
-                cv2.COLOR_BGR2RGB
-            )
+            image
         )
 
 
     image = image.copy()
 
     image.thumbnail(
-        (max_width, max_height),
+        (
+            max_width,
+            max_height
+        ),
         Image.Resampling.LANCZOS
     )
 
     return image
 
 
-# =========================================================
-# VIDEO BROWSER CONVERSION
-# =========================================================
+# ============================================================
+# VIDEO CONVERSION
+# ============================================================
 
-def convert_video(input_path):
+def convert_video_for_browser(
+    input_path
+):
 
     try:
 
         import imageio_ffmpeg
 
-        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        ffmpeg = (
+            imageio_ffmpeg
+            .get_ffmpeg_exe()
+        )
 
     except Exception:
 
@@ -230,17 +343,28 @@ def convert_video(input_path):
 
 
     command = [
+
         ffmpeg,
+
         "-y",
+
         "-i",
         input_path,
+
         "-c:v",
         "libx264",
+
+        "-preset",
+        "fast",
+
         "-pix_fmt",
         "yuv420p",
+
         "-movflags",
         "+faststart",
+
         "-an",
+
         output_path
     ]
 
@@ -261,16 +385,20 @@ def convert_video(input_path):
         return input_path
 
 
-# =========================================================
-# =========================================================
-# PAGE 1
-# =========================================================
-# =========================================================
+# ============================================================
+# ============================================================
+# FIRST PAGE
+# ============================================================
+# ============================================================
 
 if st.session_state.page == "home":
 
     st.markdown(
-        '<div class="main-title">🧶 YarnX – The Future of Yarn Inspection</div>',
+        """
+        <div class="main-title">
+        🧶 YarnX – The Future of Yarn Inspection
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
@@ -281,21 +409,29 @@ if st.session_state.page == "home":
     )
 
 
-    # =====================================================
+    # ========================================================
     # LEFT
-    # =====================================================
+    # ========================================================
 
     with left:
 
         with st.container(border=True):
 
             st.markdown(
-                "<h2 style='text-align:center;'>AI Career for Women (AICW)</h2>",
+                """
+                <h2 style="text-align:center;">
+                AI Career for Women (AICW)
+                </h2>
+                """,
                 unsafe_allow_html=True
             )
 
             st.markdown(
-                "<h3 style='text-align:center;'>Capstone Project</h3>",
+                """
+                <h3 style="text-align:center;">
+                Capstone Project
+                </h3>
+                """,
                 unsafe_allow_html=True
             )
 
@@ -307,19 +443,22 @@ if st.session_state.page == "home":
 
         st.write("")
 
+
         if st.button(
             "PREDICT",
             use_container_width=True
         ):
 
-            st.session_state.page = "inspection"
+            st.session_state.page = (
+                "inspection"
+            )
 
             st.rerun()
 
 
-    # =====================================================
+    # ========================================================
     # RIGHT
-    # =====================================================
+    # ========================================================
 
     with right:
 
@@ -359,11 +498,12 @@ if st.session_state.page == "home":
             )
 
 
-    # =====================================================
+    # ========================================================
     # TEAM DETAILS
-    # =====================================================
+    # ========================================================
 
     st.write("")
+
 
     team_col, mail_col, guide_col = st.columns(
         [1.35, 1.25, 0.9],
@@ -373,17 +513,32 @@ if st.session_state.page == "home":
 
     with team_col:
 
-        st.markdown("**TEAM MEMBERS**")
+        st.markdown(
+            "**TEAM MEMBERS**"
+        )
 
-        st.write("1. Gutti.Pavani Devi Priya")
-        st.write("2. Somasani.Sasi Priya")
-        st.write("3. Galidevara.Rama Devi")
-        st.write("4. Rambala.Harshitha Sai Lakshmi")
+        st.write(
+            "1. Gutti.Pavani Devi Priya"
+        )
+
+        st.write(
+            "2. Somasani.Sasi Priya"
+        )
+
+        st.write(
+            "3. Galidevara.Rama Devi"
+        )
+
+        st.write(
+            "4. Rambala.Harshitha Sai Lakshmi"
+        )
 
 
     with mail_col:
 
-        st.markdown("**GMAIL**")
+        st.markdown(
+            "**GMAIL**"
+        )
 
         st.write(
             "gutthipavanidevipriya@gmail.com"
@@ -404,43 +559,54 @@ if st.session_state.page == "home":
 
     with guide_col:
 
-        st.markdown("**GUIDE NAME**")
+        st.markdown(
+            "**GUIDE NAME**"
+        )
 
         st.write(
             "Md. Abdul Aziz"
         )
 
-        st.markdown("**DESIGNATION**")
+        st.markdown(
+            "**DESIGNATION**"
+        )
 
         st.write(
             "Co Lead & Trainer AICW"
         )
 
 
-# =========================================================
-# =========================================================
-# PAGE 2
-# =========================================================
-# =========================================================
+# ============================================================
+# ============================================================
+# SECOND PAGE
+# ============================================================
+# ============================================================
 
 elif st.session_state.page == "inspection":
 
     st.markdown(
-        '<div class="main-title">🧶 YarnX – The Future of Yarn Inspection</div>',
+        """
+        <div class="main-title">
+        🧶 YarnX – The Future of Yarn Inspection
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
 
-    # =====================================================
+    # ========================================================
     # BACK
-    # =====================================================
+    # ========================================================
 
-    if st.button("⬅ Back"):
+    if st.button(
+        "⬅ Back"
+    ):
 
         st.session_state.page = "home"
 
         st.session_state.image_output = None
         st.session_state.image_defects = []
+
         st.session_state.video_output = None
         st.session_state.video_defects = {}
 
@@ -453,9 +619,9 @@ elif st.session_state.page == "inspection":
     )
 
 
-    # =====================================================
-    # LEFT - INPUT
-    # =====================================================
+    # ========================================================
+    # INPUT SECTION
+    # ========================================================
 
     with left:
 
@@ -479,21 +645,23 @@ elif st.session_state.page == "inspection":
         )
 
 
-        # =================================================
-        # IMAGE
-        # =================================================
+        # ====================================================
+        # IMAGE INPUT
+        # ====================================================
 
         if input_type == "🖼️ Image":
 
-            uploaded_image = st.file_uploader(
-                "Upload Image",
-                type=[
-                    "jpg",
-                    "jpeg",
-                    "png",
-                    "webp"
-                ],
-                key="image_upload"
+            uploaded_image = (
+                st.file_uploader(
+                    "Upload Image",
+                    type=[
+                        "jpg",
+                        "jpeg",
+                        "png",
+                        "webp"
+                    ],
+                    key="image_upload"
+                )
             )
 
 
@@ -509,17 +677,17 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # SMALL FIXED DISPLAY
+                # SMALL INPUT IMAGE
                 preview = resize_for_display(
                     image,
-                    max_width=400,
-                    max_height=230
+                    max_width=350,
+                    max_height=220
                 )
 
 
                 st.image(
                     preview,
-                    width=400
+                    width=350
                 )
 
 
@@ -529,12 +697,12 @@ elif st.session_state.page == "inspection":
                 ):
 
                     with st.spinner(
-                        "Analyzing yarn..."
+                        "Analyzing image..."
                     ):
 
                         results = model.predict(
                             source=np.array(image),
-                            conf=0.25,
+                            conf=0.15,
                             verbose=False
                         )
 
@@ -542,39 +710,38 @@ elif st.session_state.page == "inspection":
                     result = results[0]
 
 
-                    # =================================================
-                    # CLEAR AND THICK YOLO BOXES
-                    # =================================================
-
-                    output = result.plot(
-                        conf=True,
-                        labels=True,
-                        boxes=True,
-                        line_width=4,
-                        font_size=16
+                    # DRAW REAL BOXES
+                    output_image, defects = (
+                        draw_yolo_boxes(
+                            np.array(image),
+                            result
+                        )
                     )
 
 
-                    defects = get_defects(
-                        result
+                    st.session_state.image_output = (
+                        output_image
                     )
 
-
-                    st.session_state.image_output = output
-                    st.session_state.image_defects = defects
+                    st.session_state.image_defects = (
+                        defects
+                    )
 
                     st.session_state.video_output = None
+
                     st.session_state.video_defects = {}
 
 
-        # =================================================
-        # CAMERA
-        # =================================================
+        # ====================================================
+        # CAMERA INPUT
+        # ====================================================
 
         elif input_type == "📷 Camera":
 
-            camera_image = st.camera_input(
-                "Capture Yarn"
+            camera_image = (
+                st.camera_input(
+                    "Capture Yarn"
+                )
             )
 
 
@@ -592,14 +759,14 @@ elif st.session_state.page == "inspection":
 
                 preview = resize_for_display(
                     image,
-                    max_width=400,
-                    max_height=230
+                    max_width=350,
+                    max_height=220
                 )
 
 
                 st.image(
                     preview,
-                    width=400
+                    width=350
                 )
 
 
@@ -609,12 +776,12 @@ elif st.session_state.page == "inspection":
                 ):
 
                     with st.spinner(
-                        "Analyzing yarn..."
+                        "Analyzing camera..."
                     ):
 
                         results = model.predict(
                             source=np.array(image),
-                            conf=0.25,
+                            conf=0.15,
                             verbose=False
                         )
 
@@ -622,42 +789,44 @@ elif st.session_state.page == "inspection":
                     result = results[0]
 
 
-                    output = result.plot(
-                        conf=True,
-                        labels=True,
-                        boxes=True,
-                        line_width=4,
-                        font_size=16
+                    output_image, defects = (
+                        draw_yolo_boxes(
+                            np.array(image),
+                            result
+                        )
                     )
 
 
-                    defects = get_defects(
-                        result
+                    st.session_state.image_output = (
+                        output_image
                     )
 
-
-                    st.session_state.image_output = output
-                    st.session_state.image_defects = defects
+                    st.session_state.image_defects = (
+                        defects
+                    )
 
                     st.session_state.video_output = None
+
                     st.session_state.video_defects = {}
 
 
-        # =================================================
-        # VIDEO
-        # =================================================
+        # ====================================================
+        # VIDEO INPUT
+        # ====================================================
 
         elif input_type == "🎥 Video":
 
-            uploaded_video = st.file_uploader(
-                "Upload Video",
-                type=[
-                    "mp4",
-                    "avi",
-                    "mov",
-                    "mkv"
-                ],
-                key="video_upload"
+            uploaded_video = (
+                st.file_uploader(
+                    "Upload Video",
+                    type=[
+                        "mp4",
+                        "avi",
+                        "mov",
+                        "mkv"
+                    ],
+                    key="video_upload"
+                )
             )
 
 
@@ -668,10 +837,11 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # SMALL VIDEO
+                # FIXED SMALL VIDEO PLAYER
                 st.video(
                     uploaded_video,
-                    format="video/mp4"
+                    format="video/mp4",
+                    width=350
                 )
 
 
@@ -684,28 +854,30 @@ elif st.session_state.page == "inspection":
                         "Analyzing video frames..."
                     ):
 
-                        # ---------------------------------
-                        # SAVE INPUT
-                        # ---------------------------------
+                        # ----------------------------------
+                        # SAVE INPUT VIDEO
+                        # ----------------------------------
 
-                        input_file = tempfile.NamedTemporaryFile(
-                            delete=False,
-                            suffix=".mp4"
+                        input_temp = (
+                            tempfile.NamedTemporaryFile(
+                                delete=False,
+                                suffix=".mp4"
+                            )
                         )
 
-                        input_file.write(
+                        input_temp.write(
                             uploaded_video.getvalue()
                         )
 
-                        input_file.close()
+                        input_temp.close()
 
 
-                        # ---------------------------------
+                        # ----------------------------------
                         # OPEN VIDEO
-                        # ---------------------------------
+                        # ----------------------------------
 
                         cap = cv2.VideoCapture(
-                            input_file.name
+                            input_temp.name
                         )
 
 
@@ -727,21 +899,27 @@ elif st.session_state.page == "inspection":
 
 
                         if fps <= 0:
+
                             fps = 25
 
 
-                        # ---------------------------------
-                        # OUTPUT
-                        # ---------------------------------
+                        # ----------------------------------
+                        # OUTPUT VIDEO
+                        # ----------------------------------
 
-                        output_file = tempfile.NamedTemporaryFile(
-                            delete=False,
-                            suffix=".mp4"
+                        output_temp = (
+                            tempfile.NamedTemporaryFile(
+                                delete=False,
+                                suffix=".mp4"
+                            )
                         )
 
-                        output_file.close()
+                        output_temp.close()
 
-                        raw_output = output_file.name
+
+                        raw_output = (
+                            output_temp.name
+                        )
 
 
                         fourcc = (
@@ -762,22 +940,29 @@ elif st.session_state.page == "inspection":
                         all_defects = {}
 
 
-                        # ---------------------------------
+                        # ----------------------------------
                         # PROCESS EVERY FRAME
-                        # ---------------------------------
+                        # ----------------------------------
 
                         while True:
 
-                            ret, frame = cap.read()
+                            ret, frame = (
+                                cap.read()
+                            )
 
 
                             if not ret:
+
                                 break
 
 
+                            # --------------------------------
+                            # YOLO DETECTION
+                            # --------------------------------
+
                             results = model.predict(
                                 source=frame,
-                                conf=0.25,
+                                conf=0.15,
                                 verbose=False
                             )
 
@@ -785,16 +970,15 @@ elif st.session_state.page == "inspection":
                             result = results[0]
 
 
-                            # =====================================
-                            # CLEAR THICK BOXES + LABELS
-                            # =====================================
+                            # --------------------------------
+                            # MANUALLY DRAW BOXES
+                            # --------------------------------
 
-                            processed_frame = result.plot(
-                                conf=True,
-                                labels=True,
-                                boxes=True,
-                                line_width=4,
-                                font_size=16
+                            processed_frame, frame_defects = (
+                                draw_yolo_boxes(
+                                    frame,
+                                    result
+                                )
                             )
 
 
@@ -803,56 +987,55 @@ elif st.session_state.page == "inspection":
                             )
 
 
-                            # ---------------------------------
-                            # COLLECT DEFECTS
-                            # ---------------------------------
+                            # --------------------------------
+                            # SAVE DETECTED DEFECTS
+                            # --------------------------------
 
-                            if result.boxes is not None:
+                            for defect in frame_defects:
 
-                                for box in result.boxes:
+                                name = (
+                                    defect["name"]
+                                )
 
-                                    class_id = int(
-                                        box.cls[0]
-                                    )
-
-                                    confidence = float(
-                                        box.conf[0]
-                                    )
-
-                                    name = model.names[
-                                        class_id
-                                    ]
+                                confidence = (
+                                    defect["confidence"]
+                                )
 
 
-                                    if (
-                                        name not in all_defects
-                                    ):
+                                if (
+                                    name
+                                    not in all_defects
+                                ):
 
-                                        all_defects[
-                                            name
-                                        ] = confidence
+                                    all_defects[
+                                        name
+                                    ] = confidence
 
-                                    elif (
-                                        confidence
-                                        >
-                                        all_defects[name]
-                                    ):
 
-                                        all_defects[
-                                            name
-                                        ] = confidence
+                                elif (
+                                    confidence
+                                    >
+                                    all_defects[name]
+                                ):
+
+                                    all_defects[
+                                        name
+                                    ] = confidence
 
 
                         cap.release()
+
                         writer.release()
 
 
-                        # ---------------------------------
-                        # CONVERT VIDEO
-                        # ---------------------------------
+                        # ----------------------------------
+                        # BROWSER COMPATIBLE VIDEO
+                        # ----------------------------------
 
-                        final_video = convert_video(
-                            raw_output
+                        final_video = (
+                            convert_video_for_browser(
+                                raw_output
+                            )
                         )
 
 
@@ -865,12 +1048,13 @@ elif st.session_state.page == "inspection":
                         )
 
                         st.session_state.image_output = None
+
                         st.session_state.image_defects = []
 
 
-    # =====================================================
-    # RIGHT - RESULT
-    # =====================================================
+    # ========================================================
+    # RESULT SECTION
+    # ========================================================
 
     with right:
 
@@ -879,31 +1063,33 @@ elif st.session_state.page == "inspection":
         )
 
 
-        # =================================================
+        # ====================================================
         # IMAGE RESULT
-        # =================================================
+        # ====================================================
 
-        if st.session_state.image_output is not None:
+        if (
+            st.session_state.image_output
+            is not None
+        ):
 
             st.write(
                 "**ANALYZED IMAGE**"
             )
 
 
-            # ---------------------------------------------
-            # SMALL OUTPUT
-            # ---------------------------------------------
-
-            result_image = resize_for_display(
-                st.session_state.image_output,
-                max_width=550,
-                max_height=320
+            result_image = (
+                resize_for_display(
+                    st.session_state.image_output,
+                    max_width=500,
+                    max_height=300
+                )
             )
 
 
+            # SMALL OUTPUT IMAGE
             st.image(
                 result_image,
-                width=550
+                width=500
             )
 
 
@@ -911,10 +1097,6 @@ elif st.session_state.page == "inspection":
                 st.session_state.image_defects
             )
 
-
-            # ---------------------------------------------
-            # BAD
-            # ---------------------------------------------
 
             if len(defects) > 0:
 
@@ -935,26 +1117,16 @@ elif st.session_state.page == "inspection":
 
                 for defect in defects:
 
-                    st.markdown(
-                        f"""
-                        <div class="defect-box">
-
-                        🔴 <b>{defect["name"]}</b>
-
-                        &nbsp;&nbsp;&nbsp;
-
-                        Confidence:
-                        {defect["confidence"] * 100:.2f}%
-
-                        </div>
-                        """,
-                        unsafe_allow_html=True
+                    st.write(
+                        f"🔴 **Defect:** "
+                        f"{defect['name']}"
                     )
 
+                    st.write(
+                        f"📊 **Confidence:** "
+                        f"{defect['confidence'] * 100:.2f}%"
+                    )
 
-            # ---------------------------------------------
-            # GOOD
-            # ---------------------------------------------
 
             else:
 
@@ -968,11 +1140,14 @@ elif st.session_state.page == "inspection":
                 )
 
 
-        # =================================================
+        # ====================================================
         # VIDEO RESULT
-        # =================================================
+        # ====================================================
 
-        elif st.session_state.video_output is not None:
+        elif (
+            st.session_state.video_output
+            is not None
+        ):
 
             st.write(
                 "**ANALYZED VIDEO**"
@@ -982,18 +1157,18 @@ elif st.session_state.page == "inspection":
             with open(
                 st.session_state.video_output,
                 "rb"
-            ) as f:
+            ) as video_file:
 
-                video_bytes = f.read()
+                video_bytes = (
+                    video_file.read()
+                )
 
 
-            # ---------------------------------------------
-            # VIDEO DISPLAY
-            # ---------------------------------------------
-
+            # SMALL OUTPUT VIDEO
             st.video(
                 video_bytes,
-                format="video/mp4"
+                format="video/mp4",
+                width=500
             )
 
 
@@ -1001,10 +1176,6 @@ elif st.session_state.page == "inspection":
                 st.session_state.video_defects
             )
 
-
-            # ---------------------------------------------
-            # BAD
-            # ---------------------------------------------
 
             if len(defects) > 0:
 
@@ -1023,28 +1194,20 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                for name, confidence in defects.items():
+                for name, confidence in (
+                    defects.items()
+                ):
 
-                    st.markdown(
-                        f"""
-                        <div class="defect-box">
-
-                        🔴 <b>{name}</b>
-
-                        &nbsp;&nbsp;&nbsp;
-
-                        Confidence:
-                        {confidence * 100:.2f}%
-
-                        </div>
-                        """,
-                        unsafe_allow_html=True
+                    st.write(
+                        f"🔴 **Defect:** "
+                        f"{name}"
                     )
 
+                    st.write(
+                        f"📊 **Confidence:** "
+                        f"{confidence * 100:.2f}%"
+                    )
 
-            # ---------------------------------------------
-            # GOOD
-            # ---------------------------------------------
 
             else:
 
@@ -1058,9 +1221,9 @@ elif st.session_state.page == "inspection":
                 )
 
 
-        # =================================================
+        # ====================================================
         # BEFORE ANALYSIS
-        # =================================================
+        # ====================================================
 
         else:
 
