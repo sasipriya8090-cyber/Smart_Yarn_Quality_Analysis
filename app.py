@@ -130,17 +130,17 @@ st.markdown("""
 
 
 /* ============================================================
-   PAGE CONTAINER
+   PAGE SIZE
    ============================================================ */
 
 .block-container {
     padding-top: 1.2rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 1.2rem;
 }
 
 
 /* ============================================================
-   MAIN YARNX HEADING
+   MAIN TITLE
    ============================================================ */
 
 .main-title {
@@ -181,7 +181,7 @@ st.markdown("""
         );
 
     box-shadow:
-        0 5px 16px rgba(83, 52, 120, 0.12);
+        0 5px 16px rgba(83,52,120,0.12);
 }
 
 
@@ -214,23 +214,21 @@ st.markdown("""
 
 
 /* ============================================================
-   MAIN SECTION HEADINGS
+   REMOVE HEADING UNDERLINES
    ============================================================ */
 
-.stApp h2 {
-    color: #43218a;
-    text-shadow:
-        0 1px 1px rgba(74,20,140,0.08);
-}
-
-
-.stApp h3 {
-    color: #263b63;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    text-decoration: none !important;
 }
 
 
 /* ============================================================
-   REMOVE HEADING LINK ICONS
+   REMOVE STREAMLIT HEADING LINK ICON
    ============================================================ */
 
 h1 a,
@@ -244,20 +242,20 @@ h6 a {
 
 
 /* ============================================================
-   FIRST PAGE CARDS
+   CARD STYLE
    ============================================================ */
 
 div[data-testid="stVerticalBlockBorderWrapper"] {
 
     border-radius: 16px !important;
 
-    border: 1px solid rgba(120, 100, 160, 0.22) !important;
+    border: 1px solid rgba(120,100,160,0.22) !important;
 
     background:
         rgba(255,255,255,0.50) !important;
 
     box-shadow:
-        0 5px 18px rgba(74, 55, 120, 0.08) !important;
+        0 5px 18px rgba(74,55,120,0.08) !important;
 
     backdrop-filter: blur(7px);
 
@@ -272,7 +270,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:hover {
     transform: translateY(-2px);
 
     box-shadow:
-        0 9px 24px rgba(74, 55, 120, 0.12) !important;
+        0 9px 24px rgba(74,55,120,0.12) !important;
 }
 
 
@@ -291,7 +289,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] h3 {
 
 
 /* ============================================================
-   CARD BODY TEXT
+   CARD TEXT
    ============================================================ */
 
 div[data-testid="stVerticalBlockBorderWrapper"] p {
@@ -299,6 +297,213 @@ div[data-testid="stVerticalBlockBorderWrapper"] p {
     color: #263952;
 
     line-height: 1.6;
+}
+
+
+/* ============================================================
+   AICW SPECIAL CARD
+   ============================================================ */
+
+.aicw-card {
+
+    width: 100%;
+
+    min-height: 255px;
+
+    border-radius: 16px;
+
+    padding: 24px 22px;
+
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(246,236,255,0.96),
+            rgba(231,243,255,0.90)
+        );
+
+    border:
+        1px solid rgba(106,27,154,0.20);
+
+    box-shadow:
+        0 8px 24px rgba(106,27,154,0.10);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+
+.aicw-text {
+
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.aicw-title {
+
+    font-size: 31px;
+
+    font-weight: 850;
+
+    color: #243957;
+
+    line-height: 1.15;
+
+    margin-bottom: 20px;
+}
+
+
+.aicw-subtitle {
+
+    font-size: 27px;
+
+    font-weight: 800;
+
+    color: #263957;
+
+    margin-bottom: 22px;
+}
+
+
+.aicw-capstone {
+
+    font-size: 22px;
+
+    font-weight: 800;
+
+    color: #263957;
+}
+
+
+/* ============================================================
+   WOMAN ILLUSTRATION
+   ============================================================ */
+
+.woman-visual {
+
+    width: 112px;
+
+    height: 112px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    position: relative;
+
+    background:
+        linear-gradient(
+            145deg,
+            #eadcff,
+            #dceeff
+        );
+
+    border:
+        2px solid rgba(106,27,154,0.16);
+
+    box-shadow:
+        0 8px 20px rgba(75,55,140,0.12);
+
+    font-size: 63px;
+}
+
+
+/* ============================================================
+   YARN BADGE
+   ============================================================ */
+
+.yarn-badge {
+
+    position: absolute;
+
+    right: -5px;
+
+    bottom: 2px;
+
+    width: 40px;
+
+    height: 40px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #f3e5f5
+        );
+
+    box-shadow:
+        0 4px 10px rgba(70,50,120,0.15);
+
+    font-size: 22px;
+}
+
+
+/* ============================================================
+   PROJECT DESCRIPTION
+   ============================================================ */
+
+.project-card {
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(237,247,255,0.94),
+            rgba(246,239,255,0.90)
+        );
+}
+
+
+/* ============================================================
+   PROJECT DESCRIPTION HEADING
+   ============================================================ */
+
+.project-heading {
+
+    color: #43218a;
+
+    font-size: 28px;
+
+    font-weight: 850;
+
+    margin-bottom: 16px;
+}
+
+
+/* ============================================================
+   PROJECT TEXT
+   ============================================================ */
+
+.project-text {
+
+    color: #263952;
+
+    font-size: 15px;
+
+    line-height: 1.65;
+
+    margin-bottom: 12px;
 }
 
 
@@ -317,14 +522,33 @@ div[data-testid="stVerticalBlockBorderWrapper"] a {
 
 
 /* ============================================================
-   BUTTONS
+   BUTTONS - WHITE TEXT FIX
+   ============================================================ */
+
+.stButton > button,
+.stButton > button *,
+button[kind="secondary"],
+button[kind="secondary"] *,
+button[kind="primary"],
+button[kind="primary"] * {
+
+    color: #ffffff !important;
+
+    -webkit-text-fill-color: #ffffff !important;
+
+    font-weight: 800 !important;
+}
+
+
+/* ============================================================
+   BUTTON DESIGN
    ============================================================ */
 
 .stButton > button {
 
-    width: 100%;
+    width: 100% !important;
 
-    min-height: 48px;
+    min-height: 48px !important;
 
     border: none !important;
 
@@ -334,7 +558,9 @@ div[data-testid="stVerticalBlockBorderWrapper"] a {
 
     font-weight: 800 !important;
 
-    color: white !important;
+    color: #ffffff !important;
+
+    -webkit-text-fill-color: #ffffff !important;
 
     background:
         linear-gradient(
@@ -352,9 +578,15 @@ div[data-testid="stVerticalBlockBorderWrapper"] a {
 }
 
 
+/* ============================================================
+   BUTTON HOVER
+   ============================================================ */
+
 .stButton > button:hover {
 
-    color: white !important;
+    color: #ffffff !important;
+
+    -webkit-text-fill-color: #ffffff !important;
 
     background:
         linear-gradient(
@@ -371,10 +603,16 @@ div[data-testid="stVerticalBlockBorderWrapper"] a {
 }
 
 
+/* ============================================================
+   BUTTON FOCUS
+   ============================================================ */
+
 .stButton > button:focus,
 .stButton > button:active {
 
-    color: white !important;
+    color: #ffffff !important;
+
+    -webkit-text-fill-color: #ffffff !important;
 
     border: none !important;
 
@@ -386,68 +624,30 @@ div[data-testid="stVerticalBlockBorderWrapper"] a {
 
 
 /* ============================================================
-   TEAM TEXT
+   BUTTON TEXT
    ============================================================ */
 
-.team-text {
+.stButton > button p,
+.stButton > button span,
+.stButton > button div {
 
-    font-size: 15px;
+    color: #ffffff !important;
 
-    color: #24324a;
+    -webkit-text-fill-color: #ffffff !important;
 
-    margin: 8px 0;
-
-    line-height: 1.5;
+    font-weight: 800 !important;
 }
 
 
 /* ============================================================
-   EMAIL TEXT
+   RADIO
    ============================================================ */
 
-.email-text {
+div[data-testid="stRadio"] label {
 
-    font-size: 14px;
+    font-weight: 600;
 
-    color: #315bb5;
-
-    margin: 10px 0;
-
-    word-break: break-word;
-
-    line-height: 1.5;
-}
-
-
-/* ============================================================
-   GUIDE
-   ============================================================ */
-
-.guide-label {
-
-    font-size: 13px;
-
-    font-weight: 800;
-
-    color: #5b5f73;
-
-    margin-top: 14px;
-
-    margin-bottom: 5px;
-
-    text-transform: uppercase;
-}
-
-
-.guide-value {
-
-    font-size: 15px;
-
-    color: #24324a;
-
-    margin-bottom: 12px;
-
-    line-height: 1.5;
+    color: #263957;
 }
 
 
@@ -461,18 +661,6 @@ section[data-testid="stFileUploaderDropzone"] {
         rgba(245,248,255,0.80) !important;
 
     border-radius: 12px !important;
-}
-
-
-/* ============================================================
-   RADIO
-   ============================================================ */
-
-div[data-testid="stRadio"] label {
-
-    font-weight: 600;
-
-    color: #263957;
 }
 
 
@@ -577,6 +765,19 @@ div[data-testid="stAlert"] {
 
     box-shadow:
         0 3px 9px rgba(180,60,80,0.06);
+}
+
+
+/* ============================================================
+   IMAGE / VIDEO CONTAINERS
+   ============================================================ */
+
+.media-container {
+
+    background:
+        rgba(255,255,255,0.55);
+
+    border-radius: 14px;
 }
 
 
@@ -947,28 +1148,42 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # AICW
+    # AICW BOX
     # ========================================================
 
     with left:
 
-        with st.container(border=True):
+        render_html("""
+        <div class="aicw-card">
 
-            st.markdown(
-                "## AI Career for Women"
-            )
+            <div class="aicw-text">
 
-            st.markdown(
-                "## (AICW)"
-            )
+                <div class="aicw-title">
+                    AI Career for Women
+                </div>
 
-            st.write("")
+                <div class="aicw-subtitle">
+                    (AICW)
+                </div>
 
-            st.write("")
+                <div class="aicw-capstone">
+                    Capstone Project
+                </div>
 
-            st.markdown(
-                "### Capstone Project"
-            )
+            </div>
+
+            <div class="woman-visual">
+
+                👩‍💻
+
+                <div class="yarn-badge">
+                    🧶
+                </div>
+
+            </div>
+
+        </div>
+        """)
 
 
         st.write("")
@@ -992,44 +1207,42 @@ if st.session_state.page == "home":
 
         with st.container(border=True):
 
-            st.markdown(
-                """
-                <h2 style="
-                    color:#4a148c;
-                    margin-top:0;
-                    margin-bottom:18px;
-                    text-decoration:none;
-                ">
-                    Project Description
-                </h2>
-                """,
-                unsafe_allow_html=True
-            )
-
-
-            st.write("""
-            YarnX is an AI-powered yarn quality inspection
-            system designed to automatically detect and
-            identify yarn defects using Computer Vision
-            and Deep Learning.
+            render_html("""
+            <div class="project-heading">
+                Project Description
+            </div>
             """)
 
 
-            st.write("""
-            The system accepts yarn images, camera input,
-            and videos for inspection. A trained YOLO model
-            analyzes the yarn and identifies defective
-            regions by drawing bounding boxes around
-            detected defects.
+            render_html("""
+            <div class="project-text">
+                YarnX is an AI-powered yarn quality inspection
+                system designed to automatically detect and
+                identify yarn defects using Computer Vision
+                and Deep Learning.
+            </div>
             """)
 
 
-            st.write("""
-            The system displays the detected defect,
-            confidence score, and final quality result as
-            GOOD or BAD. This helps reduce manual inspection
-            effort and supports faster and more accurate
-            yarn quality assessment.
+            render_html("""
+            <div class="project-text">
+                The system accepts yarn images, camera input,
+                and videos for inspection. A trained YOLO model
+                analyzes the yarn and identifies defective
+                regions by drawing bounding boxes around
+                detected defects.
+            </div>
+            """)
+
+
+            render_html("""
+            <div class="project-text">
+                The system displays the detected defect,
+                confidence score, and final quality result as
+                GOOD or BAD. This helps reduce manual inspection
+                effort and supports faster and more accurate
+                yarn quality assessment.
+            </div>
             """)
 
 
