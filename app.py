@@ -23,91 +23,50 @@ st.set_page_config(
 
 
 # ============================================================
-# MODEL PATH
+# MODEL
 # ============================================================
 
-BASE_DIR = os.path.dirname(
-    os.path.abspath(__file__)
-)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_CANDIDATES = [
     os.path.join(BASE_DIR, "best.pt"),
     os.path.join(BASE_DIR, "best (6).pt"),
     os.path.join(BASE_DIR, "model", "best.pt"),
-    os.path.join(
-        BASE_DIR,
-        "trained_model",
-        "weights",
-        "best.pt"
-    ),
-    os.path.join(
-        BASE_DIR,
-        "weights",
-        "best.pt"
-    )
+    os.path.join(BASE_DIR, "trained_model", "weights", "best.pt"),
+    os.path.join(BASE_DIR, "weights", "best.pt"),
 ]
 
 
 def find_model():
-
-    for path in MODEL_CANDIDATES:
-
-        if os.path.exists(path):
-            return path
+    for p in MODEL_CANDIDATES:
+        if os.path.exists(p):
+            return p
 
     for root, dirs, files in os.walk(BASE_DIR):
-
-        for file in files:
-
-            if file.endswith(".pt"):
-
-                return os.path.join(
-                    root,
-                    file
-                )
+        for f in files:
+            if f.endswith(".pt"):
+                return os.path.join(root, f)
 
     return None
 
-
-# ============================================================
-# TORCH COMPATIBILITY
-# ============================================================
 
 _original_torch_load = torch.load
 
 
 def patched_torch_load(*args, **kwargs):
-
-    kwargs.setdefault(
-        "weights_only",
-        False
-    )
-
-    return _original_torch_load(
-        *args,
-        **kwargs
-    )
+    kwargs.setdefault("weights_only", False)
+    return _original_torch_load(*args, **kwargs)
 
 
 torch.load = patched_torch_load
 
 
-# ============================================================
-# LOAD MODEL
-# ============================================================
-
 @st.cache_resource
 def load_model():
-
     model_path = find_model()
 
     if model_path is None:
-
-        st.error(
-            "❌ best.pt not found. "
-            "Keep best.pt inside the project folder."
-        )
-
+        st.error("❌ best.pt not found.")
         st.stop()
 
     return YOLO(model_path)
@@ -143,199 +102,415 @@ if "video_defects" not in st.session_state:
 
 
 # ============================================================
-# QUALITY RULE
-# ============================================================
-#
-# Current model has:
-#
-# 0 -> loop_fiber
-# 1 -> protruding_fiber
-#
-# The model itself does NOT contain Good/Bad classes.
-#
-# For this app:
-#
-# - no protruding fiber detected -> GOOD
-# - protruding fiber detected    -> BAD
-#
-# Loop fiber is detected internally but is not shown
-# in the final image/result when the quality is GOOD.
-#
-# ============================================================
-
-
-# ============================================================
 # CSS
 # ============================================================
 
 st.markdown(
     """
-    <style>
+<style>
 
-    .block-container {
-        padding-top: 1.2rem !important;
-        padding-bottom: 1rem !important;
-        max-width: 1450px !important;
-    }
+#MainMenu {
+    visibility: hidden;
+}
 
-    /* ================= TITLE ================= */
+footer {
+    visibility: hidden;
+}
 
-    .main-title {
-        width: 100%;
-        min-height: 68px;
-        box-sizing: border-box;
+header {
+    visibility: hidden;
+}
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
+.block-container {
+    padding-top: 0.8rem !important;
+    padding-bottom: 0.5rem !important;
+    max-width: 1500px !important;
+}
 
-        padding: 10px 20px;
 
-        border: 2px solid #6a1b9a;
-        border-radius: 16px;
+/* =========================================================
+   MAIN TITLE
+   ========================================================= */
 
-        color: #4a148c;
+.yarnx-title {
+    width: 100%;
+    height: 72px;
 
-        font-size: 29px;
-        font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-        background: linear-gradient(
-            90deg,
-            #ede7f6,
-            #e3f2fd,
-            #fce4ec
-        );
+    box-sizing: border-box;
 
-        box-shadow:
-            0 5px 15px
-            rgba(106,27,154,0.14);
+    border: 2px solid #6a1b9a;
+    border-radius: 16px;
 
-        margin-bottom: 18px;
-    }
+    background: linear-gradient(
+        90deg,
+        #eee7f8 0%,
+        #eaf2ff 50%,
+        #f8eaf2 100%
+    );
 
-    /* ================= SECTION ================= */
+    color: #402080;
 
-    .section-heading {
-        font-size: 25px;
-        font-weight: 800;
-        color: #263238;
-        margin-bottom: 10px;
-    }
+    font-size: 30px;
+    font-weight: 800;
 
-    /* ================= BUTTON ================= */
+    margin: 0 0 16px 0;
 
-    .stButton > button {
-        min-height: 46px;
+    box-shadow:
+        0 5px 16px rgba(82, 36, 145, 0.15);
 
-        border: none;
-        border-radius: 12px;
+    white-space: nowrap;
+}
 
-        color: white;
 
-        font-size: 16px;
-        font-weight: 800;
+/* =========================================================
+   SECTION HEADINGS
+   ========================================================= */
 
-        background: linear-gradient(
-            90deg,
-            #6a1b9a,
-            #3949ab
-        );
+.section-title {
+    font-size: 27px;
+    font-weight: 800;
+    color: #263238;
 
-        box-shadow:
-            0 5px 14px
-            rgba(106,27,154,0.25);
-    }
+    margin-top: 3px;
+    margin-bottom: 12px;
+}
 
-    .stButton > button:hover {
-        color: white;
-    }
 
-    /* ================= QUALITY ================= */
+/* =========================================================
+   HOME PAGE CARDS
+   ========================================================= */
 
-    .good-quality {
-        border: 2px solid #388e3c;
-        border-radius: 11px;
+.home-card {
+    min-height: 250px;
 
-        padding: 10px;
+    border: 1px solid #d8d8df;
+    border-radius: 14px;
+
+    padding: 22px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 2px 10px rgba(0,0,0,0.04);
+}
+
+.home-left-title {
+    text-align: center;
+
+    font-size: 25px;
+    font-weight: 800;
+
+    color: #263238;
+
+    line-height: 1.35;
+
+    margin-top: 30px;
+}
+
+.home-project {
+    text-align: center;
+
+    font-size: 21px;
+    font-weight: 800;
+
+    color: #37474f;
+
+    margin-top: 32px;
+}
+
+.project-title {
+    font-size: 27px;
+    font-weight: 800;
+
+    color: #4a148c;
+
+    margin-bottom: 18px;
+}
+
+.project-text {
+    font-size: 15px;
+    line-height: 1.65;
+
+    color: #263238;
+
+    margin-bottom: 12px;
+}
+
+
+/* =========================================================
+   PREDICT BUTTON
+   ========================================================= */
+
+.predict-btn > button {
+    height: 52px;
+
+    border: none !important;
+    border-radius: 13px !important;
+
+    background: linear-gradient(
+        90deg,
+        #6a1b9a,
+        #3949ab
+    ) !important;
+
+    color: white !important;
+
+    font-size: 16px !important;
+    font-weight: 800 !important;
+
+    box-shadow:
+        0 5px 14px rgba(76, 38, 150, 0.25);
+}
+
+
+/* =========================================================
+   HOME INFORMATION CARDS
+   ========================================================= */
+
+.info-card {
+    min-height: 185px;
+
+    border: 1px solid #dadde5;
+    border-radius: 13px;
+
+    padding: 17px 20px;
+
+    background: #ffffff;
+}
+
+.info-heading {
+    font-size: 17px;
+    font-weight: 800;
+
+    color: #402080;
+
+    margin-bottom: 12px;
+}
+
+.info-item {
+    font-size: 15px;
+
+    color: #263238;
+
+    margin-bottom: 10px;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+   ========================================================= */
+
+.back-btn > button {
+    height: 43px;
+
+    border: none !important;
+    border-radius: 12px !important;
+
+    background: linear-gradient(
+        90deg,
+        #6a1b9a,
+        #3949ab
+    ) !important;
+
+    color: white !important;
+
+    font-size: 15px !important;
+    font-weight: 800 !important;
+}
+
+
+/* =========================================================
+   ANALYZE BUTTON
+   ========================================================= */
+
+.analyze-btn > button {
+    height: 48px;
+
+    border: none !important;
+    border-radius: 12px !important;
+
+    background: linear-gradient(
+        90deg,
+        #6a1b9a,
+        #3949ab
+    ) !important;
+
+    color: white !important;
+
+    font-size: 15px !important;
+    font-weight: 800 !important;
+}
+
+
+/* =========================================================
+   IMAGE DISPLAY BOX
+   ========================================================= */
+
+.media-box {
+    width: 320px;
+    height: 245px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border: 1px solid #cfd8dc;
+    border-radius: 12px;
+
+    background: #f7f9fc;
+
+    margin-top: 5px;
+    margin-bottom: 12px;
+}
+
+
+/* =========================================================
+   QUALITY
+   ========================================================= */
+
+.good-box {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    border: 2px solid #388e3c;
+    border-radius: 12px;
+
+    background: #eaf6ea;
+
+    padding: 11px;
+
+    text-align: center;
+
+    color: #1b5e20;
+
+    font-size: 19px;
+    font-weight: 800;
+
+    margin: 10px 0;
+}
+
+.bad-box {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    border: 2px solid #d32f2f;
+    border-radius: 12px;
+
+    background: #ffeded;
+
+    padding: 11px;
+
+    text-align: center;
+
+    color: #b71c1c;
+
+    font-size: 19px;
+    font-weight: 800;
+
+    margin: 10px 0;
+}
+
+
+/* =========================================================
+   DEFECT CARD
+   ========================================================= */
+
+.defect-box {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    border: 1px solid #ef9a9a;
+    border-radius: 10px;
+
+    background: #fff8f8;
+
+    padding: 10px 14px;
+
+    margin: 7px 0;
+
+    color: #263238;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   SMALL LABEL
+   ========================================================= */
+
+.media-label {
+    font-size: 16px;
+    font-weight: 800;
+
+    color: #263238;
+
+    margin-top: 5px;
+    margin-bottom: 7px;
+}
+
+
+/* =========================================================
+   FILE UPLOADER
+   ========================================================= */
+
+[data-testid="stFileUploader"] {
+    margin-bottom: 8px;
+}
+
+
+/* =========================================================
+   RADIO
+   ========================================================= */
+
+[data-testid="stRadio"] {
+    margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .yarnx-title {
+        height: auto;
+        min-height: 65px;
+
+        font-size: 22px;
+
+        white-space: normal;
 
         text-align: center;
-
-        font-size: 19px;
-        font-weight: 800;
-
-        color: #1b5e20;
-
-        background: #e8f5e9;
-
-        margin: 10px 0;
     }
 
-    .bad-quality {
-        border: 2px solid #d32f2f;
-        border-radius: 11px;
+}
 
-        padding: 10px;
-
-        text-align: center;
-
-        font-size: 19px;
-        font-weight: 800;
-
-        color: #b71c1c;
-
-        background: #ffebee;
-
-        margin: 10px 0;
-    }
-
-    /* ================= DEFECT CARD ================= */
-
-    .defect-card {
-        border: 1px solid #ef9a9a;
-        border-radius: 10px;
-
-        padding: 9px 12px;
-
-        margin-top: 8px;
-
-        background: #fff8f8;
-
-        font-size: 15px;
-    }
-
-    /* ================= HOME INFO ================= */
-
-    .info-title {
-        font-size: 16px;
-        font-weight: 800;
-        color: #4a148c;
-        margin-bottom: 8px;
-    }
-
-    </style>
-    """,
+</style>
+""",
     unsafe_allow_html=True
 )
 
 
 # ============================================================
-# MODEL CLASS NAME
+# HELPERS
 # ============================================================
 
 def get_class_name(class_id):
-
     try:
-        return str(
-            model.names[class_id]
-        ).lower().strip()
-
+        return str(model.names[class_id]).lower().strip()
     except Exception:
         return "unknown"
 
-
-# ============================================================
-# FIBER TYPE
-# ============================================================
 
 def get_fiber_type(class_name):
 
@@ -368,13 +543,7 @@ def draw_red_box(
     confidence
 ):
 
-    red = (
-        0,
-        0,
-        255
-    )
-
-    # BOX
+    red = (0, 0, 255)
 
     cv2.rectangle(
         image,
@@ -384,8 +553,6 @@ def draw_red_box(
         4
     )
 
-    # LABEL
-
     label = (
         f"PROTRUDING FIBER "
         f"{confidence * 100:.1f}%"
@@ -393,34 +560,27 @@ def draw_red_box(
 
     font = cv2.FONT_HERSHEY_SIMPLEX
 
-    font_scale = 0.65
-
+    scale = 0.58
     thickness = 2
 
     text_size, _ = cv2.getTextSize(
         label,
         font,
-        font_scale,
+        scale,
         thickness
     )
 
-    text_width, text_height = text_size
+    tw, th = text_size
 
     label_y = max(
         y1,
-        text_height + 15
+        th + 12
     )
 
     cv2.rectangle(
         image,
-        (
-            x1,
-            label_y - text_height - 10
-        ),
-        (
-            x1 + text_width + 10,
-            label_y + 4
-        ),
+        (x1, label_y - th - 9),
+        (x1 + tw + 10, label_y + 4),
         red,
         -1
     )
@@ -428,12 +588,9 @@ def draw_red_box(
     cv2.putText(
         image,
         label,
-        (
-            x1 + 5,
-            label_y - 5
-        ),
+        (x1 + 5, label_y - 5),
         font,
-        font_scale,
+        scale,
         (255, 255, 255),
         thickness,
         cv2.LINE_AA
@@ -456,20 +613,11 @@ def process_image(image):
 
     output = image_array.copy()
 
-    bad_detections = []
+    defects = []
 
-    loop_detected = False
+    protruding_found = False
 
-    protruding_detected = False
-
-    # ========================================================
-    # READ DETECTIONS
-    # ========================================================
-
-    if (
-        result.boxes is not None
-        and len(result.boxes) > 0
-    ):
+    if result.boxes is not None:
 
         for box in result.boxes:
 
@@ -502,38 +650,17 @@ def process_image(image):
                 class_name
             )
 
-            # =================================================
-            # LOOP FIBER
-            # =================================================
+            # Loop fiber is not shown in final
+            # result according to your requirement.
 
             if fiber_type == "LOOP FIBER":
-
-                loop_detected = True
-
-                # Do NOT show box in final image
-                # for GOOD quality.
-
                 continue
 
-            # =================================================
-            # PROTRUDING FIBER
-            # =================================================
+            # Protruding fiber = defect
 
             if fiber_type == "PROTRUDING FIBER":
 
-                protruding_detected = True
-
-                bad_detections.append(
-                    {
-                        "fiber":
-                            "PROTRUDING FIBER",
-
-                        "confidence":
-                            confidence
-                    }
-                )
-
-                # Red box
+                protruding_found = True
 
                 draw_red_box(
                     output,
@@ -544,44 +671,34 @@ def process_image(image):
                     confidence
                 )
 
-    # ========================================================
-    # QUALITY
-    # ========================================================
+                defects.append(
+                    {
+                        "fiber": "PROTRUDING FIBER",
+                        "confidence": confidence
+                    }
+                )
 
-    if protruding_detected:
-
-        quality = "BAD"
-
-    else:
-
-        quality = "GOOD"
-
-    return (
-        output,
-        bad_detections,
-        quality
+    quality = (
+        "BAD"
+        if protruding_found
+        else "GOOD"
     )
 
+    return output, defects, quality
+
 
 # ============================================================
-# CONVERT VIDEO FOR BROWSER
+# VIDEO
 # ============================================================
 
-def convert_video_for_browser(
-    input_path
-):
+def convert_video_for_browser(input_path):
 
     try:
-
         import imageio_ffmpeg
 
-        ffmpeg = (
-            imageio_ffmpeg
-            .get_ffmpeg_exe()
-        )
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
 
     except Exception:
-
         return input_path
 
     output_path = tempfile.NamedTemporaryFile(
@@ -594,21 +711,15 @@ def convert_video_for_browser(
         "-y",
         "-i",
         input_path,
-
         "-c:v",
         "libx264",
-
         "-preset",
         "fast",
-
         "-pix_fmt",
         "yuv420p",
-
         "-movflags",
         "+faststart",
-
         "-an",
-
         output_path
     ]
 
@@ -628,34 +739,23 @@ def convert_video_for_browser(
         return input_path
 
 
-# ============================================================
-# PROCESS VIDEO
-# ============================================================
-
-def process_video(
-    input_path
-):
+def process_video(input_path):
 
     cap = cv2.VideoCapture(
         input_path
     )
 
     if not cap.isOpened():
-
         raise RuntimeError(
             "Unable to open video."
         )
 
     width = int(
-        cap.get(
-            cv2.CAP_PROP_FRAME_WIDTH
-        )
+        cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     )
 
     height = int(
-        cap.get(
-            cv2.CAP_PROP_FRAME_HEIGHT
-        )
+        cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
     )
 
     fps = cap.get(
@@ -670,32 +770,18 @@ def process_video(
         suffix=".mp4"
     ).name
 
-    fourcc = cv2.VideoWriter_fourcc(
-        *"mp4v"
-    )
-
     writer = cv2.VideoWriter(
         output_path,
-        fourcc,
+        cv2.VideoWriter_fourcc(*"mp4v"),
         fps,
-        (
-            width,
-            height
-        )
+        (width, height)
     )
 
-    all_bad_detections = []
-
-    # Keep the last detected protruding fiber
-    # boxes so they do not disappear immediately.
-
-    last_bad_boxes = []
+    defects = []
 
     has_bad = False
 
-    # ========================================================
-    # FRAME LOOP
-    # ========================================================
+    last_boxes = []
 
     while True:
 
@@ -710,16 +796,9 @@ def process_video(
             verbose=False
         )[0]
 
-        current_bad_boxes = []
+        current_boxes = []
 
-        # ====================================================
-        # DETECTIONS
-        # ====================================================
-
-        if (
-            result.boxes is not None
-            and len(result.boxes) > 0
-        ):
+        if result.boxes is not None:
 
             for box in result.boxes:
 
@@ -752,23 +831,14 @@ def process_video(
                     class_name
                 )
 
-                # =================================================
-                # LOOP FIBER
-                # =================================================
-
                 if fiber_type == "LOOP FIBER":
-
                     continue
-
-                # =================================================
-                # PROTRUDING FIBER
-                # =================================================
 
                 if fiber_type == "PROTRUDING FIBER":
 
                     has_bad = True
 
-                    current_bad_boxes.append(
+                    current_boxes.append(
                         (
                             x1,
                             y1,
@@ -778,40 +848,25 @@ def process_video(
                         )
                     )
 
-                    all_bad_detections.append(
+                    defects.append(
                         {
                             "fiber":
                                 "PROTRUDING FIBER",
-
                             "confidence":
                                 confidence
                         }
                     )
 
-        # ====================================================
-        # REMEMBER LAST BAD BOXES
-        # ====================================================
+        if current_boxes:
+            last_boxes = current_boxes
 
-        if len(current_bad_boxes) > 0:
-
-            last_bad_boxes = (
-                current_bad_boxes
-            )
-
-        boxes_to_draw = (
-
-            current_bad_boxes
-
-            if len(current_bad_boxes) > 0
-
-            else last_bad_boxes
+        frame_boxes = (
+            current_boxes
+            if current_boxes
+            else last_boxes
         )
 
         processed = frame.copy()
-
-        # ====================================================
-        # DRAW RED BOXES
-        # ====================================================
 
         for (
             x1,
@@ -819,49 +874,48 @@ def process_video(
             x2,
             y2,
             confidence
-        ) in boxes_to_draw:
+        ) in frame_boxes:
 
             draw_red_box(
                 processed,
-
                 x1,
                 y1,
                 x2,
                 y2,
-
                 confidence
             )
 
-        writer.write(
-            processed
-        )
+        writer.write(processed)
 
     cap.release()
-
     writer.release()
 
-    # ========================================================
-    # QUALITY
-    # ========================================================
-
-    if has_bad:
-
-        quality = "BAD"
-
-    else:
-
-        quality = "GOOD"
-
-    final_video = (
-        convert_video_for_browser(
-            output_path
-        )
+    final_video = convert_video_for_browser(
+        output_path
     )
 
-    return (
-        final_video,
-        all_bad_detections,
-        quality
+    quality = (
+        "BAD"
+        if has_bad
+        else "GOOD"
+    )
+
+    return final_video, defects, quality
+
+
+# ============================================================
+# TITLE FUNCTION
+# ============================================================
+
+def show_title():
+
+    st.markdown(
+        """
+        <div class="yarnx-title">
+            🧶 YarnX – The Future of Yarn Inspection
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
@@ -871,235 +925,206 @@ def process_video(
 
 if st.session_state.page == "home":
 
-    st.markdown(
-        """
-        <div class="main-title">
-            🧶 YarnX – The Future of Yarn Inspection
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    show_title()
+
+    # --------------------------------------------------------
+    # MAIN HOME ROW
+    # --------------------------------------------------------
 
     left, right = st.columns(
-        [35, 65],
+        [0.75, 1.45],
         gap="medium"
     )
 
-    # ========================================================
-    # LEFT CARD
-    # ========================================================
-
     with left:
 
-        with st.container(
-            border=True
-        ):
+        st.markdown(
+            """
+            <div class="home-card">
 
-            st.markdown(
-                """
-                <div style="
-                    text-align:center;
-                    padding:20px;
-                ">
-
-                <h2 style="
-                    color:#263238;
-                    margin-bottom:25px;
-                ">
+                <div class="home-left-title">
 
                     AI Career for Women
                     <br>
                     (AICW)
 
-                </h2>
-
-                <h3 style="
-                    color:#37474f;
-                ">
-
-                    Capstone Project
-
-                </h3>
-
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
+
+                <div class="home-project">
+                    Capstone Project
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         st.write("")
 
-        if st.button(
+        st.markdown(
+            '<div class="predict-btn">',
+            unsafe_allow_html=True
+        )
+
+        predict = st.button(
             "🔍  PREDICT",
             use_container_width=True
-        ):
+        )
 
-            st.session_state.page = (
-                "inspection"
-            )
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+        if predict:
+
+            st.session_state.page = "inspection"
 
             st.rerun()
 
-    # ========================================================
-    # PROJECT DESCRIPTION
-    # ========================================================
-
     with right:
 
-        with st.container(
-            border=True
-        ):
+        st.markdown(
+            """
+            <div class="home-card">
 
-            st.markdown(
-                """
-                <h2 style="
-                    color:#4a148c;
-                ">
+                <div class="project-title">
                     Project Description
-                </h2>
+                </div>
 
-                <p style="
-                    font-size:15px;
-                    line-height:1.7;
-                ">
+                <div class="project-text">
 
-                YarnX is an AI-powered yarn quality
-                inspection system designed to automatically
-                detect yarn fiber defects using Computer
-                Vision and Deep Learning.
+                    YarnX is an AI-powered yarn quality
+                    inspection system designed to
+                    automatically detect yarn fiber
+                    defects using Computer Vision and
+                    Deep Learning.
 
-                </p>
+                </div>
 
-                <p style="
-                    font-size:15px;
-                    line-height:1.7;
-                ">
+                <div class="project-text">
 
-                The system accepts yarn images, camera
-                input and videos. A trained YOLO model
-                analyzes the yarn and identifies fiber
-                regions.
+                    The system accepts yarn images,
+                    camera input and videos. A trained
+                    YOLO model analyzes the yarn and
+                    identifies fiber regions.
 
-                </p>
+                </div>
 
-                <p style="
-                    font-size:15px;
-                    line-height:1.7;
-                ">
+                <div class="project-text">
 
-                YarnX provides a simple GOOD or BAD result
-                and highlights detected protruding fiber
-                defects with red bounding boxes and
-                confidence scores.
+                    YarnX provides a simple GOOD or BAD
+                    result and highlights detected
+                    protruding fiber defects with red
+                    bounding boxes and confidence scores.
 
-                </p>
-                """,
-                unsafe_allow_html=True
-            )
+                </div>
 
-    # ========================================================
-    # TEAM INFORMATION
-    # ========================================================
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     st.write("")
 
+    # --------------------------------------------------------
+    # INFORMATION ROW
+    # --------------------------------------------------------
+
     team_col, email_col, guide_col = st.columns(
-        [1.2, 1.3, 0.9],
+        [1.15, 1.25, 0.8],
         gap="medium"
     )
 
     with team_col:
 
-        with st.container(
-            border=True
-        ):
+        st.markdown(
+            """
+            <div class="info-card">
 
-            st.markdown(
-                """
-                <div class="info-title">
+                <div class="info-heading">
                     👩‍💻 TEAM MEMBERS
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
 
-            st.write(
-                "1. Gutti.Pavani Devi Priya"
-            )
+                <div class="info-item">
+                    1. Gutti.Pavani Devi Priya
+                </div>
 
-            st.write(
-                "2. Somasani.Sasi Priya"
-            )
+                <div class="info-item">
+                    2. Somasani.Sasi Priya
+                </div>
 
-            st.write(
-                "3. Galidevara.Rama Devi"
-            )
+                <div class="info-item">
+                    3. Galidevara.Rama Devi
+                </div>
 
-            st.write(
-                "4. Rambala.Harshitha Sai Lakshmi"
-            )
+                <div class="info-item">
+                    4. Rambala.Harshitha Sai Lakshmi
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     with email_col:
 
-        with st.container(
-            border=True
-        ):
+        st.markdown(
+            """
+            <div class="info-card">
 
-            st.markdown(
-                """
-                <div class="info-title">
+                <div class="info-heading">
                     📧 GMAIL
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
 
-            st.write(
-                "gutthipavanidevipriya@gmail.com"
-            )
+                <div class="info-item">
+                    gutthipavanidevipriya@gmail.com
+                </div>
 
-            st.write(
-                "Sasipriya8090@gmail.com"
-            )
+                <div class="info-item">
+                    Sasipriya8090@gmail.com
+                </div>
 
-            st.write(
-                "ramadevi.galidevara0@gmail.com"
-            )
+                <div class="info-item">
+                    ramadevi.galidevara0@gmail.com
+                </div>
 
-            st.write(
-                "harshitharambala3@gmail.com"
-            )
+                <div class="info-item">
+                    harshitharambala3@gmail.com
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     with guide_col:
 
-        with st.container(
-            border=True
-        ):
+        st.markdown(
+            """
+            <div class="info-card">
 
-            st.markdown(
-                """
-                <div class="info-title">
+                <div class="info-heading">
                     👨‍🏫 GUIDE NAME
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
 
-            st.write(
-                "Md. Abdul Aziz"
-            )
+                <div class="info-item">
+                    Md. Abdul Aziz
+                </div>
 
-            st.markdown(
-                """
-                <div class="info-title">
+                <div class="info-heading"
+                     style="margin-top:18px;">
                     DESIGNATION
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
 
-            st.write(
-                "Co Lead & Trainer AICW"
-            )
+                <div class="info-item">
+                    Co Lead & Trainer AICW
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
 # ============================================================
@@ -1108,22 +1133,27 @@ if st.session_state.page == "home":
 
 else:
 
+    show_title()
+
+    # --------------------------------------------------------
+    # BACK
+    # --------------------------------------------------------
+
     st.markdown(
-        """
-        <div class="main-title">
-            🧶 YarnX – The Future of Yarn Inspection
-        </div>
-        """,
+        '<div class="back-btn">',
         unsafe_allow_html=True
     )
 
-    # ========================================================
-    # BACK
-    # ========================================================
-
-    if st.button(
+    back = st.button(
         "⬅ Back"
-    ):
+    )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    if back:
 
         st.session_state.page = "home"
 
@@ -1140,7 +1170,7 @@ else:
     st.write("")
 
     # ========================================================
-    # EQUAL INPUT / RESULT COLUMNS
+    # EQUAL TWO COLUMNS
     # ========================================================
 
     input_col, result_col = st.columns(
@@ -1156,7 +1186,7 @@ else:
 
         st.markdown(
             """
-            <div class="section-heading">
+            <div class="section-title">
                 📥 INPUT
             </div>
             """,
@@ -1196,21 +1226,34 @@ else:
                     uploaded_image
                 ).convert("RGB")
 
-                st.write(
-                    "**INPUT IMAGE**"
+                st.markdown(
+                    '<div class="media-label">INPUT IMAGE</div>',
+                    unsafe_allow_html=True
                 )
 
-                # SMALL IMAGE
+                # FIXED SMALL SIZE
 
                 st.image(
                     image,
-                    width=300
+                    width=320
                 )
 
-                if st.button(
-                    "🔍 Analyze Image",
+                st.markdown(
+                    '<div class="analyze-btn">',
+                    unsafe_allow_html=True
+                )
+
+                analyze = st.button(
+                    "🔍  Analyze Image",
                     use_container_width=True
-                ):
+                )
+
+                st.markdown(
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
+                if analyze:
 
                     with st.spinner(
                         "Analyzing yarn..."
@@ -1220,33 +1263,23 @@ else:
                             result_image,
                             defects,
                             quality
-                        ) = process_image(
-                            image
-                        )
+                        ) = process_image(image)
 
                     st.session_state.image_result = (
                         result_image
-                    )
-
-                    st.session_state.image_defects = (
-                        defects
                     )
 
                     st.session_state.image_quality = (
                         quality
                     )
 
-                    st.session_state.video_result = (
-                        None
+                    st.session_state.image_defects = (
+                        defects
                     )
 
-                    st.session_state.video_defects = (
-                        []
-                    )
-
-                    st.session_state.video_quality = (
-                        None
-                    )
+                    st.session_state.video_result = None
+                    st.session_state.video_quality = None
+                    st.session_state.video_defects = []
 
                     st.rerun()
 
@@ -1266,19 +1299,32 @@ else:
                     camera_image
                 ).convert("RGB")
 
-                st.write(
-                    "**INPUT IMAGE**"
+                st.markdown(
+                    '<div class="media-label">INPUT IMAGE</div>',
+                    unsafe_allow_html=True
                 )
 
                 st.image(
                     image,
-                    width=300
+                    width=320
                 )
 
-                if st.button(
-                    "🔍 Analyze Camera",
+                st.markdown(
+                    '<div class="analyze-btn">',
+                    unsafe_allow_html=True
+                )
+
+                analyze = st.button(
+                    "🔍  Analyze Camera",
                     use_container_width=True
-                ):
+                )
+
+                st.markdown(
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
+                if analyze:
 
                     with st.spinner(
                         "Analyzing yarn..."
@@ -1288,25 +1334,23 @@ else:
                             result_image,
                             defects,
                             quality
-                        ) = process_image(
-                            image
-                        )
+                        ) = process_image(image)
 
                     st.session_state.image_result = (
                         result_image
-                    )
-
-                    st.session_state.image_defects = (
-                        defects
                     )
 
                     st.session_state.image_quality = (
                         quality
                     )
 
-                    st.session_state.video_result = (
-                        None
+                    st.session_state.image_defects = (
+                        defects
                     )
+
+                    st.session_state.video_result = None
+                    st.session_state.video_quality = None
+                    st.session_state.video_defects = []
 
                     st.rerun()
 
@@ -1329,29 +1373,42 @@ else:
 
             if uploaded_video:
 
-                st.write(
-                    "**INPUT VIDEO**"
+                st.markdown(
+                    '<div class="media-label">INPUT VIDEO</div>',
+                    unsafe_allow_html=True
                 )
+
+                # FIXED SMALL SIZE
 
                 st.video(
                     uploaded_video,
                     width=320
                 )
 
-                if st.button(
-                    "🔍 Analyze Video",
+                st.markdown(
+                    '<div class="analyze-btn">',
+                    unsafe_allow_html=True
+                )
+
+                analyze = st.button(
+                    "🔍  Analyze Video",
                     use_container_width=True
-                ):
+                )
+
+                st.markdown(
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
+                if analyze:
 
                     with st.spinner(
-                        "Analyzing video... Please wait."
+                        "Analyzing video..."
                     ):
 
-                        temp_video = (
-                            tempfile.NamedTemporaryFile(
-                                delete=False,
-                                suffix=".mp4"
-                            )
+                        temp_video = tempfile.NamedTemporaryFile(
+                            delete=False,
+                            suffix=".mp4"
                         )
 
                         temp_video.write(
@@ -1372,25 +1429,17 @@ else:
                         output_video
                     )
 
-                    st.session_state.video_defects = (
-                        defects
-                    )
-
                     st.session_state.video_quality = (
                         quality
                     )
 
-                    st.session_state.image_result = (
-                        None
+                    st.session_state.video_defects = (
+                        defects
                     )
 
-                    st.session_state.image_defects = (
-                        []
-                    )
-
-                    st.session_state.image_quality = (
-                        None
-                    )
+                    st.session_state.image_result = None
+                    st.session_state.image_quality = None
+                    st.session_state.image_defects = []
 
                     st.rerun()
 
@@ -1402,7 +1451,7 @@ else:
 
         st.markdown(
             """
-            <div class="section-heading">
+            <div class="section-title">
                 🎯 RESULT
             </div>
             """,
@@ -1413,131 +1462,113 @@ else:
         # IMAGE RESULT
         # ====================================================
 
-        if (
-            st.session_state.image_result
-            is not None
-        ):
+        if st.session_state.image_result is not None:
 
-            st.write(
-                "**OUTPUT IMAGE**"
+            st.markdown(
+                '<div class="media-label">OUTPUT IMAGE</div>',
+                unsafe_allow_html=True
             )
 
-            # SAME SMALL SIZE AS INPUT
+            # SAME WIDTH AS INPUT
 
             st.image(
                 st.session_state.image_result,
-                width=300
+                width=320
             )
 
             quality = (
                 st.session_state.image_quality
             )
 
+            # ------------------------------------------------
+            # GOOD
+            # ------------------------------------------------
+
             if quality == "GOOD":
 
                 st.markdown(
                     """
-                    <div class="good-quality">
-
+                    <div class="good-box">
                         🟢 GOOD QUALITY
-
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-                # Good quality:
-                # NO fibers / defects displayed
+                st.info(
+                    "No defect detected."
+                )
+
+            # ------------------------------------------------
+            # BAD
+            # ------------------------------------------------
 
             else:
 
                 st.markdown(
                     """
-                    <div class="bad-quality">
-
+                    <div class="bad-box">
                         🔴 BAD QUALITY
-
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-                # =================================================
-                # DEFECT DETAILS ONLY FOR BAD QUALITY
-                # =================================================
+                st.markdown(
+                    "### 🔴 Detected Defect",
+                    unsafe_allow_html=True
+                )
 
-                if (
-                    len(
-                        st.session_state.image_defects
-                    ) > 0
+                shown = set()
+
+                for defect in (
+                    st.session_state.image_defects
                 ):
 
-                    st.markdown(
-                        "### 🔴 DETECTED DEFECT"
+                    fiber = defect["fiber"]
+
+                    confidence = (
+                        defect["confidence"]
                     )
 
-                    shown = set()
+                    key = (
+                        fiber,
+                        round(confidence, 2)
+                    )
 
-                    for defect in (
-                        st.session_state.image_defects
-                    ):
+                    if key in shown:
+                        continue
 
-                        key = (
-                            defect["fiber"],
-                            round(
-                                defect["confidence"],
-                                2
-                            )
-                        )
+                    shown.add(key)
 
-                        if key in shown:
-                            continue
-
-                        shown.add(key)
-
-                        confidence = (
-                            defect["confidence"]
-                            * 100
-                        )
-
-                        st.markdown(
-                            f"""
-                            <div class="defect-card">
+                    st.markdown(
+                        f"""
+                        <div class="defect-box">
 
                             🔴
-                            <b>
-                            {defect["fiber"]}
-                            </b>
+                            <b>{fiber}</b>
 
                             <br>
 
                             Confidence:
                             <b>
-                            {confidence:.2f}%
+                            {confidence * 100:.2f}%
                             </b>
 
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-                else:
-
-                    st.write(
-                        "No defect detected."
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
 
         # ====================================================
         # VIDEO RESULT
         # ====================================================
 
-        elif (
-            st.session_state.video_result
-            is not None
-        ):
+        elif st.session_state.video_result is not None:
 
-            st.write(
-                "**OUTPUT VIDEO**"
+            st.markdown(
+                '<div class="media-label">OUTPUT VIDEO</div>',
+                unsafe_allow_html=True
             )
 
             st.video(
@@ -1549,87 +1580,78 @@ else:
                 st.session_state.video_quality
             )
 
+            # ------------------------------------------------
+            # GOOD
+            # ------------------------------------------------
+
             if quality == "GOOD":
 
                 st.markdown(
                     """
-                    <div class="good-quality">
-
+                    <div class="good-box">
                         🟢 GOOD QUALITY
-
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
+
+                st.info(
+                    "No defect detected."
+                )
+
+            # ------------------------------------------------
+            # BAD
+            # ------------------------------------------------
 
             else:
 
                 st.markdown(
                     """
-                    <div class="bad-quality">
-
+                    <div class="bad-box">
                         🔴 BAD QUALITY
-
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
 
-                if (
-                    len(
-                        st.session_state.video_defects
-                    ) > 0
-                ):
+                st.markdown(
+                    "### 🔴 Detected Defect",
+                    unsafe_allow_html=True
+                )
 
-                    st.markdown(
-                        "### 🔴 DETECTED DEFECT"
+                if st.session_state.video_defects:
+
+                    highest = max(
+                        d["confidence"]
+                        for d in
+                        st.session_state.video_defects
                     )
-
-                    highest_confidence = 0
-
-                    for defect in (
-                        st.session_state.video_defects
-                    ):
-
-                        highest_confidence = max(
-                            highest_confidence,
-                            defect["confidence"]
-                        )
 
                     st.markdown(
                         f"""
-                        <div class="defect-card">
+                        <div class="defect-box">
 
-                        🔴
-                        <b>
-                        PROTRUDING FIBER
-                        </b>
+                            🔴
+                            <b>PROTRUDING FIBER</b>
 
-                        <br>
+                            <br>
 
-                        Confidence:
-                        <b>
-                        {highest_confidence * 100:.2f}%
-                        </b>
+                            Confidence:
+                            <b>
+                            {highest * 100:.2f}%
+                            </b>
 
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
 
-                else:
-
-                    st.write(
-                        "No defect detected."
-                    )
-
         # ====================================================
-        # BEFORE ANALYSIS
+        # NO RESULT YET
         # ====================================================
 
         else:
 
             st.info(
-                "Upload an image or video "
-                "and click Analyze."
+                "Upload an image or video and click Analyze."
             )
