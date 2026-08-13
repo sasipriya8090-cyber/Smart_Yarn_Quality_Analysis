@@ -93,29 +93,29 @@ st.markdown("""
 <style>
 
 /* ============================================================
-   MORE COLORFUL APP BACKGROUND
+   COLORFUL BACKGROUND
    ============================================================ */
 
 .stApp {
     background:
         radial-gradient(
-            circle at 10% 15%,
-            rgba(186, 104, 200, 0.18) 0%,
+            circle at 8% 12%,
+            rgba(186, 104, 200, 0.20) 0%,
+            transparent 27%
+        ),
+        radial-gradient(
+            circle at 92% 15%,
+            rgba(66, 165, 245, 0.20) 0%,
+            transparent 29%
+        ),
+        radial-gradient(
+            circle at 18% 88%,
+            rgba(77, 182, 172, 0.16) 0%,
             transparent 28%
         ),
         radial-gradient(
-            circle at 90% 20%,
-            rgba(66, 165, 245, 0.18) 0%,
-            transparent 30%
-        ),
-        radial-gradient(
-            circle at 20% 85%,
-            rgba(77, 182, 172, 0.14) 0%,
-            transparent 28%
-        ),
-        radial-gradient(
-            circle at 90% 85%,
-            rgba(244, 143, 177, 0.16) 0%,
+            circle at 90% 88%,
+            rgba(244, 143, 177, 0.18) 0%,
             transparent 30%
         ),
         linear-gradient(
@@ -130,7 +130,7 @@ st.markdown("""
 
 
 /* ============================================================
-   MAIN PAGE
+   PAGE CONTAINER
    ============================================================ */
 
 .block-container {
@@ -140,7 +140,7 @@ st.markdown("""
 
 
 /* ============================================================
-   YARNX TITLE
+   MAIN YARNX HEADING
    ============================================================ */
 
 .main-title {
@@ -170,17 +170,149 @@ st.markdown("""
     font-size: 28px;
     font-weight: 800;
 
-    color: #4a148c;
+    color: #43218a;
 
-    background: linear-gradient(
-        90deg,
-        #f3e5f5 0%,
-        #e3f2fd 50%,
-        #fce4ec 100%
-    );
+    background:
+        linear-gradient(
+            90deg,
+            rgba(243,229,245,0.96),
+            rgba(227,242,253,0.96),
+            rgba(252,228,236,0.96)
+        );
 
     box-shadow:
-        0 2px 8px rgba(90, 50, 130, 0.08);
+        0 5px 16px rgba(83, 52, 120, 0.12);
+}
+
+
+/* ============================================================
+   GENERAL TEXT
+   ============================================================ */
+
+.stApp,
+.stApp p,
+.stApp span,
+.stApp label {
+    color: #24324a;
+}
+
+
+/* ============================================================
+   HEADINGS
+   ============================================================ */
+
+.stApp h1,
+.stApp h2,
+.stApp h3,
+.stApp h4,
+.stApp h5,
+.stApp h6 {
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    text-decoration: none !important;
+}
+
+
+/* ============================================================
+   MAIN SECTION HEADINGS
+   ============================================================ */
+
+.stApp h2 {
+    color: #43218a;
+    text-shadow:
+        0 1px 1px rgba(74,20,140,0.08);
+}
+
+
+.stApp h3 {
+    color: #263b63;
+}
+
+
+/* ============================================================
+   REMOVE HEADING LINK ICONS
+   ============================================================ */
+
+h1 a,
+h2 a,
+h3 a,
+h4 a,
+h5 a,
+h6 a {
+    display: none !important;
+}
+
+
+/* ============================================================
+   FIRST PAGE CARDS
+   ============================================================ */
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+
+    border-radius: 16px !important;
+
+    border: 1px solid rgba(120, 100, 160, 0.22) !important;
+
+    background:
+        rgba(255,255,255,0.50) !important;
+
+    box-shadow:
+        0 5px 18px rgba(74, 55, 120, 0.08) !important;
+
+    backdrop-filter: blur(7px);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 9px 24px rgba(74, 55, 120, 0.12) !important;
+}
+
+
+/* ============================================================
+   CARD HEADINGS
+   ============================================================ */
+
+div[data-testid="stVerticalBlockBorderWrapper"] h2 {
+    color: #43218a;
+}
+
+
+div[data-testid="stVerticalBlockBorderWrapper"] h3 {
+    color: #263957;
+}
+
+
+/* ============================================================
+   CARD BODY TEXT
+   ============================================================ */
+
+div[data-testid="stVerticalBlockBorderWrapper"] p {
+
+    color: #263952;
+
+    line-height: 1.6;
+}
+
+
+/* ============================================================
+   EMAIL LINKS
+   ============================================================ */
+
+div[data-testid="stVerticalBlockBorderWrapper"] a {
+
+    color: #315bb5 !important;
+
+    font-weight: 600;
+
+    text-decoration: none !important;
 }
 
 
@@ -204,17 +336,19 @@ st.markdown("""
 
     color: white !important;
 
-    background: linear-gradient(
-        135deg,
-        #6a1b9a 0%,
-        #3949ab 50%,
-        #1976d2 100%
-    ) !important;
+    background:
+        linear-gradient(
+            135deg,
+            #6a1b9a 0%,
+            #3949ab 50%,
+            #1976d2 100%
+        ) !important;
 
     box-shadow:
-        0 5px 14px rgba(70, 55, 150, 0.25) !important;
+        0 6px 16px rgba(70,55,150,0.25) !important;
 
-    transition: all 0.2s ease-in-out !important;
+    transition:
+        all 0.2s ease-in-out !important;
 }
 
 
@@ -222,17 +356,18 @@ st.markdown("""
 
     color: white !important;
 
-    background: linear-gradient(
-        135deg,
-        #7b1fa2 0%,
-        #3f51b5 50%,
-        #1e88e5 100%
-    ) !important;
+    background:
+        linear-gradient(
+            135deg,
+            #7b1fa2 0%,
+            #3f51b5 50%,
+            #1e88e5 100%
+        ) !important;
 
     transform: translateY(-2px);
 
     box-shadow:
-        0 8px 18px rgba(70, 55, 150, 0.30) !important;
+        0 9px 20px rgba(70,55,150,0.30) !important;
 }
 
 
@@ -246,7 +381,7 @@ st.markdown("""
     outline: none !important;
 
     box-shadow:
-        0 5px 14px rgba(70, 55, 150, 0.25) !important;
+        0 6px 16px rgba(70,55,150,0.25) !important;
 }
 
 
@@ -255,22 +390,31 @@ st.markdown("""
    ============================================================ */
 
 .team-text {
+
     font-size: 15px;
+
     color: #24324a;
+
     margin: 8px 0;
+
     line-height: 1.5;
 }
 
 
 /* ============================================================
-   EMAIL
+   EMAIL TEXT
    ============================================================ */
 
 .email-text {
+
     font-size: 14px;
+
     color: #315bb5;
+
     margin: 10px 0;
+
     word-break: break-word;
+
     line-height: 1.5;
 }
 
@@ -280,25 +424,70 @@ st.markdown("""
    ============================================================ */
 
 .guide-label {
+
     font-size: 13px;
+
     font-weight: 800;
+
     color: #5b5f73;
+
     margin-top: 14px;
+
     margin-bottom: 5px;
+
     text-transform: uppercase;
 }
 
 
 .guide-value {
+
     font-size: 15px;
+
     color: #24324a;
+
     margin-bottom: 12px;
+
     line-height: 1.5;
 }
 
 
 /* ============================================================
-   QUALITY
+   FILE UPLOADER
+   ============================================================ */
+
+section[data-testid="stFileUploaderDropzone"] {
+
+    background:
+        rgba(245,248,255,0.80) !important;
+
+    border-radius: 12px !important;
+}
+
+
+/* ============================================================
+   RADIO
+   ============================================================ */
+
+div[data-testid="stRadio"] label {
+
+    font-weight: 600;
+
+    color: #263957;
+}
+
+
+/* ============================================================
+   INFO MESSAGE
+   ============================================================ */
+
+div[data-testid="stAlert"] {
+
+    border-radius: 12px !important;
+}
+
+
+/* ============================================================
+   GOOD QUALITY
    ============================================================ */
 
 .good-quality {
@@ -317,11 +506,23 @@ st.markdown("""
 
     color: #1b5e20;
 
-    background: #e8f5e9;
+    background:
+        linear-gradient(
+            135deg,
+            #e8f5e9,
+            #f1f8e9
+        );
 
     margin-top: 10px;
+
+    box-shadow:
+        0 4px 12px rgba(46,125,50,0.10);
 }
 
+
+/* ============================================================
+   BAD QUALITY
+   ============================================================ */
 
 .bad-quality {
 
@@ -339,9 +540,17 @@ st.markdown("""
 
     color: #b71c1c;
 
-    background: #ffebee;
+    background:
+        linear-gradient(
+            135deg,
+            #ffebee,
+            #fff5f5
+        );
 
     margin-top: 10px;
+
+    box-shadow:
+        0 4px 12px rgba(198,40,40,0.10);
 }
 
 
@@ -353,22 +562,30 @@ st.markdown("""
 
     border: 1px solid #ef9a9a;
 
-    border-radius: 9px;
+    border-radius: 10px;
 
-    padding: 8px 10px;
+    padding: 10px 12px;
 
-    margin-top: 6px;
+    margin-top: 7px;
 
-    background: #fff8f8;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,248,248,0.96),
+            rgba(255,242,245,0.92)
+        );
+
+    box-shadow:
+        0 3px 9px rgba(180,60,80,0.06);
 }
 
 
 /* ============================================================
-   RADIO
+   SMOOTH UI
    ============================================================ */
 
-div[data-testid="stRadio"] label {
-    font-weight: 600;
+* {
+    box-sizing: border-box;
 }
 
 </style>
@@ -513,7 +730,7 @@ def show_fixed_video(
 
 
 # ============================================================
-# DRAW YOLO BOXES FOR IMAGE
+# YOLO IMAGE BOXES
 # ============================================================
 
 def draw_yolo_boxes(frame, result):
@@ -567,8 +784,6 @@ def draw_yolo_boxes(frame, result):
         })
 
 
-        # RED BOX
-
         cv2.rectangle(
             output,
             (x1, y1),
@@ -577,8 +792,6 @@ def draw_yolo_boxes(frame, result):
             6
         )
 
-
-        # LABEL
 
         label = (
             f"{defect_name} "
@@ -734,7 +947,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # AICW CARD
+    # AICW
     # ========================================================
 
     with left:
@@ -785,6 +998,7 @@ if st.session_state.page == "home":
                     color:#4a148c;
                     margin-top:0;
                     margin-bottom:18px;
+                    text-decoration:none;
                 ">
                     Project Description
                 </h2>
@@ -834,7 +1048,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # TEAM
+    # TEAM MEMBERS
     # ========================================================
 
     with team:
@@ -1225,9 +1439,7 @@ else:
                         input_temp.close()
 
 
-                        input_path = (
-                            input_temp.name
-                        )
+                        input_path = input_temp.name
 
 
                         cap = cv2.VideoCapture(
@@ -1250,13 +1462,11 @@ else:
                             )
                         )
 
-
                         height = int(
                             cap.get(
                                 cv2.CAP_PROP_FRAME_HEIGHT
                             )
                         )
-
 
                         fps = cap.get(
                             cv2.CAP_PROP_FPS
@@ -1274,13 +1484,9 @@ else:
                             )
                         )
 
-
                         output_temp.close()
 
-
-                        raw_output = (
-                            output_temp.name
-                        )
+                        raw_output = output_temp.name
 
 
                         fourcc = (
@@ -1318,9 +1524,7 @@ else:
 
                         while True:
 
-                            ret, frame = (
-                                cap.read()
-                            )
+                            ret, frame = cap.read()
 
 
                             if not ret:
@@ -1370,9 +1574,7 @@ else:
 
 
                                     defect_name = (
-                                        model.names[
-                                            class_id
-                                        ]
+                                        model.names[class_id]
                                     )
 
 
@@ -1419,18 +1621,14 @@ else:
 
                             if len(current_boxes) > 0:
 
-                                boxes_to_draw = (
-                                    current_boxes
-                                )
+                                boxes_to_draw = current_boxes
 
                             else:
 
                                 boxes_to_draw = last_boxes
 
 
-                            processed_frame = (
-                                frame.copy()
-                            )
+                            processed_frame = frame.copy()
 
 
                             for detection in boxes_to_draw:
@@ -1439,16 +1637,12 @@ else:
                                     detection["box"]
                                 )
 
-                                name = (
-                                    detection["name"]
-                                )
+                                name = detection["name"]
 
                                 confidence = (
                                     detection["confidence"]
                                 )
 
-
-                                # RED BOX
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1458,8 +1652,6 @@ else:
                                     6
                                 )
 
-
-                                # LABEL
 
                                 label = (
                                     f"{name} "
