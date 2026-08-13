@@ -1,6 +1,7 @@
 import os
 import tempfile
 import subprocess
+import base64
 
 import cv2
 import numpy as np
@@ -27,11 +28,6 @@ st.set_page_config(
 
 MODEL_PATH = "best (6).pt"
 
-
-# ============================================================
-# PYTORCH COMPATIBILITY
-# ============================================================
-
 _original_torch_load = torch.load
 
 
@@ -45,10 +41,6 @@ def patched_torch_load(*args, **kwargs):
 
 torch.load = patched_torch_load
 
-
-# ============================================================
-# LOAD MODEL
-# ============================================================
 
 @st.cache_resource
 def load_model():
@@ -100,31 +92,121 @@ st.markdown(
         padding-bottom: 1rem;
     }
 
+
+    /* ======================================================
+       TITLE
+       ====================================================== */
+
     .main-title {
-        border: 2px solid #222;
+        border: 2px solid #6a1b9a;
+        border-radius: 14px;
         padding: 12px;
         text-align: center;
         font-size: 28px;
-        font-weight: bold;
+        font-weight: 800;
+        color: #4a148c;
+        background: linear-gradient(
+            90deg,
+            #f3e5f5,
+            #e3f2fd,
+            #fce4ec
+        );
         margin-bottom: 14px;
     }
 
+
+    /* ======================================================
+       QUALITY
+       ====================================================== */
+
     .good-quality {
-        border: 2px solid green;
-        padding: 8px;
+        border: 2px solid #2e7d32;
+        border-radius: 12px;
+        padding: 9px;
         text-align: center;
         font-size: 21px;
         font-weight: bold;
+        color: #1b5e20;
+        background: #e8f5e9;
         margin-top: 10px;
     }
 
+
     .bad-quality {
-        border: 2px solid red;
-        padding: 8px;
+        border: 2px solid #c62828;
+        border-radius: 12px;
+        padding: 9px;
         text-align: center;
         font-size: 21px;
         font-weight: bold;
+        color: #b71c1c;
+        background: #ffebee;
         margin-top: 10px;
+    }
+
+
+    /* ======================================================
+       MEDIA BOX
+       ====================================================== */
+
+    .input-media-box {
+        width: 320px;
+        height: 210px;
+        margin: 8px auto 12px auto;
+        border: 2px solid #90caf9;
+        border-radius: 12px;
+        background: #f5faff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+
+    .output-media-box {
+        width: 420px;
+        height: 270px;
+        margin: 8px auto 12px auto;
+        border: 2px solid #ce93d8;
+        border-radius: 12px;
+        background: #fcf5ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+
+    .input-media-box img {
+        max-width: 300px !important;
+        max-height: 190px !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+
+
+    .output-media-box img {
+        max-width: 400px !important;
+        max-height: 240px !important;
+        width: auto !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+
+
+    .defect-card {
+        border: 1px solid #ef9a9a;
+        border-radius: 9px;
+        padding: 7px 10px;
+        margin-top: 5px;
+        background: #fff8f8;
+    }
+
+
+    .stButton > button {
+        border-radius: 10px;
+        font-weight: 700;
     }
 
     </style>
@@ -134,7 +216,7 @@ st.markdown(
 
 
 # ============================================================
-# DRAW BOUNDING BOXES - IMAGE
+# DRAW YOLO BOXES
 # ============================================================
 
 def draw_yolo_boxes(frame, result):
@@ -143,16 +225,23 @@ def draw_yolo_boxes(frame, result):
 
     defects = []
 
+
     if result.boxes is None:
+
         return output, defects
 
+
     if len(result.boxes) == 0:
+
         return output, defects
 
 
     for box in result.boxes:
 
-        # Coordinates
+        # -----------------------------------------------
+        # COORDINATES
+        # -----------------------------------------------
+
         coords = (
             box.xyxy[0]
             .cpu()
@@ -163,7 +252,10 @@ def draw_yolo_boxes(frame, result):
         x1, y1, x2, y2 = coords
 
 
-        # Confidence
+        # -----------------------------------------------
+        # CONFIDENCE
+        # -----------------------------------------------
+
         confidence = float(
             box.conf[0]
             .cpu()
@@ -171,7 +263,10 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # Class
+        # -----------------------------------------------
+        # CLASS
+        # -----------------------------------------------
+
         class_id = int(
             box.cls[0]
             .cpu()
@@ -179,21 +274,27 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # Defect name
         defect_name = model.names[class_id]
 
 
-        # Store defect
         defects.append(
             {
                 "name": defect_name,
                 "confidence": confidence,
-                "box": (x1, y1, x2, y2)
+                "box": (
+                    x1,
+                    y1,
+                    x2,
+                    y2
+                )
             }
         )
 
 
-        # Thick red bounding box
+        # -----------------------------------------------
+        # RED BOX
+        # -----------------------------------------------
+
         cv2.rectangle(
             output,
             (x1, y1),
@@ -203,7 +304,10 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # Label
+        # -----------------------------------------------
+        # LABEL
+        # -----------------------------------------------
+
         label = (
             f"{defect_name} "
             f"{confidence * 100:.1f}%"
@@ -211,16 +315,22 @@ def draw_yolo_boxes(frame, result):
 
 
         font = cv2.FONT_HERSHEY_SIMPLEX
+
         font_scale = 0.75
+
         thickness = 2
 
 
-        text_size, baseline = cv2.getTextSize(
+        (
+            text_size,
+            baseline
+        ) = cv2.getTextSize(
             label,
             font,
             font_scale,
             thickness
         )
+
 
         text_width, text_height = text_size
 
@@ -231,17 +341,25 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # Label background
+        # -----------------------------------------------
+        # LABEL BACKGROUND
+        # -----------------------------------------------
+
         cv2.rectangle(
             output,
 
             (
                 x1,
-                label_y - text_height - 12
+                label_y
+                - text_height
+                - 12
             ),
 
             (
-                x1 + text_width + 12,
+                x1
+                + text_width
+                + 12,
+
                 label_y + 4
             ),
 
@@ -251,15 +369,28 @@ def draw_yolo_boxes(frame, result):
         )
 
 
-        # Label text
+        # -----------------------------------------------
+        # LABEL TEXT
+        # -----------------------------------------------
+
         cv2.putText(
             output,
+
             label,
-            (x1 + 6, label_y - 6),
+
+            (
+                x1 + 6,
+                label_y - 6
+            ),
+
             font,
+
             font_scale,
+
             (255, 255, 255),
+
             thickness,
+
             cv2.LINE_AA
         )
 
@@ -268,7 +399,7 @@ def draw_yolo_boxes(frame, result):
 
 
 # ============================================================
-# RESIZE IMAGE FOR DISPLAY
+# RESIZE IMAGE
 # ============================================================
 
 def resize_for_display(
@@ -284,7 +415,9 @@ def resize_for_display(
             cv2.COLOR_BGR2RGB
         )
 
-        image = Image.fromarray(image)
+        image = Image.fromarray(
+            image
+        )
 
 
     image = image.copy()
@@ -303,16 +436,21 @@ def resize_for_display(
 
 
 # ============================================================
-# CONVERT VIDEO FOR BROWSER
+# CONVERT VIDEO
 # ============================================================
 
-def convert_video_for_browser(input_path):
+def convert_video_for_browser(
+    input_path
+):
 
     try:
 
         import imageio_ffmpeg
 
-        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        ffmpeg = (
+            imageio_ffmpeg
+            .get_ffmpeg_exe()
+        )
 
     except Exception:
 
@@ -354,9 +492,88 @@ def convert_video_for_browser(input_path):
 
         return output_path
 
+
     except Exception:
 
         return input_path
+
+
+# ============================================================
+# FIXED SIZE VIDEO PLAYER
+# ============================================================
+
+def show_video(
+    video_path,
+    width=300,
+    height=190
+):
+
+    try:
+
+        with open(
+            video_path,
+            "rb"
+        ) as video_file:
+
+            video_bytes = (
+                video_file.read()
+            )
+
+
+        encoded_video = (
+            base64.b64encode(
+                video_bytes
+            ).decode("utf-8")
+        )
+
+
+        html = f"""
+        <div style="
+            width:{width}px;
+            height:{height}px;
+            margin:8px auto 12px auto;
+            border:2px solid #90caf9;
+            border-radius:12px;
+            background:#f5faff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+        ">
+
+            <video
+                controls
+                style="
+                    width:{width}px;
+                    max-width:{width}px;
+                    max-height:{height}px;
+                    height:auto;
+                    object-fit:contain;
+                "
+            >
+
+                <source
+                    src="data:video/mp4;base64,{encoded_video}"
+                    type="video/mp4"
+                >
+
+            </video>
+
+        </div>
+        """
+
+
+        st.components.v1.html(
+            html,
+            height=height + 35
+        )
+
+
+    except Exception as e:
+
+        st.error(
+            f"❌ Unable to display video: {e}"
+        )
 
 
 # ============================================================
@@ -366,10 +583,6 @@ def convert_video_for_browser(input_path):
 # ============================================================
 
 if st.session_state.page == "home":
-
-    # --------------------------------------------------------
-    # TITLE
-    # --------------------------------------------------------
 
     st.markdown(
         """
@@ -381,10 +594,6 @@ if st.session_state.page == "home":
     )
 
 
-    # --------------------------------------------------------
-    # MAIN COLUMNS
-    # --------------------------------------------------------
-
     left, right = st.columns(
         [35, 65],
         gap="small"
@@ -392,7 +601,7 @@ if st.session_state.page == "home":
 
 
     # ========================================================
-    # LEFT SIDE
+    # LEFT
     # ========================================================
 
     with left:
@@ -428,20 +637,20 @@ if st.session_state.page == "home":
         st.write("")
 
 
-        # Predict button
-
         if st.button(
             "PREDICT",
             use_container_width=True
         ):
 
-            st.session_state.page = "inspection"
+            st.session_state.page = (
+                "inspection"
+            )
 
             st.rerun()
 
 
     # ========================================================
-    # RIGHT SIDE
+    # RIGHT
     # ========================================================
 
     with right:
@@ -498,10 +707,6 @@ if st.session_state.page == "home":
     )
 
 
-    # --------------------------------------------------------
-    # TEAM MEMBERS
-    # --------------------------------------------------------
-
     with team_col:
 
         st.markdown(
@@ -525,10 +730,6 @@ if st.session_state.page == "home":
         )
 
 
-    # --------------------------------------------------------
-    # GMAIL
-    # --------------------------------------------------------
-
     with mail_col:
 
         st.markdown(
@@ -551,10 +752,6 @@ if st.session_state.page == "home":
             "harshitharambala3@gmail.com"
         )
 
-
-    # --------------------------------------------------------
-    # GUIDE
-    # --------------------------------------------------------
 
     with guide_col:
 
@@ -583,10 +780,6 @@ if st.session_state.page == "home":
 
 elif st.session_state.page == "inspection":
 
-    # --------------------------------------------------------
-    # TITLE
-    # --------------------------------------------------------
-
     st.markdown(
         """
         <div class="main-title">
@@ -597,9 +790,9 @@ elif st.session_state.page == "inspection":
     )
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # BACK
-    # --------------------------------------------------------
+    # ========================================================
 
     if st.button("⬅ Back"):
 
@@ -614,10 +807,6 @@ elif st.session_state.page == "inspection":
         st.rerun()
 
 
-    # --------------------------------------------------------
-    # INPUT + OUTPUT COLUMNS
-    # --------------------------------------------------------
-
     left, right = st.columns(
         [35, 65],
         gap="small"
@@ -625,7 +814,7 @@ elif st.session_state.page == "inspection":
 
 
     # ========================================================
-    # INPUT SECTION
+    # INPUT
     # ========================================================
 
     with left:
@@ -681,12 +870,16 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # Small input image
-
                 preview = resize_for_display(
                     image,
-                    max_width=300,
-                    max_height=190
+                    300,
+                    190
+                )
+
+
+                st.markdown(
+                    '<div class="input-media-box">',
+                    unsafe_allow_html=True
                 )
 
 
@@ -696,7 +889,11 @@ elif st.session_state.page == "inspection":
                 )
 
 
-                # Analyze
+                st.markdown(
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+
 
                 if st.button(
                     "🔍 Analyze Image",
@@ -707,14 +904,11 @@ elif st.session_state.page == "inspection":
                         "Analyzing yarn..."
                     ):
 
-                        results = model.predict(
+                        result = model.predict(
                             source=np.array(image),
                             conf=0.15,
                             verbose=False
-                        )
-
-
-                    result = results[0]
+                        )[0]
 
 
                     output_image, defects = (
@@ -734,6 +928,7 @@ elif st.session_state.page == "inspection":
                     )
 
                     st.session_state.video_output = None
+
                     st.session_state.video_defects = {}
 
 
@@ -765,14 +960,26 @@ elif st.session_state.page == "inspection":
 
                 preview = resize_for_display(
                     image,
-                    max_width=300,
-                    max_height=190
+                    300,
+                    190
+                )
+
+
+                st.markdown(
+                    '<div class="input-media-box">',
+                    unsafe_allow_html=True
                 )
 
 
                 st.image(
                     preview,
                     width=300
+                )
+
+
+                st.markdown(
+                    '</div>',
+                    unsafe_allow_html=True
                 )
 
 
@@ -785,14 +992,11 @@ elif st.session_state.page == "inspection":
                         "Analyzing yarn..."
                     ):
 
-                        results = model.predict(
+                        result = model.predict(
                             source=np.array(image),
                             conf=0.15,
                             verbose=False
-                        )
-
-
-                    result = results[0]
+                        )[0]
 
 
                     output_image, defects = (
@@ -812,6 +1016,7 @@ elif st.session_state.page == "inspection":
                     )
 
                     st.session_state.video_output = None
+
                     st.session_state.video_defects = {}
 
 
@@ -838,21 +1043,38 @@ elif st.session_state.page == "inspection":
 
             if uploaded_video:
 
+                # -------------------------------------------
+                # SAVE INPUT VIDEO
+                # -------------------------------------------
+
+                preview_file = (
+                    tempfile.NamedTemporaryFile(
+                        delete=False,
+                        suffix=".mp4"
+                    )
+                )
+
+
+                preview_file.write(
+                    uploaded_video.getvalue()
+                )
+
+
+                preview_file.close()
+
+
                 st.write(
                     "**INPUT VIDEO**"
                 )
 
 
-                # Small input video
-
-                st.video(
-                    uploaded_video,
-                    format="video/mp4",
-                    width=300
+                # EXACT SMALL INPUT VIDEO
+                show_video(
+                    preview_file.name,
+                    300,
+                    190
                 )
 
-
-                # Analyze video
 
                 if st.button(
                     "🔍 Analyze Video",
@@ -863,9 +1085,9 @@ elif st.session_state.page == "inspection":
                         "Analyzing video... Please wait."
                     ):
 
-                        # ======================================
-                        # SAVE INPUT VIDEO
-                        # ======================================
+                        # ==================================
+                        # SAVE INPUT
+                        # ==================================
 
                         input_temp = (
                             tempfile.NamedTemporaryFile(
@@ -883,12 +1105,14 @@ elif st.session_state.page == "inspection":
                         input_temp.close()
 
 
-                        input_path = input_temp.name
+                        input_path = (
+                            input_temp.name
+                        )
 
 
-                        # ======================================
+                        # ==================================
                         # OPEN VIDEO
-                        # ======================================
+                        # ==================================
 
                         cap = cv2.VideoCapture(
                             input_path
@@ -928,9 +1152,9 @@ elif st.session_state.page == "inspection":
                             fps = 25
 
 
-                        # ======================================
-                        # OUTPUT FILE
-                        # ======================================
+                        # ==================================
+                        # OUTPUT VIDEO
+                        # ==================================
 
                         output_temp = (
                             tempfile.NamedTemporaryFile(
@@ -943,12 +1167,10 @@ elif st.session_state.page == "inspection":
                         output_temp.close()
 
 
-                        raw_output = output_temp.name
+                        raw_output = (
+                            output_temp.name
+                        )
 
-
-                        # ======================================
-                        # VIDEO WRITER
-                        # ======================================
 
                         fourcc = (
                             cv2.VideoWriter_fourcc(
@@ -976,59 +1198,58 @@ elif st.session_state.page == "inspection":
                             st.stop()
 
 
-                        # ======================================
-                        # DEFECT STORAGE
-                        # ======================================
+                        # ==================================
+                        # DEFECTS
+                        # ==================================
 
                         all_defects = {}
 
 
-                        # ======================================
-                        # LAST KNOWN BOXES
+                        # ==================================
+                        # LAST KNOWN BOX
                         #
-                        # Once a defect is detected,
-                        # its last box remains until
-                        # the video ends.
-                        # ======================================
+                        # Once detected, it stays until
+                        # video ends.
+                        # ==================================
 
                         last_boxes = []
 
 
-                        # ======================================
+                        # ==================================
                         # PROCESS EVERY FRAME
-                        # ======================================
+                        # ==================================
 
                         while True:
 
-                            ret, frame = cap.read()
-
-
-                            if not ret:
-                                break
-
-
-                            # ==================================
-                            # YOLO PREDICT
-                            #
-                            # NO model.track()
-                            # ==================================
-
-                            results = model.predict(
-                                source=frame,
-                                conf=0.10,
-                                verbose=False
+                            ret, frame = (
+                                cap.read()
                             )
 
 
-                            result = results[0]
+                            if not ret:
+
+                                break
+
+
+                            # IMPORTANT:
+                            # NO model.track()
+                            #
+                            # This avoids the tap/tracker
+                            # error.
+
+                            result = model.predict(
+                                source=frame,
+                                conf=0.10,
+                                verbose=False
+                            )[0]
 
 
                             current_boxes = []
 
 
-                            # ==================================
-                            # GET CURRENT DETECTIONS
-                            # ==================================
+                            # =================================
+                            # GET DETECTIONS
+                            # =================================
 
                             if (
                                 result.boxes is not None
@@ -1038,11 +1259,6 @@ elif st.session_state.page == "inspection":
 
                                 for box in result.boxes:
 
-
-                                    # --------------------------
-                                    # Coordinates
-                                    # --------------------------
-
                                     coords = (
                                         box.xyxy[0]
                                         .cpu()
@@ -1051,12 +1267,10 @@ elif st.session_state.page == "inspection":
                                     )
 
 
-                                    x1, y1, x2, y2 = coords
+                                    x1, y1, x2, y2 = (
+                                        coords
+                                    )
 
-
-                                    # --------------------------
-                                    # Confidence
-                                    # --------------------------
 
                                     confidence = float(
                                         box.conf[0]
@@ -1064,10 +1278,6 @@ elif st.session_state.page == "inspection":
                                         .item()
                                     )
 
-
-                                    # --------------------------
-                                    # Class
-                                    # --------------------------
 
                                     class_id = int(
                                         box.cls[0]
@@ -1082,10 +1292,6 @@ elif st.session_state.page == "inspection":
                                         ]
                                     )
 
-
-                                    # --------------------------
-                                    # Store current box
-                                    # --------------------------
 
                                     current_boxes.append(
                                         {
@@ -1105,9 +1311,7 @@ elif st.session_state.page == "inspection":
                                     )
 
 
-                                    # --------------------------
-                                    # Save defect
-                                    # --------------------------
+                                    # Save highest confidence
 
                                     if (
                                         defect_name
@@ -1132,18 +1336,9 @@ elif st.session_state.page == "inspection":
                                         ] = confidence
 
 
-                            # ==================================
-                            # IMPORTANT:
-                            #
-                            # If current detection exists,
-                            # update last known box.
-                            #
-                            # If current detection does NOT
-                            # exist, last box is NOT deleted.
-                            #
-                            # Therefore the box continues
-                            # until video END.
-                            # ==================================
+                            # =================================
+                            # PERSIST BOX UNTIL VIDEO END
+                            # =================================
 
                             if len(current_boxes) > 0:
 
@@ -1151,10 +1346,6 @@ elif st.session_state.page == "inspection":
                                     current_boxes
                                 )
 
-
-                            # ==================================
-                            # SELECT BOXES
-                            # ==================================
 
                             if len(current_boxes) > 0:
 
@@ -1169,23 +1360,18 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                            # ==================================
-                            # COPY FRAME
-                            # ==================================
+                            # =================================
+                            # DRAW
+                            # =================================
 
                             processed_frame = (
                                 frame.copy()
                             )
 
 
-                            # ==================================
-                            # DRAW BOXES
-                            # ==================================
-
                             for detection in (
                                 boxes_to_draw
                             ):
-
 
                                 x1, y1, x2, y2 = (
                                     detection["box"]
@@ -1202,9 +1388,7 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ------------------------------
                                 # RED BOX
-                                # ------------------------------
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1219,9 +1403,7 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ------------------------------
                                 # LABEL
-                                # ------------------------------
 
                                 label = (
                                     f"{name} "
@@ -1262,9 +1444,7 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ------------------------------
-                                # LABEL BACKGROUND
-                                # ------------------------------
+                                # Label background
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1290,9 +1470,7 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                                # ------------------------------
-                                # LABEL TEXT
-                                # ------------------------------
+                                # Label text
 
                                 cv2.putText(
                                     processed_frame,
@@ -1316,27 +1494,25 @@ elif st.session_state.page == "inspection":
                                 )
 
 
-                            # ==================================
-                            # WRITE FRAME
-                            # ==================================
+                            # Write frame
 
                             writer.write(
                                 processed_frame
                             )
 
 
-                        # ======================================
+                        # ==================================
                         # RELEASE
-                        # ======================================
+                        # ==================================
 
                         cap.release()
 
                         writer.release()
 
 
-                        # ======================================
-                        # BROWSER MP4
-                        # ======================================
+                        # ==================================
+                        # BROWSER COMPATIBLE
+                        # ==================================
 
                         final_video = (
                             convert_video_for_browser(
@@ -1344,10 +1520,6 @@ elif st.session_state.page == "inspection":
                             )
                         )
 
-
-                        # ======================================
-                        # SAVE VIDEO RESULT
-                        # ======================================
 
                         st.session_state.video_output = (
                             final_video
@@ -1373,9 +1545,7 @@ elif st.session_state.page == "inspection":
 
 
     # ========================================================
-    # ========================================================
-    # OUTPUT SECTION
-    # ========================================================
+    # OUTPUT
     # ========================================================
 
     with right:
@@ -1394,20 +1564,23 @@ elif st.session_state.page == "inspection":
             is not None
         ):
 
-
             st.write(
                 "**ANALYZED IMAGE**"
             )
 
 
-            # Small output image
-
             result_image = (
                 resize_for_display(
                     st.session_state.image_output,
-                    max_width=400,
-                    max_height=240
+                    400,
+                    240
                 )
+            )
+
+
+            st.markdown(
+                '<div class="output-media-box">',
+                unsafe_allow_html=True
             )
 
 
@@ -1417,14 +1590,16 @@ elif st.session_state.page == "inspection":
             )
 
 
+            st.markdown(
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+
             defects = (
                 st.session_state.image_defects
             )
 
-
-            # ------------------------------------------------
-            # BAD QUALITY IMAGE
-            # ------------------------------------------------
 
             if len(defects) > 0:
 
@@ -1445,21 +1620,23 @@ elif st.session_state.page == "inspection":
 
                 for defect in defects:
 
-                    st.write(
-                        f"🔴 **Defect:** "
-                        f"{defect['name']}"
+                    st.markdown(
+                        f"""
+                        <div class="defect-card">
+
+                        🔴 <b>Defect:</b>
+                        {defect["name"]}
+
+                        &nbsp;&nbsp;
+
+                        📊 <b>Confidence:</b>
+                        {defect["confidence"] * 100:.2f}%
+
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
 
-
-                    st.write(
-                        f"📊 **Confidence:** "
-                        f"{defect['confidence'] * 100:.2f}%"
-                    )
-
-
-            # ------------------------------------------------
-            # GOOD QUALITY IMAGE
-            # ------------------------------------------------
 
             else:
 
@@ -1482,52 +1659,24 @@ elif st.session_state.page == "inspection":
             is not None
         ):
 
-
             st.write(
                 "**ANALYZED VIDEO**"
             )
 
 
-            # ------------------------------------------------
-            # READ VIDEO
-            # ------------------------------------------------
+            # EXACT SMALL OUTPUT VIDEO
 
-            try:
-
-                with open(
-                    st.session_state.video_output,
-                    "rb"
-                ) as video_file:
-
-                    video_bytes = (
-                        video_file.read()
-                    )
-
-
-                # Small output video
-
-                st.video(
-                    video_bytes,
-                    format="video/mp4",
-                    width=400
-                )
-
-
-            except Exception as e:
-
-                st.error(
-                    f"❌ Unable to display output video: {e}"
-                )
+            show_video(
+                st.session_state.video_output,
+                400,
+                240
+            )
 
 
             defects = (
                 st.session_state.video_defects
             )
 
-
-            # ------------------------------------------------
-            # BAD QUALITY VIDEO
-            # ------------------------------------------------
 
             if len(defects) > 0:
 
@@ -1550,20 +1699,23 @@ elif st.session_state.page == "inspection":
                     defects.items()
                 ):
 
-                    st.write(
-                        f"🔴 **Defect:** {name}"
+                    st.markdown(
+                        f"""
+                        <div class="defect-card">
+
+                        🔴 <b>Defect:</b>
+                        {name}
+
+                        &nbsp;&nbsp;
+
+                        📊 <b>Confidence:</b>
+                        {confidence * 100:.2f}%
+
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
 
-
-                    st.write(
-                        f"📊 **Confidence:** "
-                        f"{confidence * 100:.2f}%"
-                    )
-
-
-            # ------------------------------------------------
-            # GOOD QUALITY VIDEO
-            # ------------------------------------------------
 
             else:
 
@@ -1578,7 +1730,7 @@ elif st.session_state.page == "inspection":
 
 
         # ====================================================
-        # BEFORE ANALYSIS
+        # WAITING
         # ====================================================
 
         else:
