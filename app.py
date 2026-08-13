@@ -93,6 +93,23 @@ st.markdown("""
 <style>
 
 /* ============================================================
+   COLORFUL APP BACKGROUND
+   ============================================================ */
+
+.stApp {
+    background:
+        linear-gradient(
+            135deg,
+            #f8f0ff 0%,
+            #eef7ff 45%,
+            #fff1f7 100%
+        );
+
+    min-height: 100vh;
+}
+
+
+/* ============================================================
    MAIN PAGE
    ============================================================ */
 
@@ -1656,8 +1673,6 @@ else:
                 )
 
 
-                # CLEAN DEFECT OUTPUT
-
                 for defect in defects:
 
                     render_html(f"""
@@ -1722,8 +1737,6 @@ else:
                     "### Detected Defects"
                 )
 
-
-                # CLEAN DEFECT OUTPUT
 
                 for name, confidence in (
                     defects.items()
