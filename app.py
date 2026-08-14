@@ -74,568 +74,594 @@ if "video_defects" not in st.session_state:
 
 
 # ============================================================
-# CSS
+# DARK THEME CSS
 # ============================================================
 
-st.markdown("""
-<style>
-
-/* ============================================================
-   BACKGROUND
-   ============================================================ */
-
-.stApp {
-    background:
-        radial-gradient(
-            circle at 8% 12%,
-            rgba(186,104,200,0.20) 0%,
-            transparent 27%
-        ),
-        radial-gradient(
-            circle at 92% 15%,
-            rgba(66,165,245,0.20) 0%,
-            transparent 29%
-        ),
-        radial-gradient(
-            circle at 18% 88%,
-            rgba(77,182,172,0.16) 0%,
-            transparent 28%
-        ),
-        radial-gradient(
-            circle at 90% 88%,
-            rgba(244,143,177,0.18) 0%,
-            transparent 30%
-        ),
-        linear-gradient(
-            135deg,
-            #f7efff 0%,
-            #edf7ff 45%,
-            #fff1f7 100%
-        );
-
-    min-height: 100vh;
-}
-
-
-/* ============================================================
-   PAGE SIZE
-   ============================================================ */
-
-.block-container {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-}
+st.markdown(
+    """
+    <style>
+
+    /* ========================================================
+       GLOBAL DARK BACKGROUND
+       ======================================================== */
+
+    .stApp {
+        min-height: 100vh;
+
+        background:
+            radial-gradient(
+                circle at 5% 8%,
+                rgba(124, 58, 237, 0.22) 0%,
+                transparent 28%
+            ),
+            radial-gradient(
+                circle at 95% 12%,
+                rgba(37, 99, 235, 0.20) 0%,
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 10% 90%,
+                rgba(14, 165, 233, 0.13) 0%,
+                transparent 27%
+            ),
+            radial-gradient(
+                circle at 92% 90%,
+                rgba(236, 72, 153, 0.14) 0%,
+                transparent 28%
+            ),
+            linear-gradient(
+                135deg,
+                #070b17 0%,
+                #0b1020 45%,
+                #100b1d 100%
+            );
+
+        color: #f1f5f9;
+    }
+
+
+    /* ========================================================
+       PAGE SIZE
+       ======================================================== */
+
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        max-width: 1450px;
+    }
+
+
+    /* ========================================================
+       REMOVE STREAMLIT DEFAULT HEADER
+       ======================================================== */
+
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+
+
+    /* ========================================================
+       MAIN TITLE
+       ======================================================== */
+
+    .main-title {
+        width: 100%;
+        min-height: 72px;
+
+        border: 2px solid rgba(139, 92, 246, 0.75);
+        border-radius: 16px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 0 20px;
+        margin-top: 0;
+        margin-bottom: 20px;
+
+        transform: translateY(12px);
+
+        overflow: hidden;
+        text-align: center;
+
+        font-size: 28px;
+        font-weight: 800;
+
+        color: #f5f3ff;
+
+        background:
+            linear-gradient(
+                90deg,
+                rgba(46, 16, 76, 0.92),
+                rgba(17, 42, 80, 0.92),
+                rgba(70, 20, 53, 0.92)
+            );
+
+        box-shadow:
+            0 8px 28px rgba(0, 0, 0, 0.40),
+            0 0 25px rgba(124, 58, 237, 0.12);
+    }
+
+
+    /* ========================================================
+       HEADINGS
+       ======================================================== */
+
+    .stApp h1,
+    .stApp h2,
+    .stApp h3,
+    .stApp h4,
+    .stApp h5,
+    .stApp h6 {
+        color: #f8fafc !important;
+        font-weight: 800 !important;
+        text-decoration: none !important;
+    }
+
+    h1 a,
+    h2 a,
+    h3 a,
+    h4 a,
+    h5 a,
+    h6 a {
+        display: none !important;
+    }
+
+
+    /* ========================================================
+       NORMAL CARDS
+       ======================================================== */
+
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 18px !important;
+
+        border: 1px solid rgba(148, 163, 184, 0.18) !important;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(22, 28, 48, 0.90),
+                rgba(13, 18, 34, 0.90)
+            ) !important;
+
+        box-shadow:
+            0 8px 28px rgba(0, 0, 0, 0.38) !important;
+
+        backdrop-filter: blur(12px);
+    }
+
+
+    /* ========================================================
+       AICW CARD
+       ======================================================== */
+
+    .aicw-card {
+        min-height: 255px;
+        border-radius: 18px;
+        padding: 25px;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(45, 25, 74, 0.96),
+                rgba(18, 42, 75, 0.94)
+            );
+
+        border: 1px solid rgba(139, 92, 246, 0.30);
+
+        box-shadow:
+            0 10px 30px rgba(0, 0, 0, 0.40);
+    }
+
+
+    /* ========================================================
+       AICW TITLE
+       ======================================================== */
+
+    .aicw-title {
+        font-size: 30px;
+        font-weight: 850;
+        color: #f5f3ff;
+        line-height: 1.2;
+        margin-bottom: 15px;
+    }
+
+
+    .aicw-subtitle {
+        font-size: 27px;
+        font-weight: 800;
+        color: #c4b5fd;
+        margin-bottom: 25px;
+    }
+
+
+    .aicw-capstone {
+        font-size: 22px;
+        font-weight: 800;
+        color: #e2e8f0;
+    }
+
 
+    /* ========================================================
+       WOMAN VISUAL
+       ======================================================== */
+
+    .woman-box {
+        text-align: center;
+        margin-top: -5px;
+        margin-bottom: 10px;
+    }
+
+    .woman-circle {
+        width: 100px;
+        height: 100px;
+
+        margin: auto;
+
+        border-radius: 50%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background:
+            linear-gradient(
+                145deg,
+                #312e81,
+                #1e3a8a
+            );
+
+        border:
+            2px solid rgba(167, 139, 250, 0.45);
+
+        box-shadow:
+            0 10px 28px rgba(0, 0, 0, 0.45);
+
+        font-size: 55px;
+    }
+
+    .yarn-small {
+        font-size: 24px;
+        margin-top: -25px;
+        margin-left: 65px;
+        position: relative;
+        z-index: 2;
+    }
+
+
+    /* ========================================================
+       PROJECT HEADING
+       ======================================================== */
+
+    .project-heading {
+        color: #c4b5fd;
+        font-size: 28px;
+        font-weight: 850;
+        margin-bottom: 15px;
+    }
+
+
+    /* ========================================================
+       PROJECT TEXT
+       ======================================================== */
+
+    .project-text {
+        color: #cbd5e1;
+        font-size: 15px;
+        line-height: 1.65;
+        margin-bottom: 12px;
+    }
+
+
+    /* ========================================================
+       EMAIL LINKS
+       ======================================================== */
+
+    div[data-testid="stVerticalBlockBorderWrapper"] a {
+        color: #93c5fd !important;
+        font-weight: 600;
+        text-decoration: none !important;
+    }
+
+
+    /* ========================================================
+       BUTTONS
+       ======================================================== */
+
+    .stButton > button {
+        width: 100% !important;
+        min-height: 48px !important;
+
+        border: none !important;
+        border-radius: 13px !important;
+
+        font-size: 16px !important;
+        font-weight: 800 !important;
+
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+
+        background:
+            linear-gradient(
+                135deg,
+                #7c3aed 0%,
+                #4f46e5 50%,
+                #2563eb 100%
+            ) !important;
+
+        box-shadow:
+            0 7px 20px rgba(79, 70, 229, 0.35) !important;
+
+        transition: 0.2s ease;
+    }
+
+    .stButton > button:hover {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+
+        background:
+            linear-gradient(
+                135deg,
+                #8b5cf6 0%,
+                #6366f1 50%,
+                #3b82f6 100%
+            ) !important;
+
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 10px 25px rgba(99, 102, 241, 0.45) !important;
+    }
+
+    .stButton > button p,
+    .stButton > button span,
+    .stButton > button div {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        font-weight: 800 !important;
+    }
+
+
+    /* ========================================================
+       FILE UPLOADER
+       ======================================================== */
+
+    section[data-testid="stFileUploaderDropzone"] {
+        background:
+            linear-gradient(
+                145deg,
+                rgba(20, 27, 46, 0.95),
+                rgba(12, 18, 32, 0.95)
+            ) !important;
 
-/* ============================================================
-   MAIN TITLE
-   ============================================================ */
-
-.main-title {
-    width: 100%;
-    height: 72px;
-
-    border: 2px solid #6a1b9a;
-    border-radius: 14px;
+        border-radius: 13px !important;
+
+        border:
+            1px dashed rgba(129, 140, 248, 0.45) !important;
+    }
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
-    padding: 0 20px;
+    section[data-testid="stFileUploaderDropzone"] button {
+        background:
+            linear-gradient(
+                135deg,
+                #1e293b,
+                #172554
+            ) !important;
 
-    margin-top: 0;
-    margin-bottom: 20px;
+        border:
+            1px solid rgba(129, 140, 248, 0.45) !important;
 
-    transform: translateY(12px);
+        border-radius: 10px !important;
 
-    overflow: hidden;
-
-    text-align: center;
+        color: #e2e8f0 !important;
+        -webkit-text-fill-color: #e2e8f0 !important;
 
-    font-size: 28px;
-    font-weight: 800;
+        font-weight: 700 !important;
 
-    color: #43218a;
+        min-height: 40px !important;
 
-    background:
-        linear-gradient(
-            90deg,
-            rgba(243,229,245,0.96),
-            rgba(227,242,253,0.96),
-            rgba(252,228,236,0.96)
-        );
+        box-shadow:
+            0 3px 10px rgba(0, 0, 0, 0.30) !important;
+    }
 
-    box-shadow:
-        0 5px 16px rgba(83,52,120,0.12);
-}
+    section[data-testid="stFileUploaderDropzone"] button:hover {
+        background:
+            linear-gradient(
+                135deg,
+                #312e81,
+                #1e40af
+            ) !important;
 
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
 
-/* ============================================================
-   HEADINGS
-   ============================================================ */
-
-.stApp h1,
-.stApp h2,
-.stApp h3,
-.stApp h4,
-.stApp h5,
-.stApp h6 {
-    font-weight: 800;
-    text-decoration: none !important;
-}
+    section[data-testid="stFileUploaderDropzone"] button p,
+    section[data-testid="stFileUploaderDropzone"] button span,
+    section[data-testid="stFileUploaderDropzone"] button div {
+        color: #e2e8f0 !important;
+        -webkit-text-fill-color: #e2e8f0 !important;
+        font-weight: 700 !important;
+    }
 
-h1 a,
-h2 a,
-h3 a,
-h4 a,
-h5 a,
-h6 a {
-    display: none !important;
-}
+    section[data-testid="stFileUploaderDropzone"] small {
+        color: #94a3b8 !important;
+    }
 
 
-/* ============================================================
-   NORMAL CARDS
-   ============================================================ */
+    /* ========================================================
+       RADIO
+       ======================================================== */
 
-div[data-testid="stVerticalBlockBorderWrapper"] {
+    div[data-testid="stRadio"] label {
+        font-weight: 600;
+        color: #cbd5e1 !important;
+    }
 
-    border-radius: 16px !important;
+    div[data-testid="stRadio"] p {
+        color: #cbd5e1 !important;
+    }
 
-    border: 1px solid rgba(120,100,160,0.22) !important;
 
-    background:
-        rgba(255,255,255,0.50) !important;
+    /* ========================================================
+       FILE UPLOADER LABEL
+       ======================================================== */
 
-    box-shadow:
-        0 5px 18px rgba(74,55,120,0.08) !important;
+    .stFileUploader label {
+        color: #e2e8f0 !important;
+        font-weight: 600 !important;
+    }
 
-    backdrop-filter: blur(7px);
-}
 
+    /* ========================================================
+       INPUT / RESULT LABELS
+       ======================================================== */
 
-/* ============================================================
-   AICW CARD
-   ============================================================ */
+    .stApp p,
+    .stApp label {
+        color: #cbd5e1;
+    }
 
-.aicw-card {
-    min-height: 255px;
+    .stApp strong,
+    .stApp b {
+        color: #f1f5f9;
+    }
 
-    border-radius: 16px;
 
-    padding: 25px;
+    /* ========================================================
+       GOOD QUALITY
+       ======================================================== */
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(246,236,255,0.96),
-            rgba(231,243,255,0.92)
-        );
+    .good-quality {
+        border: 2px solid #22c55e;
 
-    border: 1px solid rgba(106,27,154,0.20);
+        border-radius: 12px;
 
-    box-shadow:
-        0 8px 24px rgba(106,27,154,0.10);
-}
+        padding: 10px;
 
+        text-align: center;
 
-/* ============================================================
-   AICW TITLE
-   ============================================================ */
+        font-size: 21px;
 
-.aicw-title {
-    font-size: 30px;
-    font-weight: 850;
-    color: #243957;
-    line-height: 1.2;
-    margin-bottom: 15px;
-}
+        font-weight: bold;
 
+        color: #86efac;
 
-/* ============================================================
-   AICW SUBTITLE
-   ============================================================ */
+        background:
+            linear-gradient(
+                135deg,
+                rgba(20, 83, 45, 0.70),
+                rgba(22, 101, 52, 0.45)
+            );
 
-.aicw-subtitle {
-    font-size: 27px;
-    font-weight: 800;
-    color: #263957;
-    margin-bottom: 25px;
-}
+        box-shadow:
+            0 5px 18px rgba(34, 197, 94, 0.12);
+    }
 
 
-/* ============================================================
-   CAPSTONE
-   ============================================================ */
+    /* ========================================================
+       BAD QUALITY
+       ======================================================== */
 
-.aicw-capstone {
-    font-size: 22px;
-    font-weight: 800;
-    color: #263957;
-}
+    .bad-quality {
+        border: 2px solid #ef4444;
 
+        border-radius: 12px;
 
-/* ============================================================
-   WOMAN VISUAL
-   ============================================================ */
+        padding: 10px;
 
-.woman-box {
-    text-align: center;
+        text-align: center;
 
-    margin-top: -5px;
-    margin-bottom: 10px;
-}
+        font-size: 21px;
 
+        font-weight: bold;
 
-.woman-circle {
+        color: #fca5a5;
 
-    width: 100px;
-    height: 100px;
+        background:
+            linear-gradient(
+                135deg,
+                rgba(127, 29, 29, 0.75),
+                rgba(69, 10, 10, 0.60)
+            );
 
-    margin: auto;
+        box-shadow:
+            0 5px 18px rgba(239, 68, 68, 0.14);
+    }
 
-    border-radius: 50%;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* ========================================================
+       DEFECT CARD
+       ======================================================== */
 
-    background:
-        linear-gradient(
-            145deg,
-            #eadcff,
-            #dceeff
-        );
+    .defect-card {
+        border: 1px solid rgba(248, 113, 113, 0.55);
 
-    border:
-        2px solid rgba(106,27,154,0.16);
+        border-radius: 10px;
 
-    box-shadow:
-        0 8px 20px rgba(75,55,140,0.12);
+        padding: 11px 13px;
 
-    font-size: 55px;
-}
+        margin-top: 7px;
 
+        color: #fecaca;
 
-/* ============================================================
-   YARN BADGE
-   ============================================================ */
+        background:
+            linear-gradient(
+                135deg,
+                rgba(69, 10, 10, 0.82),
+                rgba(51, 18, 18, 0.72)
+            );
 
-.yarn-small {
+        box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.22);
+    }
 
-    font-size: 24px;
 
-    margin-top: -25px;
+    /* ========================================================
+       STREAMLIT INPUTS
+       ======================================================== */
 
-    margin-left: 65px;
+    input,
+    textarea,
+    select {
+        background-color: #111827 !important;
+        color: #e5e7eb !important;
+    }
 
-    position: relative;
 
-    z-index: 2;
-}
+    /* ========================================================
+       INFO MESSAGE
+       ======================================================== */
 
+    div[data-testid="stAlert"] {
+        background: rgba(30, 41, 59, 0.85) !important;
+        border: 1px solid rgba(96, 165, 250, 0.30) !important;
+        color: #dbeafe !important;
+    }
 
-/* ============================================================
-   PROJECT HEADING
-   ============================================================ */
 
-.project-heading {
-    color: #43218a;
+    /* ========================================================
+       SPINNER
+       ======================================================== */
 
-    font-size: 28px;
+    div[data-testid="stSpinner"] {
+        color: #c4b5fd !important;
+    }
 
-    font-weight: 850;
 
-    margin-bottom: 15px;
-}
-
-
-/* ============================================================
-   PROJECT TEXT
-   ============================================================ */
-
-.project-text {
-    color: #263952;
-
-    font-size: 15px;
-
-    line-height: 1.65;
-
-    margin-bottom: 12px;
-}
-
-
-/* ============================================================
-   EMAIL LINKS
-   ============================================================ */
-
-div[data-testid="stVerticalBlockBorderWrapper"] a {
-    color: #315bb5 !important;
-    font-weight: 600;
-    text-decoration: none !important;
-}
-
-
-/* ============================================================
-   NORMAL STREAMLIT BUTTONS
-   ============================================================ */
-
-.stButton > button {
-
-    width: 100% !important;
-
-    min-height: 48px !important;
-
-    border: none !important;
-
-    border-radius: 13px !important;
-
-    font-size: 16px !important;
-
-    font-weight: 800 !important;
-
-    color: #ffffff !important;
-
-    -webkit-text-fill-color: #ffffff !important;
-
-    background:
-        linear-gradient(
-            135deg,
-            #6a1b9a 0%,
-            #3949ab 50%,
-            #1976d2 100%
-        ) !important;
-
-    box-shadow:
-        0 6px 16px rgba(70,55,150,0.25) !important;
-}
-
-
-.stButton > button:hover {
-
-    color: #ffffff !important;
-
-    -webkit-text-fill-color: #ffffff !important;
-
-    background:
-        linear-gradient(
-            135deg,
-            #7b1fa2 0%,
-            #3f51b5 50%,
-            #1e88e5 100%
-        ) !important;
-
-    transform: translateY(-2px);
-}
-
-
-.stButton > button p,
-.stButton > button span,
-.stButton > button div {
-
-    color: #ffffff !important;
-
-    -webkit-text-fill-color: #ffffff !important;
-
-    font-weight: 800 !important;
-}
-
-
-/* ============================================================
-   UPLOAD AREA
-   ============================================================ */
-
-section[data-testid="stFileUploaderDropzone"] {
-
-    background:
-        rgba(248,250,255,0.90) !important;
-
-    border-radius: 12px !important;
-
-    border: 1px solid rgba(120,140,180,0.18) !important;
-}
-
-
-/* ============================================================
-   UPLOAD BUTTON - IMPORTANT FIX
-   ============================================================ */
-
-section[data-testid="stFileUploaderDropzone"] button {
-
-    background:
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #eef3ff
-        ) !important;
-
-    border: 1px solid #b7c4dc !important;
-
-    border-radius: 10px !important;
-
-    color: #263957 !important;
-
-    -webkit-text-fill-color: #263957 !important;
-
-    font-weight: 700 !important;
-
-    min-height: 40px !important;
-
-    box-shadow:
-        0 2px 6px rgba(60,80,120,0.08) !important;
-}
-
-
-/* ============================================================
-   UPLOAD BUTTON TEXT
-   ============================================================ */
-
-section[data-testid="stFileUploaderDropzone"] button p,
-section[data-testid="stFileUploaderDropzone"] button span,
-section[data-testid="stFileUploaderDropzone"] button div {
-
-    color: #263957 !important;
-
-    -webkit-text-fill-color: #263957 !important;
-
-    font-weight: 700 !important;
-}
-
-
-/* ============================================================
-   UPLOAD BUTTON HOVER
-   ============================================================ */
-
-section[data-testid="stFileUploaderDropzone"] button:hover {
-
-    background:
-        linear-gradient(
-            135deg,
-            #e8eaf6,
-            #e3f2fd
-        ) !important;
-
-    color: #263957 !important;
-
-    -webkit-text-fill-color: #263957 !important;
-}
-
-
-/* ============================================================
-   UPLOAD TEXT
-   ============================================================ */
-
-section[data-testid="stFileUploaderDropzone"] small {
-
-    color: #718096 !important;
-}
-
-
-/* ============================================================
-   RADIO
-   ============================================================ */
-
-div[data-testid="stRadio"] label {
-    font-weight: 600;
-    color: #263957;
-}
-
-
-/* ============================================================
-   GOOD QUALITY
-   ============================================================ */
-
-.good-quality {
-
-    border: 2px solid #2e7d32;
-
-    border-radius: 12px;
-
-    padding: 9px;
-
-    text-align: center;
-
-    font-size: 21px;
-
-    font-weight: bold;
-
-    color: #1b5e20;
-
-    background:
-        linear-gradient(
-            135deg,
-            #e8f5e9,
-            #f1f8e9
-        );
-}
-
-
-/* ============================================================
-   BAD QUALITY
-   ============================================================ */
-
-.bad-quality {
-
-    border: 2px solid #c62828;
-
-    border-radius: 12px;
-
-    padding: 9px;
-
-    text-align: center;
-
-    font-size: 21px;
-
-    font-weight: bold;
-
-    color: #b71c1c;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ffebee,
-            #fff5f5
-        );
-}
-
-
-/* ============================================================
-   DEFECT CARD
-   ============================================================ */
-
-.defect-card {
-
-    border: 1px solid #ef9a9a;
-
-    border-radius: 10px;
-
-    padding: 11px 13px;
-
-    margin-top: 7px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255,248,248,0.96),
-            rgba(255,242,245,0.92)
-        );
-}
-
-
-/* ============================================================
-   FILE UPLOAD LABEL
-   ============================================================ */
-
-.stFileUploader label {
-
-    color: #263957 !important;
-
-    font-weight: 600 !important;
-}
-
-</style>
-""", unsafe_allow_html=True)
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -646,8 +672,8 @@ def show_fixed_image(
     image,
     width=400,
     height=240,
-    border_color="#90caf9",
-    background="#f5faff"
+    border_color="#6366f1",
+    background="#111827"
 ):
 
     if isinstance(image, np.ndarray):
@@ -686,6 +712,7 @@ def show_fixed_image(
             align-items:center;
             justify-content:center;
             overflow:hidden;
+            box-shadow:0 6px 18px rgba(0,0,0,0.35);
         ">
             <img
                 src="data:image/png;base64,{encoded}"
@@ -711,8 +738,8 @@ def show_fixed_video(
     video_path,
     width=400,
     height=240,
-    border_color="#90caf9",
-    background="#f5faff"
+    border_color="#6366f1",
+    background="#111827"
 ):
 
     try:
@@ -737,6 +764,7 @@ def show_fixed_video(
                 align-items:center;
                 justify-content:center;
                 overflow:hidden;
+                box-shadow:0 6px 18px rgba(0,0,0,0.35);
             ">
                 <video
                     controls
@@ -777,7 +805,6 @@ def draw_yolo_boxes(frame, result):
     if result.boxes is None or len(result.boxes) == 0:
         return output, defects
 
-
     for box in result.boxes:
 
         coords = (
@@ -799,18 +826,18 @@ def draw_yolo_boxes(frame, result):
 
         defect_name = model.names[class_id]
 
-
-        defects.append({
-            "name": defect_name,
-            "confidence": confidence,
-            "box": (
-                x1,
-                y1,
-                x2,
-                y2
-            )
-        })
-
+        defects.append(
+            {
+                "name": defect_name,
+                "confidence": confidence,
+                "box": (
+                    x1,
+                    y1,
+                    x2,
+                    y2
+                )
+            }
+        )
 
         cv2.rectangle(
             output,
@@ -820,19 +847,14 @@ def draw_yolo_boxes(frame, result):
             6
         )
 
-
         label = (
             f"{defect_name} "
             f"{confidence * 100:.1f}%"
         )
 
-
         font = cv2.FONT_HERSHEY_SIMPLEX
-
         font_scale = 0.75
-
         thickness = 2
-
 
         text_size, _ = cv2.getTextSize(
             label,
@@ -841,14 +863,12 @@ def draw_yolo_boxes(frame, result):
             thickness
         )
 
-
         text_width, text_height = text_size
 
         label_y = max(
             y1,
             text_height + 15
         )
-
 
         cv2.rectangle(
             output,
@@ -864,7 +884,6 @@ def draw_yolo_boxes(frame, result):
             -1
         )
 
-
         cv2.putText(
             output,
             label,
@@ -874,11 +893,10 @@ def draw_yolo_boxes(frame, result):
             ),
             font,
             font_scale,
-            (255,255,255),
+            (255, 255, 255),
             thickness,
             cv2.LINE_AA
         )
-
 
     return output, defects
 
@@ -899,12 +917,10 @@ def convert_video_for_browser(input_path):
 
         return input_path
 
-
     output_path = tempfile.NamedTemporaryFile(
         delete=False,
         suffix=".mp4"
     ).name
-
 
     command = [
         ffmpeg,
@@ -922,7 +938,6 @@ def convert_video_for_browser(input_path):
         "-an",
         output_path
     ]
-
 
     try:
 
@@ -954,7 +969,6 @@ if st.session_state.page == "home":
         """,
         unsafe_allow_html=True
     )
-
 
     left, right = st.columns(
         [35, 65],
@@ -1013,9 +1027,7 @@ if st.session_state.page == "home":
                     unsafe_allow_html=True
                 )
 
-
         st.write("")
-
 
         if st.button(
             "🔍 PREDICT",
@@ -1023,7 +1035,6 @@ if st.session_state.page == "home":
         ):
 
             st.session_state.page = "inspection"
-
             st.rerun()
 
 
@@ -1042,7 +1053,6 @@ if st.session_state.page == "home":
                 unsafe_allow_html=True
             )
 
-
             st.markdown(
                 """
                 <div class="project-text">
@@ -1054,7 +1064,6 @@ if st.session_state.page == "home":
                 """,
                 unsafe_allow_html=True
             )
-
 
             st.markdown(
                 """
@@ -1068,7 +1077,6 @@ if st.session_state.page == "home":
                 """,
                 unsafe_allow_html=True
             )
-
 
             st.markdown(
                 """
@@ -1086,7 +1094,6 @@ if st.session_state.page == "home":
 
     st.write("")
 
-
     team, gmail, guide = st.columns(
         [1.35, 1.25, 0.9],
         gap="medium"
@@ -1101,25 +1108,12 @@ if st.session_state.page == "home":
 
         with st.container(border=True):
 
-            st.markdown(
-                "### 👩‍💻 TEAM MEMBERS"
-            )
+            st.markdown("### 👩‍💻 TEAM MEMBERS")
 
-            st.write(
-                "1. Gutti.Pavani Devi Priya"
-            )
-
-            st.write(
-                "2. Somasani.Sasi Priya"
-            )
-
-            st.write(
-                "3. Galidevara.Rama Devi"
-            )
-
-            st.write(
-                "4. Rambala.Harshitha Sai Lakshmi"
-            )
+            st.write("1. Gutti.Pavani Devi Priya")
+            st.write("2. Somasani.Sasi Priya")
+            st.write("3. Galidevara.Rama Devi")
+            st.write("4. Rambala.Harshitha Sai Lakshmi")
 
 
     # ========================================================
@@ -1130,9 +1124,7 @@ if st.session_state.page == "home":
 
         with st.container(border=True):
 
-            st.markdown(
-                "### 📧 GMAIL"
-            )
+            st.markdown("### 📧 GMAIL")
 
             st.markdown(
                 "gutthipavanidevipriya@gmail.com"
@@ -1159,21 +1151,13 @@ if st.session_state.page == "home":
 
         with st.container(border=True):
 
-            st.markdown(
-                "### 🎓 GUIDE NAME"
-            )
+            st.markdown("### 🎓 GUIDE NAME")
 
-            st.write(
-                "Md. Abdul Aziz"
-            )
+            st.write("Md. Abdul Aziz")
 
-            st.markdown(
-                "### DESIGNATION"
-            )
+            st.markdown("### DESIGNATION")
 
-            st.write(
-                "Co Lead & Trainer AICW"
-            )
+            st.write("Co Lead & Trainer AICW")
 
 
 # ============================================================
@@ -1208,7 +1192,6 @@ else:
 
         st.rerun()
 
-
     st.write("")
 
 
@@ -1226,10 +1209,7 @@ else:
 
         st.subheader("📥 INPUT")
 
-        st.write(
-            "Select Input Type:"
-        )
-
+        st.write("Select Input Type:")
 
         input_type = st.radio(
             "",
@@ -1259,25 +1239,21 @@ else:
                 key="image_upload"
             )
 
-
             if uploaded_image:
 
                 image = Image.open(
                     uploaded_image
                 ).convert("RGB")
 
-
                 st.write("**INPUT PREVIEW**")
-
 
                 show_fixed_image(
                     image,
                     width=400,
                     height=240,
-                    border_color="#90caf9",
-                    background="#f5faff"
+                    border_color="#6366f1",
+                    background="#111827"
                 )
-
 
                 if st.button(
                     "🔍 Analyze Image",
@@ -1294,14 +1270,12 @@ else:
                             verbose=False
                         )[0]
 
-
                     output_image, defects = (
                         draw_yolo_boxes(
                             np.array(image),
                             result
                         )
                     )
-
 
                     st.session_state.image_output = (
                         output_image
@@ -1312,7 +1286,6 @@ else:
                     )
 
                     st.session_state.video_output = None
-
                     st.session_state.video_defects = {}
 
                     st.rerun()
@@ -1328,25 +1301,21 @@ else:
                 "Capture Yarn"
             )
 
-
             if camera_image:
 
                 image = Image.open(
                     camera_image
                 ).convert("RGB")
 
-
                 st.write("**CAMERA PREVIEW**")
-
 
                 show_fixed_image(
                     image,
                     width=400,
                     height=240,
-                    border_color="#90caf9",
-                    background="#f5faff"
+                    border_color="#6366f1",
+                    background="#111827"
                 )
-
 
                 if st.button(
                     "🔍 Analyze Camera",
@@ -1363,14 +1332,12 @@ else:
                             verbose=False
                         )[0]
 
-
                     output_image, defects = (
                         draw_yolo_boxes(
                             np.array(image),
                             result
                         )
                     )
-
 
                     st.session_state.image_output = (
                         output_image
@@ -1381,7 +1348,6 @@ else:
                     )
 
                     st.session_state.video_output = None
-
                     st.session_state.video_defects = {}
 
                     st.rerun()
@@ -1404,7 +1370,6 @@ else:
                 key="video_upload"
             )
 
-
             if uploaded_video:
 
                 preview_file = tempfile.NamedTemporaryFile(
@@ -1412,25 +1377,21 @@ else:
                     suffix=".mp4"
                 )
 
-
                 preview_file.write(
                     uploaded_video.getvalue()
                 )
 
                 preview_file.close()
 
-
                 st.write("**INPUT VIDEO**")
-
 
                 show_fixed_video(
                     preview_file.name,
                     width=400,
                     height=240,
-                    border_color="#90caf9",
-                    background="#f5faff"
+                    border_color="#6366f1",
+                    background="#111827"
                 )
-
 
                 if st.button(
                     "🔍 Analyze Video",
@@ -1446,21 +1407,17 @@ else:
                             suffix=".mp4"
                         )
 
-
                         input_temp.write(
                             uploaded_video.getvalue()
                         )
 
                         input_temp.close()
 
-
                         input_path = input_temp.name
-
 
                         cap = cv2.VideoCapture(
                             input_path
                         )
-
 
                         if not cap.isOpened():
 
@@ -1469,7 +1426,6 @@ else:
                             )
 
                             st.stop()
-
 
                         width = int(
                             cap.get(
@@ -1487,10 +1443,8 @@ else:
                             cv2.CAP_PROP_FPS
                         )
 
-
                         if fps <= 0:
                             fps = 25
-
 
                         output_temp = tempfile.NamedTemporaryFile(
                             delete=False,
@@ -1499,14 +1453,11 @@ else:
 
                         output_temp.close()
 
-
                         raw_output = output_temp.name
-
 
                         fourcc = cv2.VideoWriter_fourcc(
                             *"mp4v"
                         )
-
 
                         writer = cv2.VideoWriter(
                             raw_output,
@@ -1514,7 +1465,6 @@ else:
                             fps,
                             (width, height)
                         )
-
 
                         if not writer.isOpened():
 
@@ -1526,20 +1476,15 @@ else:
 
                             st.stop()
 
-
                         all_defects = {}
-
                         last_boxes = []
-
 
                         while True:
 
                             ret, frame = cap.read()
 
-
                             if not ret:
                                 break
-
 
                             result = model.predict(
                                 source=frame,
@@ -1547,9 +1492,7 @@ else:
                                 verbose=False
                             )[0]
 
-
                             current_boxes = []
-
 
                             if (
                                 result.boxes is not None
@@ -1565,9 +1508,7 @@ else:
                                         .astype(int)
                                     )
 
-
                                     x1, y1, x2, y2 = coords
-
 
                                     confidence = float(
                                         box.conf[0]
@@ -1575,32 +1516,30 @@ else:
                                         .item()
                                     )
 
-
                                     class_id = int(
                                         box.cls[0]
                                         .cpu()
                                         .item()
                                     )
 
-
                                     defect_name = model.names[
                                         class_id
                                     ]
 
-
-                                    current_boxes.append({
-                                        "box": (
-                                            x1,
-                                            y1,
-                                            x2,
-                                            y2
-                                        ),
-                                        "name":
-                                            defect_name,
-                                        "confidence":
-                                            confidence
-                                    })
-
+                                    current_boxes.append(
+                                        {
+                                            "box": (
+                                                x1,
+                                                y1,
+                                                x2,
+                                                y2
+                                            ),
+                                            "name":
+                                                defect_name,
+                                            "confidence":
+                                                confidence
+                                        }
+                                    )
 
                                     if defect_name not in all_defects:
 
@@ -1616,34 +1555,27 @@ else:
                                             defect_name
                                         ] = confidence
 
-
                             if len(current_boxes) > 0:
-
                                 last_boxes = current_boxes
 
-
                             if len(current_boxes) > 0:
-
                                 boxes_to_draw = current_boxes
-
                             else:
-
                                 boxes_to_draw = last_boxes
-
 
                             processed_frame = frame.copy()
 
-
                             for detection in boxes_to_draw:
 
-                                x1, y1, x2, y2 = detection["box"]
+                                x1, y1, x2, y2 = (
+                                    detection["box"]
+                                )
 
                                 name = detection["name"]
 
-                                confidence = detection[
-                                    "confidence"
-                                ]
-
+                                confidence = (
+                                    detection["confidence"]
+                                )
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1653,21 +1585,17 @@ else:
                                     6
                                 )
 
-
                                 label = (
                                     f"{name} "
                                     f"{confidence * 100:.1f}%"
                                 )
-
 
                                 font = (
                                     cv2.FONT_HERSHEY_SIMPLEX
                                 )
 
                                 font_scale = 0.75
-
                                 thickness = 2
-
 
                                 text_size, _ = (
                                     cv2.getTextSize(
@@ -1678,17 +1606,14 @@ else:
                                     )
                                 )
 
-
                                 text_width, text_height = (
                                     text_size
                                 )
-
 
                                 label_y = max(
                                     y1,
                                     text_height + 15
                                 )
-
 
                                 cv2.rectangle(
                                     processed_frame,
@@ -1708,7 +1633,6 @@ else:
                                     -1
                                 )
 
-
                                 cv2.putText(
                                     processed_frame,
                                     label,
@@ -1718,28 +1642,23 @@ else:
                                     ),
                                     font,
                                     font_scale,
-                                    (255,255,255),
+                                    (255, 255, 255),
                                     thickness,
                                     cv2.LINE_AA
                                 )
-
 
                             writer.write(
                                 processed_frame
                             )
 
-
                         cap.release()
-
                         writer.release()
-
 
                         final_video = (
                             convert_video_for_browser(
                                 raw_output
                             )
                         )
-
 
                         st.session_state.video_output = (
                             final_video
@@ -1750,9 +1669,7 @@ else:
                         )
 
                         st.session_state.image_output = None
-
                         st.session_state.image_defects = []
-
 
                         st.rerun()
 
@@ -1778,18 +1695,15 @@ else:
                 "**ANALYZED IMAGE**"
             )
 
-
             show_fixed_image(
                 st.session_state.image_output,
                 width=500,
                 height=300,
-                border_color="#ce93d8",
-                background="#fcf5ff"
+                border_color="#8b5cf6",
+                background="#111827"
             )
 
-
             defects = st.session_state.image_defects
-
 
             if len(defects) > 0:
 
@@ -1802,18 +1716,15 @@ else:
                     unsafe_allow_html=True
                 )
 
-
-                st.write(
-                    "### Detected Defects"
-                )
-
+                st.write("### Detected Defects")
 
                 for defect in defects:
 
                     st.markdown(
                         f"""
                         <div class="defect-card">
-                            🔴 <b>Defect:</b> {defect["name"]}
+                            🔴 <b>Defect:</b>
+                            {defect["name"]}
                             &nbsp;&nbsp;&nbsp;
                             📊 <b>Confidence:</b>
                             {defect["confidence"] * 100:.2f}%
@@ -1821,7 +1732,6 @@ else:
                         """,
                         unsafe_allow_html=True
                     )
-
 
             else:
 
@@ -1845,18 +1755,15 @@ else:
                 "**ANALYZED VIDEO**"
             )
 
-
             show_fixed_video(
                 st.session_state.video_output,
                 width=500,
                 height=300,
-                border_color="#ce93d8",
-                background="#fcf5ff"
+                border_color="#8b5cf6",
+                background="#111827"
             )
 
-
             defects = st.session_state.video_defects
-
 
             if len(defects) > 0:
 
@@ -1869,18 +1776,15 @@ else:
                     unsafe_allow_html=True
                 )
 
-
-                st.write(
-                    "### Detected Defects"
-                )
-
+                st.write("### Detected Defects")
 
                 for name, confidence in defects.items():
 
                     st.markdown(
                         f"""
                         <div class="defect-card">
-                            🔴 <b>Defect:</b> {name}
+                            🔴 <b>Defect:</b>
+                            {name}
                             &nbsp;&nbsp;&nbsp;
                             📊 <b>Confidence:</b>
                             {confidence * 100:.2f}%
@@ -1888,7 +1792,6 @@ else:
                         """,
                         unsafe_allow_html=True
                     )
-
 
             else:
 
