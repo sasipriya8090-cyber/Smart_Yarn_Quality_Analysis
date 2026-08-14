@@ -74,7 +74,7 @@ if "video_defects" not in st.session_state:
 
 
 # ============================================================
-# DARK PROFESSIONAL THEME
+# DARK THEME CSS
 # ============================================================
 
 st.markdown(
@@ -82,7 +82,7 @@ st.markdown(
     <style>
 
     /* ========================================================
-       MAIN BACKGROUND
+       GLOBAL DARK BACKGROUND
        ======================================================== */
 
     .stApp {
@@ -121,7 +121,7 @@ st.markdown(
 
 
     /* ========================================================
-       PAGE WIDTH
+       PAGE SIZE
        ======================================================== */
 
     .block-container {
@@ -132,7 +132,7 @@ st.markdown(
 
 
     /* ========================================================
-       STREAMLIT HEADER
+       REMOVE STREAMLIT DEFAULT HEADER
        ======================================================== */
 
     header[data-testid="stHeader"] {
@@ -217,7 +217,7 @@ st.markdown(
 
 
     /* ========================================================
-       NORMAL CONTAINERS
+       NORMAL CARDS
        ======================================================== */
 
     div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -240,43 +240,30 @@ st.markdown(
 
 
     /* ========================================================
-       SECOND PAGE INPUT / OUTPUT BOX
+       AICW CARD
        ======================================================== */
 
-    .inspection-box {
-        border: 1px solid rgba(129, 140, 248, 0.35);
-
-        border-radius: 20px;
-
-        padding: 22px;
-
-        min-height: 570px;
+    .aicw-card {
+        min-height: 255px;
+        border-radius: 18px;
+        padding: 25px;
 
         background:
             linear-gradient(
                 145deg,
-                rgba(20, 27, 48, 0.94),
-                rgba(11, 17, 32, 0.94)
+                rgba(45, 25, 74, 0.96),
+                rgba(18, 42, 75, 0.94)
             );
 
+        border: 1px solid rgba(139, 92, 246, 0.30);
+
         box-shadow:
-            0 10px 32px rgba(0, 0, 0, 0.40),
-            inset 0 0 25px rgba(99, 102, 241, 0.04);
-
-        backdrop-filter: blur(12px);
-    }
-
-
-    .inspection-box-title {
-        font-size: 25px;
-        font-weight: 850;
-        color: #f8fafc;
-        margin-bottom: 18px;
+            0 10px 30px rgba(0, 0, 0, 0.40);
     }
 
 
     /* ========================================================
-       AICW
+       AICW TITLE
        ======================================================== */
 
     .aicw-title {
@@ -287,12 +274,14 @@ st.markdown(
         margin-bottom: 15px;
     }
 
+
     .aicw-subtitle {
         font-size: 27px;
         font-weight: 800;
         color: #c4b5fd;
         margin-bottom: 25px;
     }
+
 
     .aicw-capstone {
         font-size: 22px;
@@ -302,7 +291,7 @@ st.markdown(
 
 
     /* ========================================================
-       WOMAN ICON
+       WOMAN VISUAL
        ======================================================== */
 
     .woman-box {
@@ -349,7 +338,7 @@ st.markdown(
 
 
     /* ========================================================
-       PROJECT
+       PROJECT HEADING
        ======================================================== */
 
     .project-heading {
@@ -358,6 +347,11 @@ st.markdown(
         font-weight: 850;
         margin-bottom: 15px;
     }
+
+
+    /* ========================================================
+       PROJECT TEXT
+       ======================================================== */
 
     .project-text {
         color: #cbd5e1;
@@ -368,7 +362,7 @@ st.markdown(
 
 
     /* ========================================================
-       EMAIL
+       EMAIL LINKS
        ======================================================== */
 
     div[data-testid="stVerticalBlockBorderWrapper"] a {
@@ -379,7 +373,7 @@ st.markdown(
 
 
     /* ========================================================
-       BUTTON
+       BUTTONS
        ======================================================== */
 
     .stButton > button {
@@ -454,6 +448,7 @@ st.markdown(
             1px dashed rgba(129, 140, 248, 0.45) !important;
     }
 
+
     section[data-testid="stFileUploaderDropzone"] button {
         background:
             linear-gradient(
@@ -518,7 +513,17 @@ st.markdown(
 
 
     /* ========================================================
-       GENERAL TEXT
+       FILE UPLOADER LABEL
+       ======================================================== */
+
+    .stFileUploader label {
+        color: #e2e8f0 !important;
+        font-weight: 600 !important;
+    }
+
+
+    /* ========================================================
+       INPUT / RESULT LABELS
        ======================================================== */
 
     .stApp p,
@@ -529,11 +534,6 @@ st.markdown(
     .stApp strong,
     .stApp b {
         color: #f1f5f9;
-    }
-
-    .stFileUploader label {
-        color: #e2e8f0 !important;
-        font-weight: 600 !important;
     }
 
 
@@ -627,13 +627,34 @@ st.markdown(
 
 
     /* ========================================================
-       INFO
+       STREAMLIT INPUTS
+       ======================================================== */
+
+    input,
+    textarea,
+    select {
+        background-color: #111827 !important;
+        color: #e5e7eb !important;
+    }
+
+
+    /* ========================================================
+       INFO MESSAGE
        ======================================================== */
 
     div[data-testid="stAlert"] {
         background: rgba(30, 41, 59, 0.85) !important;
         border: 1px solid rgba(96, 165, 250, 0.30) !important;
         color: #dbeafe !important;
+    }
+
+
+    /* ========================================================
+       SPINNER
+       ======================================================== */
+
+    div[data-testid="stSpinner"] {
+        color: #c4b5fd !important;
     }
 
 
@@ -998,7 +1019,6 @@ if st.session_state.page == "home":
                         <div class="woman-circle">
                             👩‍💻
                         </div>
-
                         <div class="yarn-small">
                             🧶
                         </div>
@@ -1015,7 +1035,6 @@ if st.session_state.page == "home":
         ):
 
             st.session_state.page = "inspection"
-
             st.rerun()
 
 
@@ -1158,7 +1177,7 @@ else:
 
 
     # ========================================================
-    # BACK BUTTON
+    # BACK
     # ========================================================
 
     if st.button("⬅ Back"):
@@ -1173,13 +1192,8 @@ else:
 
         st.rerun()
 
-
     st.write("")
 
-
-    # ========================================================
-    # INPUT / OUTPUT COLUMNS
-    # ========================================================
 
     left, right = st.columns(
         [1, 1],
@@ -1188,698 +1202,615 @@ else:
 
 
     # ========================================================
-    # INPUT BOX
+    # INPUT
     # ========================================================
 
     with left:
 
-        with st.container(border=True):
+        st.subheader("📥 INPUT")
 
-            st.markdown(
-                """
-                <div class="inspection-box-title">
-                    📥 INPUT
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        st.write("Select Input Type:")
 
-            st.write("Select Input Type:")
+        input_type = st.radio(
+            "",
+            [
+                "🖼️ Image",
+                "📷 Camera",
+                "🎥 Video"
+            ],
+            horizontal=True
+        )
 
-            input_type = st.radio(
-                "",
-                [
-                    "🖼️ Image",
-                    "📷 Camera",
-                    "🎥 Video"
+
+        # ====================================================
+        # IMAGE
+        # ====================================================
+
+        if input_type == "🖼️ Image":
+
+            uploaded_image = st.file_uploader(
+                "Upload Image",
+                type=[
+                    "jpg",
+                    "jpeg",
+                    "png",
+                    "webp"
                 ],
-                horizontal=True
+                key="image_upload"
             )
 
+            if uploaded_image:
 
-            # ====================================================
-            # IMAGE INPUT
-            # ====================================================
+                image = Image.open(
+                    uploaded_image
+                ).convert("RGB")
 
-            if input_type == "🖼️ Image":
+                st.write("**INPUT PREVIEW**")
 
-                uploaded_image = st.file_uploader(
-                    "Upload Image",
-                    type=[
-                        "jpg",
-                        "jpeg",
-                        "png",
-                        "webp"
-                    ],
-                    key="image_upload"
+                show_fixed_image(
+                    image,
+                    width=400,
+                    height=240,
+                    border_color="#6366f1",
+                    background="#111827"
                 )
 
-                if uploaded_image:
+                if st.button(
+                    "🔍 Analyze Image",
+                    use_container_width=True
+                ):
 
-                    image = Image.open(
-                        uploaded_image
-                    ).convert("RGB")
-
-                    st.write("**INPUT PREVIEW**")
-
-                    show_fixed_image(
-                        image,
-                        width=400,
-                        height=240,
-                        border_color="#6366f1",
-                        background="#111827"
-                    )
-
-                    if st.button(
-                        "🔍 Analyze Image",
-                        use_container_width=True
+                    with st.spinner(
+                        "Analyzing yarn..."
                     ):
 
-                        with st.spinner(
-                            "Analyzing yarn..."
-                        ):
+                        result = model.predict(
+                            source=np.array(image),
+                            conf=0.15,
+                            verbose=False
+                        )[0]
 
-                            result = model.predict(
-                                source=np.array(image),
-                                conf=0.15,
-                                verbose=False
-                            )[0]
-
-                        output_image, defects = (
-                            draw_yolo_boxes(
-                                np.array(image),
-                                result
-                            )
+                    output_image, defects = (
+                        draw_yolo_boxes(
+                            np.array(image),
+                            result
                         )
+                    )
 
-                        st.session_state.image_output = (
-                            output_image
-                        )
+                    st.session_state.image_output = (
+                        output_image
+                    )
 
-                        st.session_state.image_defects = (
-                            defects
-                        )
+                    st.session_state.image_defects = (
+                        defects
+                    )
 
-                        st.session_state.video_output = None
-                        st.session_state.video_defects = {}
+                    st.session_state.video_output = None
+                    st.session_state.video_defects = {}
 
-                        st.rerun()
+                    st.rerun()
 
 
-            # ====================================================
-            # CAMERA INPUT
-            # ====================================================
+        # ====================================================
+        # CAMERA
+        # ====================================================
 
-            elif input_type == "📷 Camera":
+        elif input_type == "📷 Camera":
 
-                camera_image = st.camera_input(
-                    "Capture Yarn"
+            camera_image = st.camera_input(
+                "Capture Yarn"
+            )
+
+            if camera_image:
+
+                image = Image.open(
+                    camera_image
+                ).convert("RGB")
+
+                st.write("**CAMERA PREVIEW**")
+
+                show_fixed_image(
+                    image,
+                    width=400,
+                    height=240,
+                    border_color="#6366f1",
+                    background="#111827"
                 )
 
-                if camera_image:
+                if st.button(
+                    "🔍 Analyze Camera",
+                    use_container_width=True
+                ):
 
-                    image = Image.open(
-                        camera_image
-                    ).convert("RGB")
-
-                    st.write("**CAMERA PREVIEW**")
-
-                    show_fixed_image(
-                        image,
-                        width=400,
-                        height=240,
-                        border_color="#6366f1",
-                        background="#111827"
-                    )
-
-                    if st.button(
-                        "🔍 Analyze Camera",
-                        use_container_width=True
+                    with st.spinner(
+                        "Analyzing yarn..."
                     ):
 
-                        with st.spinner(
-                            "Analyzing yarn..."
-                        ):
+                        result = model.predict(
+                            source=np.array(image),
+                            conf=0.15,
+                            verbose=False
+                        )[0]
 
-                            result = model.predict(
-                                source=np.array(image),
-                                conf=0.15,
-                                verbose=False
-                            )[0]
-
-                        output_image, defects = (
-                            draw_yolo_boxes(
-                                np.array(image),
-                                result
-                            )
+                    output_image, defects = (
+                        draw_yolo_boxes(
+                            np.array(image),
+                            result
                         )
+                    )
 
-                        st.session_state.image_output = (
-                            output_image
-                        )
+                    st.session_state.image_output = (
+                        output_image
+                    )
 
-                        st.session_state.image_defects = (
-                            defects
-                        )
+                    st.session_state.image_defects = (
+                        defects
+                    )
 
-                        st.session_state.video_output = None
-                        st.session_state.video_defects = {}
+                    st.session_state.video_output = None
+                    st.session_state.video_defects = {}
 
-                        st.rerun()
+                    st.rerun()
 
 
-            # ====================================================
-            # VIDEO INPUT
-            # ====================================================
+        # ====================================================
+        # VIDEO
+        # ====================================================
 
-            else:
+        else:
 
-                uploaded_video = st.file_uploader(
-                    "Upload Video",
-                    type=[
-                        "mp4",
-                        "avi",
-                        "mov",
-                        "mkv"
-                    ],
-                    key="video_upload"
+            uploaded_video = st.file_uploader(
+                "Upload Video",
+                type=[
+                    "mp4",
+                    "avi",
+                    "mov",
+                    "mkv"
+                ],
+                key="video_upload"
+            )
+
+            if uploaded_video:
+
+                preview_file = tempfile.NamedTemporaryFile(
+                    delete=False,
+                    suffix=".mp4"
                 )
 
-                if uploaded_video:
+                preview_file.write(
+                    uploaded_video.getvalue()
+                )
 
-                    preview_file = tempfile.NamedTemporaryFile(
-                        delete=False,
-                        suffix=".mp4"
-                    )
+                preview_file.close()
 
-                    preview_file.write(
-                        uploaded_video.getvalue()
-                    )
+                st.write("**INPUT VIDEO**")
 
-                    preview_file.close()
+                show_fixed_video(
+                    preview_file.name,
+                    width=400,
+                    height=240,
+                    border_color="#6366f1",
+                    background="#111827"
+                )
 
-                    st.write("**INPUT VIDEO**")
+                if st.button(
+                    "🔍 Analyze Video",
+                    use_container_width=True
+                ):
 
-                    show_fixed_video(
-                        preview_file.name,
-                        width=400,
-                        height=240,
-                        border_color="#6366f1",
-                        background="#111827"
-                    )
-
-                    if st.button(
-                        "🔍 Analyze Video",
-                        use_container_width=True
+                    with st.spinner(
+                        "Analyzing video... Please wait."
                     ):
 
-                        with st.spinner(
-                            "Analyzing video... Please wait."
-                        ):
+                        input_temp = tempfile.NamedTemporaryFile(
+                            delete=False,
+                            suffix=".mp4"
+                        )
 
-                            input_temp = tempfile.NamedTemporaryFile(
-                                delete=False,
-                                suffix=".mp4"
+                        input_temp.write(
+                            uploaded_video.getvalue()
+                        )
+
+                        input_temp.close()
+
+                        input_path = input_temp.name
+
+                        cap = cv2.VideoCapture(
+                            input_path
+                        )
+
+                        if not cap.isOpened():
+
+                            st.error(
+                                "❌ Unable to open uploaded video."
                             )
 
-                            input_temp.write(
-                                uploaded_video.getvalue()
+                            st.stop()
+
+                        width = int(
+                            cap.get(
+                                cv2.CAP_PROP_FRAME_WIDTH
                             )
+                        )
 
-                            input_temp.close()
-
-                            input_path = input_temp.name
-
-                            cap = cv2.VideoCapture(
-                                input_path
+                        height = int(
+                            cap.get(
+                                cv2.CAP_PROP_FRAME_HEIGHT
                             )
+                        )
 
-                            if not cap.isOpened():
+                        fps = cap.get(
+                            cv2.CAP_PROP_FPS
+                        )
 
-                                st.error(
-                                    "❌ Unable to open uploaded video."
-                                )
+                        if fps <= 0:
+                            fps = 25
 
-                                st.stop()
+                        output_temp = tempfile.NamedTemporaryFile(
+                            delete=False,
+                            suffix=".mp4"
+                        )
 
+                        output_temp.close()
 
-                            width = int(
-                                cap.get(
-                                    cv2.CAP_PROP_FRAME_WIDTH
-                                )
-                            )
+                        raw_output = output_temp.name
 
-                            height = int(
-                                cap.get(
-                                    cv2.CAP_PROP_FRAME_HEIGHT
-                                )
-                            )
+                        fourcc = cv2.VideoWriter_fourcc(
+                            *"mp4v"
+                        )
 
-                            fps = cap.get(
-                                cv2.CAP_PROP_FPS
-                            )
+                        writer = cv2.VideoWriter(
+                            raw_output,
+                            fourcc,
+                            fps,
+                            (width, height)
+                        )
 
-                            if fps <= 0:
-                                fps = 25
-
-
-                            output_temp = tempfile.NamedTemporaryFile(
-                                delete=False,
-                                suffix=".mp4"
-                            )
-
-                            output_temp.close()
-
-                            raw_output = output_temp.name
-
-
-                            fourcc = cv2.VideoWriter_fourcc(
-                                *"mp4v"
-                            )
-
-                            writer = cv2.VideoWriter(
-                                raw_output,
-                                fourcc,
-                                fps,
-                                (width, height)
-                            )
-
-
-                            if not writer.isOpened():
-
-                                cap.release()
-
-                                st.error(
-                                    "❌ Unable to create output video."
-                                )
-
-                                st.stop()
-
-
-                            all_defects = {}
-
-                            last_boxes = []
-
-
-                            # =================================================
-                            # PROCESS VIDEO FRAME BY FRAME
-                            # =================================================
-
-                            while True:
-
-                                ret, frame = cap.read()
-
-                                if not ret:
-                                    break
-
-
-                                result = model.predict(
-                                    source=frame,
-                                    conf=0.10,
-                                    verbose=False
-                                )[0]
-
-
-                                current_boxes = []
-
-
-                                if (
-                                    result.boxes is not None
-                                    and len(result.boxes) > 0
-                                ):
-
-                                    for box in result.boxes:
-
-                                        coords = (
-                                            box.xyxy[0]
-                                            .cpu()
-                                            .numpy()
-                                            .astype(int)
-                                        )
-
-                                        x1, y1, x2, y2 = coords
-
-
-                                        confidence = float(
-                                            box.conf[0]
-                                            .cpu()
-                                            .item()
-                                        )
-
-
-                                        class_id = int(
-                                            box.cls[0]
-                                            .cpu()
-                                            .item()
-                                        )
-
-
-                                        defect_name = (
-                                            model.names[
-                                                class_id
-                                            ]
-                                        )
-
-
-                                        current_boxes.append(
-                                            {
-                                                "box": (
-                                                    x1,
-                                                    y1,
-                                                    x2,
-                                                    y2
-                                                ),
-                                                "name":
-                                                    defect_name,
-                                                "confidence":
-                                                    confidence
-                                            }
-                                        )
-
-
-                                        if (
-                                            defect_name
-                                            not in all_defects
-                                        ):
-
-                                            all_defects[
-                                                defect_name
-                                            ] = confidence
-
-                                        elif (
-                                            confidence
-                                            >
-                                            all_defects[
-                                                defect_name
-                                            ]
-                                        ):
-
-                                            all_defects[
-                                                defect_name
-                                            ] = confidence
-
-
-                                if len(current_boxes) > 0:
-                                    last_boxes = current_boxes
-
-
-                                if len(current_boxes) > 0:
-                                    boxes_to_draw = current_boxes
-                                else:
-                                    boxes_to_draw = last_boxes
-
-
-                                processed_frame = frame.copy()
-
-
-                                # =================================================
-                                # DRAW YOLO BOXES
-                                # =================================================
-
-                                for detection in boxes_to_draw:
-
-                                    x1, y1, x2, y2 = (
-                                        detection["box"]
-                                    )
-
-                                    name = detection["name"]
-
-                                    confidence = (
-                                        detection["confidence"]
-                                    )
-
-
-                                    cv2.rectangle(
-                                        processed_frame,
-                                        (x1, y1),
-                                        (x2, y2),
-                                        (0, 0, 255),
-                                        6
-                                    )
-
-
-                                    label = (
-                                        f"{name} "
-                                        f"{confidence * 100:.1f}%"
-                                    )
-
-
-                                    font = (
-                                        cv2.FONT_HERSHEY_SIMPLEX
-                                    )
-
-                                    font_scale = 0.75
-                                    thickness = 2
-
-
-                                    text_size, _ = (
-                                        cv2.getTextSize(
-                                            label,
-                                            font,
-                                            font_scale,
-                                            thickness
-                                        )
-                                    )
-
-
-                                    text_width, text_height = (
-                                        text_size
-                                    )
-
-
-                                    label_y = max(
-                                        y1,
-                                        text_height + 15
-                                    )
-
-
-                                    cv2.rectangle(
-                                        processed_frame,
-                                        (
-                                            x1,
-                                            label_y
-                                            - text_height
-                                            - 12
-                                        ),
-                                        (
-                                            x1
-                                            + text_width
-                                            + 12,
-                                            label_y + 4
-                                        ),
-                                        (0, 0, 255),
-                                        -1
-                                    )
-
-
-                                    cv2.putText(
-                                        processed_frame,
-                                        label,
-                                        (
-                                            x1 + 6,
-                                            label_y - 6
-                                        ),
-                                        font,
-                                        font_scale,
-                                        (255, 255, 255),
-                                        thickness,
-                                        cv2.LINE_AA
-                                    )
-
-
-                                writer.write(
-                                    processed_frame
-                                )
-
+                        if not writer.isOpened():
 
                             cap.release()
-                            writer.release()
 
+                            st.error(
+                                "❌ Unable to create output video."
+                            )
 
-                            final_video = (
-                                convert_video_for_browser(
-                                    raw_output
+                            st.stop()
+
+                        all_defects = {}
+                        last_boxes = []
+
+                        while True:
+
+                            ret, frame = cap.read()
+
+                            if not ret:
+                                break
+
+                            result = model.predict(
+                                source=frame,
+                                conf=0.10,
+                                verbose=False
+                            )[0]
+
+                            current_boxes = []
+
+                            if (
+                                result.boxes is not None
+                                and len(result.boxes) > 0
+                            ):
+
+                                for box in result.boxes:
+
+                                    coords = (
+                                        box.xyxy[0]
+                                        .cpu()
+                                        .numpy()
+                                        .astype(int)
+                                    )
+
+                                    x1, y1, x2, y2 = coords
+
+                                    confidence = float(
+                                        box.conf[0]
+                                        .cpu()
+                                        .item()
+                                    )
+
+                                    class_id = int(
+                                        box.cls[0]
+                                        .cpu()
+                                        .item()
+                                    )
+
+                                    defect_name = model.names[
+                                        class_id
+                                    ]
+
+                                    current_boxes.append(
+                                        {
+                                            "box": (
+                                                x1,
+                                                y1,
+                                                x2,
+                                                y2
+                                            ),
+                                            "name":
+                                                defect_name,
+                                            "confidence":
+                                                confidence
+                                        }
+                                    )
+
+                                    if defect_name not in all_defects:
+
+                                        all_defects[
+                                            defect_name
+                                        ] = confidence
+
+                                    elif confidence > all_defects[
+                                        defect_name
+                                    ]:
+
+                                        all_defects[
+                                            defect_name
+                                        ] = confidence
+
+                            if len(current_boxes) > 0:
+                                last_boxes = current_boxes
+
+                            if len(current_boxes) > 0:
+                                boxes_to_draw = current_boxes
+                            else:
+                                boxes_to_draw = last_boxes
+
+                            processed_frame = frame.copy()
+
+                            for detection in boxes_to_draw:
+
+                                x1, y1, x2, y2 = (
+                                    detection["box"]
                                 )
+
+                                name = detection["name"]
+
+                                confidence = (
+                                    detection["confidence"]
+                                )
+
+                                cv2.rectangle(
+                                    processed_frame,
+                                    (x1, y1),
+                                    (x2, y2),
+                                    (0, 0, 255),
+                                    6
+                                )
+
+                                label = (
+                                    f"{name} "
+                                    f"{confidence * 100:.1f}%"
+                                )
+
+                                font = (
+                                    cv2.FONT_HERSHEY_SIMPLEX
+                                )
+
+                                font_scale = 0.75
+                                thickness = 2
+
+                                text_size, _ = (
+                                    cv2.getTextSize(
+                                        label,
+                                        font,
+                                        font_scale,
+                                        thickness
+                                    )
+                                )
+
+                                text_width, text_height = (
+                                    text_size
+                                )
+
+                                label_y = max(
+                                    y1,
+                                    text_height + 15
+                                )
+
+                                cv2.rectangle(
+                                    processed_frame,
+                                    (
+                                        x1,
+                                        label_y
+                                        - text_height
+                                        - 12
+                                    ),
+                                    (
+                                        x1
+                                        + text_width
+                                        + 12,
+                                        label_y + 4
+                                    ),
+                                    (0, 0, 255),
+                                    -1
+                                )
+
+                                cv2.putText(
+                                    processed_frame,
+                                    label,
+                                    (
+                                        x1 + 6,
+                                        label_y - 6
+                                    ),
+                                    font,
+                                    font_scale,
+                                    (255, 255, 255),
+                                    thickness,
+                                    cv2.LINE_AA
+                                )
+
+                            writer.write(
+                                processed_frame
                             )
 
+                        cap.release()
+                        writer.release()
 
-                            st.session_state.video_output = (
-                                final_video
+                        final_video = (
+                            convert_video_for_browser(
+                                raw_output
                             )
+                        )
 
-                            st.session_state.video_defects = (
-                                all_defects
-                            )
+                        st.session_state.video_output = (
+                            final_video
+                        )
 
-                            st.session_state.image_output = None
-                            st.session_state.image_defects = []
+                        st.session_state.video_defects = (
+                            all_defects
+                        )
 
-                            st.rerun()
+                        st.session_state.image_output = None
+                        st.session_state.image_defects = []
+
+                        st.rerun()
 
 
     # ========================================================
-    # OUTPUT / INSPECTION RESULT BOX
+    # RESULT
     # ========================================================
 
     with right:
 
-        with st.container(border=True):
+        st.subheader(
+            "🤖 INSPECTION RESULT"
+        )
 
-            st.markdown(
-                """
-                <div class="inspection-box-title">
-                    🤖 INSPECTION RESULT
-                </div>
-                """,
-                unsafe_allow_html=True
+
+        # ====================================================
+        # IMAGE RESULT
+        # ====================================================
+
+        if st.session_state.image_output is not None:
+
+            st.write(
+                "**ANALYZED IMAGE**"
             )
 
+            show_fixed_image(
+                st.session_state.image_output,
+                width=500,
+                height=300,
+                border_color="#8b5cf6",
+                background="#111827"
+            )
 
-            # ====================================================
-            # IMAGE RESULT
-            # ====================================================
+            defects = st.session_state.image_defects
 
-            if st.session_state.image_output is not None:
+            if len(defects) > 0:
 
-                st.write(
-                    "**ANALYZED IMAGE**"
+                st.markdown(
+                    """
+                    <div class="bad-quality">
+                        ❌ BAD QUALITY
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
 
-                show_fixed_image(
-                    st.session_state.image_output,
-                    width=500,
-                    height=300,
-                    border_color="#8b5cf6",
-                    background="#111827"
-                )
+                st.write("### Detected Defects")
 
-
-                defects = (
-                    st.session_state.image_defects
-                )
-
-
-                if len(defects) > 0:
+                for defect in defects:
 
                     st.markdown(
-                        """
-                        <div class="bad-quality">
-                            ❌ BAD QUALITY
+                        f"""
+                        <div class="defect-card">
+                            🔴 <b>Defect:</b>
+                            {defect["name"]}
+                            &nbsp;&nbsp;&nbsp;
+                            📊 <b>Confidence:</b>
+                            {defect["confidence"] * 100:.2f}%
                         </div>
                         """,
                         unsafe_allow_html=True
                     )
-
-
-                    st.write(
-                        "### Detected Defects"
-                    )
-
-
-                    for defect in defects:
-
-                        st.markdown(
-                            f"""
-                            <div class="defect-card">
-                                🔴 <b>Defect:</b>
-                                {defect["name"]}
-                                &nbsp;&nbsp;&nbsp;
-                                📊 <b>Confidence:</b>
-                                {defect["confidence"] * 100:.2f}%
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-
-                else:
-
-                    st.markdown(
-                        """
-                        <div class="good-quality">
-                            ✅ GOOD QUALITY
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-
-            # ====================================================
-            # VIDEO RESULT
-            # ====================================================
-
-            elif st.session_state.video_output is not None:
-
-                st.write(
-                    "**ANALYZED VIDEO**"
-                )
-
-
-                show_fixed_video(
-                    st.session_state.video_output,
-                    width=500,
-                    height=300,
-                    border_color="#8b5cf6",
-                    background="#111827"
-                )
-
-
-                defects = (
-                    st.session_state.video_defects
-                )
-
-
-                if len(defects) > 0:
-
-                    st.markdown(
-                        """
-                        <div class="bad-quality">
-                            ❌ BAD QUALITY
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-
-                    st.write(
-                        "### Detected Defects"
-                    )
-
-
-                    for name, confidence in defects.items():
-
-                        st.markdown(
-                            f"""
-                            <div class="defect-card">
-                                🔴 <b>Defect:</b>
-                                {name}
-                                &nbsp;&nbsp;&nbsp;
-                                📊 <b>Confidence:</b>
-                                {confidence * 100:.2f}%
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-
-                else:
-
-                    st.markdown(
-                        """
-                        <div class="good-quality">
-                            ✅ GOOD QUALITY
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-
-            # ====================================================
-            # DEFAULT RESULT
-            # ====================================================
 
             else:
 
-                st.info(
-                    "Upload an image or video and click Analyze."
+                st.markdown(
+                    """
+                    <div class="good-quality">
+                        ✅ GOOD QUALITY
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
+
+
+        # ====================================================
+        # VIDEO RESULT
+        # ====================================================
+
+        elif st.session_state.video_output is not None:
+
+            st.write(
+                "**ANALYZED VIDEO**"
+            )
+
+            show_fixed_video(
+                st.session_state.video_output,
+                width=500,
+                height=300,
+                border_color="#8b5cf6",
+                background="#111827"
+            )
+
+            defects = st.session_state.video_defects
+
+            if len(defects) > 0:
+
+                st.markdown(
+                    """
+                    <div class="bad-quality">
+                        ❌ BAD QUALITY
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                st.write("### Detected Defects")
+
+                for name, confidence in defects.items():
+
+                    st.markdown(
+                        f"""
+                        <div class="defect-card">
+                            🔴 <b>Defect:</b>
+                            {name}
+                            &nbsp;&nbsp;&nbsp;
+                            📊 <b>Confidence:</b>
+                            {confidence * 100:.2f}%
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+            else:
+
+                st.markdown(
+                    """
+                    <div class="good-quality">
+                        ✅ GOOD QUALITY
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+
+        # ====================================================
+        # DEFAULT
+        # ====================================================
+
+        else:
+
+            st.info(
+                "Upload an image or video and click Analyze."
+            )
